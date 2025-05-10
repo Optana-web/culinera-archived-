@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vernecipe - Share and Discover Recipes</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF8C42;
+            --accent-light: #FFBC80;
+            --dark: #333333;
+            --light: #FFFFFF;
+            --gray-light: #F5F5F5;
+            --gray: #E0E0E0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Playfair Display', serif;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .logo span {
+            color: var(--primary-color);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            font-family: 'Roboto Mono', monospace;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-light);
+        }
+        
+        .hero {
+            padding: 5rem 0;
+            text-align: center;
+            background-color: var(--gray-light);
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .featured {
+            padding: 4rem 0;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+        
+        .section-title:after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background-color: var(--primary-color);
+        }
+        
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        
+        .recipe-card {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+        
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .recipe-content {
+            padding: 1.5rem;
+        }
+        
+        .recipe-title {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .recipe-description {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+        
+        .recipe-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: var(--light);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray);
+            border-radius: 4px;
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+        
+        footer {
+            background-color: var(--gray-light);
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .footer-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+        
+        .copyright {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .how-it-works {
+            padding: 4rem 0;
+            background-color: var(--gray-light);
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 3rem;
+        }
+        
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 0 1rem;
+        }
+        
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-color);
+            color: var(--light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+        
+        .step h3 {
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .steps {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .step {
+                padding: 0;
+            }
+            
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+            
+            .hero p {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">Verne<span>cipe</span></div>
+                <div class="nav-links">
+                    <a href="browse.html">Browse Recipes</a>
+                    <a href="popular.html">Popular</a>
+                    <a href="categories.html">Categories</a>
+                    <a href="about.html">About</a>
+                </div>
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Log In</a>
+                    <a href="signup.html" class="btn btn-primary">Sign Up</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Share and Discover <span style="color: var(--primary-color);">Delicious</span> Recipes</h1>
+            <p>Join our community of food enthusiasts who love to cook, share, and discover amazing recipes from around the world.</p>
+            <a href="browse.html" class="btn btn-primary">Start Exploring</a>
+        </div>
+    </section>
+
+    <section class="featured">
+        <div class="container">
+            <h2 class="section-title">Featured Recipes</h2>
+            <div class="recipe-grid">
+                <!-- Recipe Card 1 -->
+                <div class="recipe-card">
+                    <img src="/api/placeholder/400/320" alt="Recipe Image" class="recipe-image">
+                    <div class="recipe-content">
+                        <h3 class="recipe-title">Lemon Herb Roasted Chicken</h3>
+                        <p class="recipe-description">A delicious and simple roasted chicken with fresh herbs and lemon.</p>
+                        <div class="recipe-meta">
+                            <span>By ChefJohnson</span>
+                            <span>★ 4.9 (128)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recipe Card 2 -->
+                <div class="recipe-card">
+                    <img src="/api/placeholder/400/320" alt="Recipe Image" class="recipe-image">
+                    <div class="recipe-content">
+                        <h3 class="recipe-title">Vegetarian Pad Thai</h3>
+                        <p class="recipe-description">Classic Thai noodles with a perfect balance of sweet, sour and umami flavors.</p>
+                        <div class="recipe-meta">
+                            <span>By GlobalFoodie</span>
+                            <span>★ 4.7 (94)</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recipe Card 3 -->
+                <div class="recipe-card">
+                    <img src="/api/placeholder/400/320" alt="Recipe Image" class="recipe-image">
+                    <div class="recipe-content">
+                        <h3 class="recipe-title">Chocolate Lava Cake</h3>
+                        <p class="recipe-description">Decadent chocolate cake with a molten center, perfect for dessert lovers.</p>
+                        <div class="recipe-meta">
+                            <span>By DessertMaster</span>
+                            <span>★ 5.0 (156)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How Vernecipe Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-icon">1</div>
+                    <h3>Create an Account</h3>
+                    <p>Sign up and verify your email to join our community of food enthusiasts.</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-icon">2</div>
+                    <h3>Share Your Recipes</h3>
+                    <p>Upload your favorite recipes with ingredients, instructions, and photos.</p>
+                </div>
+                
+                <div class="step">
+                    <div class="step-icon">3</div>
+                    <h3>Discover & Save</h3>
+                    <p>Explore recipes from other users and save your favorites to your profile.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal sections removed as they're no longer needed -->
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">Verne<span>cipe</span></div>
+                <div class="footer-links">
+                    <a href="about.html">About Us</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </div>
+            </div>
+            <p class="copyright">&copy; 2025 Vernecipe. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Integration -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Check authentication state
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                // User is signed in
+                console.log("User is signed in:", user.email);
+                // You could redirect to dashboard or show user-specific content
+            } else {
+                // No user is signed in
+                console.log("No user is signed in");
+            }
+        });
+    </script>
+</body>
+</html>
