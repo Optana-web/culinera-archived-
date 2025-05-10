@@ -5,14 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Culinera – Sign Up</title>
 
-    <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-        rel="stylesheet"
-    />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap"
-        rel="stylesheet"
-    />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
 
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
@@ -40,7 +34,6 @@
         body { font-family: 'Playfair Display', serif; color: var(--dark); background: var(--gray-light); line-height: 1.6; }
         .mono { font-family: 'Roboto Mono', monospace; }
         .container { width: 90%; max-width: 1200px; margin: 0 auto; }
-
         header { padding: 1.5rem 0; background: var(--light); border-bottom: 1px solid var(--gray); }
         nav { display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.8rem; font-weight: 700; }
@@ -55,59 +48,54 @@
         .btn-outline:hover { background: var(--primary-color); color: var(--light); }
         .btn-primary { background: var(--primary-color); color: var(--light); }
         .btn-primary:hover { background: var(--accent-light); }
-
         .signup-container { max-width: 600px; margin: 4rem auto; padding: 2rem; background: var(--light); border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,.1); }
         .page-title { text-align: center; margin-bottom: 2rem; font-size: 2rem; }
         .page-title span { color: var(--primary-color); }
-
         .alert { display: none; margin-bottom: 1.5rem; padding: .75rem; border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
         .alert-info { background: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-border); }
-        .alert-success { background: var(--success-bg); color: var(--success-text); border: var(--success-border); }
-        .alert-danger { background: var(--danger-bg); color: var(--danger-text); border: var(--danger-border); }
-
+        .alert-success { background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+        .alert-danger { background: var(--danger-bg); color: var(--danger-text); border: 1px solid var(--danger-border); }
         .form-group { margin-bottom: 1.5rem; }
         .form-group label { display: block; margin-bottom: .5rem; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
         .form-group input { width: 100%; padding: .75rem; font-family: 'Roboto Mono', monospace; font-size: 1rem; border: 1px solid var(--gray); border-radius: 8px; }
         .form-group input:focus { outline: none; border-color: var(--primary-color); }
-
-        .form-footer { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; align-items: stretch; }
-        .form-footer button { width: 100%; } /* Make buttons full width within the flex container by default */
-        .password-requirements { font-family: 'Roboto Mono', monospace; font-size: .8rem; color: #666; margin-top: .5rem; text-align: left; }
-
-        .alt-action { text-align: center; margin-top: 2rem; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
-        .alt-action a { color: var(--primary-color); text-decoration: none; }
-        .alt-action a:hover { text-decoration: underline; }
-
-        .verification-section { display: none; text-align: center; padding: 2rem; }
-        .verification-icon { width: 80px; height: 80px; background-color: var(--primary-color); color: var(--light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 2rem; }
-
+        .form-footer { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; }
         .google-btn {
+            width: 100%;
+            padding: .75rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1rem;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: .5rem;
-            border: 1px solid var(--primary-color);
-            border-radius: 8px;
-            background: transparent;
-            color: var(--dark);
-            font-family: 'Roboto Mono', monospace;
-            font-size: 1rem;
-            padding: .75rem;
             cursor: pointer;
             transition: background .3s, color .3s;
         }
         .google-btn:hover { background: var(--primary-color); color: var(--light); }
-
+        .alt-action { text-align: center; margin-top: 2rem; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
+        .alt-action a { color: var(--primary-color); text-decoration: none; }
+        .alt-action a:hover { text-decoration: underline; }
         footer { background: var(--gray-light); padding: 2rem 0; text-align: center; margin-top: 4rem; }
         .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; }
         .footer-links a { color: var(--dark); text-decoration: none; font-size: .9rem; transition: color .3s; }
         .footer-links a:hover { color: var(--primary-color); }
         .copyright { font-family: 'Roboto Mono', monospace; font-size: .8rem; color: #888; }
-
         @media (max-width: 768px) {
             .nav-links { display: none; }
             .signup-container { margin: 2rem auto; padding: 1.5rem; }
             .page-title { font-size: 1.8rem; }
+        }
+        #signupFormSection {
+            display: none; /* Initially hide the signup form */
+        }
+        #username-status {
+            font-size: 0.9em;
+            margin-top: 0.25em;
+            font-family: 'Roboto Mono', monospace;
         }
     </style>
 </head>
@@ -123,7 +111,7 @@
                     <a href="categories.html">Categories</a>
                     <a href="about.html">About</a>
                 </div>
-                <div class="auth-buttons">
+                <div class="auth-buttons" id="authButtons">
                     <a href="login.html" class="btn btn-outline">Log In</a>
                     <a href="signup.html" class="btn btn-primary">Sign Up</a>
                 </div>
@@ -134,51 +122,41 @@
     <main>
         <div class="container">
             <div class="signup-container">
-                <h1 class="page-title">Join <span>Culinera</span></h1>
+                <h1 class="page-title">Sign up for <span>Culinera</span></h1>
                 <div id="notification" class="alert" aria-live="assertive"></div>
 
                 <div id="signupFormSection">
-                    <form id="signupForm">
+                    <form id="signupForm" autocomplete="off">
                         <div class="form-group">
                             <label for="username">Username</label>
-                            <input type="text" id="username" name="username" required />
+                            <input type="text" id="username" name="username" required minlength="3" maxlength="15" pattern="^[a-zA-Z0-9_]+$" autocomplete="off" />
+                            <div id="username-status"></div>
                         </div>
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" name="email" required autocomplete="email" />
+                            <input type="email" id="email" name="email" required autocomplete="username" />
                         </div>
                         <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="password" id="password" name="password" required minlength="8" autocomplete="new-password" />
-                            <div class="password-requirements">Must be at least 8 characters long.</div>
+                            <input type="password" id="password" name="password" required autocomplete="new-password" />
                         </div>
                         <div class="form-group">
                             <label for="confirmPassword">Confirm Password</label>
                             <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="new-password" />
                         </div>
-
                         <div class="form-footer">
-                            <button type="submit" class="btn btn-primary">Create Account</button>
-                            <button type="button" id="googleSignupBtn" class="google-btn">
-                                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                                    alt="Google logo" width="20" height="20" />
-                                Sign up with Google
-                            </button>
+                            <button type="submit" class="btn btn-primary">Sign Up</button>
                         </div>
                     </form>
-
+                    <div style="margin: 1.5em 0; text-align: center;">
+                        <button type="button" id="googleSignupBtn" class="google-btn">
+                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" width="20" height="20" />
+                            Sign up with Google
+                        </button>
+                    </div>
                     <div class="alt-action">
                         Already have an account? <a href="login.html">Log in</a>
                     </div>
-                </div>
-
-                <div id="verificationSection" class="verification-section">
-                    <div class="verification-icon">✉️</div>
-                    <h2>Verify Your Email</h2>
-                    <p>We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.</p>
-                    <p class="mono" style="margin-top: 1rem;">Didn't receive an email?</p>
-                    <button id="resendEmailBtn" class="btn btn-outline" style="margin-top: 1rem;">Resend Verification Email</button>
-                    <div id="resendNotification" class="alert" aria-live="polite" style="margin-top: 1rem;"></div>
                 </div>
             </div>
         </div>
@@ -195,7 +173,7 @@
     </footer>
 
     <script>
-        // --- INLINE YOUR FIREBASE CONFIG HERE ---
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
             apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
             authDomain: "culinera-recipes.firebaseapp.com",
@@ -206,18 +184,26 @@
             measurementId: "G-LJTEX9XC99"
         };
 
-        // initialize
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
         const signupForm = document.getElementById('signupForm');
         const notification = document.getElementById('notification');
-        const verificationSection = document.getElementById('verificationSection');
         const signupFormSection = document.getElementById('signupFormSection');
-        const resendEmailBtn = document.getElementById('resendEmailBtn');
-        const resendNotification = document.getElementById('resendNotification');
+        const authButtons = document.getElementById('authButtons');
+        const usernameInput = document.getElementById('username');
+        const usernameStatus = document.getElementById('username-status');
         const googleSignupBtn = document.getElementById('googleSignupBtn');
+
+        // Utility: debounce
+        function debounce(fn, delay) {
+            let timeout;
+            return (...args) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
 
         function showAlert(msg, type='success') {
             notification.textContent = msg;
@@ -225,108 +211,148 @@
             notification.style.display = 'block';
         }
 
-        function showResendAlert(msg, type='success') {
-            resendNotification.textContent = msg;
-            resendNotification.className = `alert alert-${type}`;
-            resendNotification.style.display = 'block';
-        }
+        // --- Username availability check ---
+        let usernameAvailable = false;
+        let lastCheckedUsername = "";
 
+        usernameInput.addEventListener('input', debounce(async function(e) {
+            const username = e.target.value.trim().toLowerCase();
+            lastCheckedUsername = username;
+            usernameStatus.textContent = '';
+            usernameAvailable = false;
+
+            if (!username.match(/^[a-zA-Z0-9_]{3,15}$/)) {
+                usernameStatus.textContent = "Usernames must be 3-15 letters, numbers, or underscores.";
+                usernameStatus.style.color = "#721c24";
+                return;
+            }
+
+            // Check if username exists
+            const doc = await db.collection('usernames').doc(username).get();
+            if (doc.exists) {
+                usernameStatus.textContent = "Username is taken.";
+                usernameStatus.style.color = "#721c24";
+                usernameAvailable = false;
+            } else {
+                usernameStatus.textContent = "Username is available!";
+                usernameStatus.style.color = "#155724";
+                usernameAvailable = true;
+            }
+        }, 350));
+
+        // --- Auth state ---
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                window.location.href = 'dashboard.html';
+            } else {
+                signupFormSection.style.display = 'block';
+                if (authButtons) authButtons.style.display = 'flex';
+            }
+        });
+        signupFormSection.style.display = 'none';
+        if (authButtons) authButtons.style.display = 'none';
+
+        // --- Email/password signup ---
         signupForm.addEventListener('submit', async e => {
             e.preventDefault();
-            showAlert('Creating account…', 'info');
+            showAlert('Signing up…', 'info');
 
-            const username = signupForm.username.value.trim();
+            const username = signupForm.username.value.trim().toLowerCase();
             const email = signupForm.email.value.trim();
             const password = signupForm.password.value;
             const confirmPassword = signupForm.confirmPassword.value;
 
+            if (!username.match(/^[a-zA-Z0-9_]{3,15}$/)) {
+                showAlert('Invalid username format.', 'danger');
+                return;
+            }
+            if (!usernameAvailable || username !== lastCheckedUsername) {
+                showAlert('Please choose an available username.', 'danger');
+                return;
+            }
             if (password !== confirmPassword) {
                 showAlert('Passwords do not match.', 'danger');
                 return;
             }
 
             try {
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
+                // Create user
+                const { user } = await auth.createUserWithEmailAndPassword(email, password);
 
-                // Update user profile with username
-                await user.updateProfile({ displayName: username });
+                // Batch write: user profile and username mapping
+                const batch = db.batch();
+                const userDoc = db.collection('users').doc(user.uid);
+                const usernameDoc = db.collection('usernames').doc(username);
 
-                // Send email verification
-                await user.sendEmailVerification();
-
-                // Store user data in Firestore
-                await db.collection('users').doc(user.uid).set({
-                    uid: user.uid,
+                batch.set(userDoc, {
+                    username: username,
                     email: email,
-                    displayName: username,
-                    signUpMethod: 'email',
-                    emailVerified: false,
-                    creationTime: firebase.firestore.FieldValue.serverTimestamp()
+                    provider: 'password'
+                });
+                batch.set(usernameDoc, {
+                    uid: user.uid
                 });
 
-                signupFormSection.style.display = 'none';
-                verificationSection.style.display = 'block';
-                showAlert('Account created! Please check your email to verify.', 'success');
+                await batch.commit();
 
-            } catch (error) {
-                showAlert(error.message, 'danger');
+                await user.updateProfile({ displayName: username });
+
+                await user.sendEmailVerification();
+                showAlert('Signup successful! Please verify your email before logging in.', 'success');
+                await auth.signOut();
+            } catch (err) {
+                showAlert(err.message, 'danger');
             }
         });
 
+        // --- Google signup ---
         googleSignupBtn.addEventListener('click', async () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
             showAlert('Opening Google Sign-Up…', 'info');
+            const provider = new firebase.auth.GoogleAuthProvider();
             try {
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
+                const email = user.email;
+                let username = "";
 
-                // Store user data in Firestore if it's a new user
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (!userDoc.exists) {
-                    await db.collection('users').doc(user.uid).set({
-                        uid: user.uid,
-                        email: user.email,
-                        displayName: user.displayName || '',
-                        signUpMethod: 'google',
-                        emailVerified: user.emailVerified,
-                        creationTime: firebase.firestore.FieldValue.serverTimestamp()
-                    });
+                // Only allow Gmail addresses
+                if (!email.endsWith('@gmail.com')) {
+                    await auth.signOut();
+                    showAlert('Only Gmail accounts are allowed for Google sign up.', 'danger');
+                    return;
                 }
+                username = email.replace('@gmail.com', '').toLowerCase();
+
+                // Check username uniqueness
+                const usernameDoc = await db.collection('usernames').doc(username).get();
+                if (usernameDoc.exists) {
+                    await auth.signOut();
+                    showAlert('This Gmail username is already taken. Please sign in or use another account.', 'danger');
+                    return;
+                }
+
+                // Batch write: user profile and username mapping
+                const batch = db.batch();
+                const userDoc = db.collection('users').doc(user.uid);
+                const usernameRef = db.collection('usernames').doc(username);
+
+                batch.set(userDoc, {
+                    username: username,
+                    email: email,
+                    provider: 'google'
+                });
+                batch.set(usernameRef, {
+                    uid: user.uid
+                });
+
+                await batch.commit();
+
+                await user.updateProfile({ displayName: username });
 
                 showAlert('Google sign up successful! Redirecting…', 'success');
-                setTimeout(() => location.href = 'dashboard.html', 1500);
-
-            } catch (error) {
-                showAlert(error.message, 'danger');
-            }
-        });
-
-        resendEmailBtn.addEventListener('click', async () => {
-            const user = auth.currentUser;
-            if (user) {
-                showResendAlert('Resending verification email…', 'info');
-                try {
-                    await user.sendEmailVerification();
-                    showResendAlert('Verification email resent!', 'success');
-                } catch (error) {
-                    showResendAlert(error.message, 'danger');
-                }
-            } else {
-                showResendAlert('No user signed in.', 'danger');
-            }
-        });
-
-       (user && user.emailVerified) {
-                location.href = 'dashboard.html'; // Redirect to dashboard if already signed in and verified
-            } else if (user && !user.emailVerified && window.location.pathname.includes('signup.html')) {
-                // If signed in but not verified on signup page, show verification message
-                signupFormSection.style.display = 'none';
-                verificationSection.style.display = 'block';
-            } else {
-                // User is logged out, show the signup form
-                signupFormSection.style.display = 'block';
-                verificationSection.style.display = 'none';
+                setTimeout(() => location.href = 'dashboard.html', 1200);
+            } catch (err) {
+                showAlert(err.message, 'danger');
             }
         });
     </script>
