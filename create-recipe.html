@@ -234,8 +234,6 @@
     .add-step-btn:hover { 
       background: var(--accent-light); 
     }
-
-    /* Toggle Switch Styles */
     .switch {
       position: relative;
       display: inline-block;
@@ -266,7 +264,6 @@
     input:checked + .slider:before {
       transform: translateX(20px);
     }
-    
     @media (max-width: 992px) {
       .sidebar { width: 80px; }
       .sidebar .logo span,
@@ -325,7 +322,6 @@
       <div class="content-card">
         <div class="content-card-header">
           <h2 class="content-card-title">New Recipe Details</h2>
-          <!-- Toggle Public/Private option -->
           <div style="position:absolute; top:18px; right:24px; display:flex; gap:16px; align-items:center;">
             <label class="switch" title="Toggle public/private">
               <input type="checkbox" id="publicToggle">
@@ -341,16 +337,31 @@
               <input type="text" id="title" name="title" required placeholder="e.g., Lemon Garlic Chicken">
             </div>
 
+            <div class="form-group">
+              <label for="imgWidth">Image Width (px)</label>
+              <input type="number" id="imgWidth" name="imgWidth" value="800" min="1" placeholder="e.g. 800">
+            </div>
+            <div class="form-group">
+              <label for="imgHeight">Image Height (px)</label>
+              <input type="number" id="imgHeight" name="imgHeight" value="600" min="1" placeholder="e.g. 600">
+            </div>
+            <div class="form-group">
+              <label for="imgType">Output Format</label>
+              <select id="imgType" name="imgType">
+                <option value="image/jpeg">JPEG</option>
+                <option value="image/png">PNG</option>
+                <option value="image/webp">WebP</option>
+              </select>
+            </div>
+
             <div class="form-group ingredients-list" id="ingredientsList">
               <label>Ingredients</label>
             </div>
-
             <div id="addIngredientWrapper"></div>
 
             <div class="form-group steps-list" id="stepsList">
               <label>Preparation Steps</label>
             </div>
-
             <div id="addStepWrapper"></div>
 
             <div class="form-group">
@@ -467,7 +478,6 @@
     function updateIngredientUI() {
       const fields = ingredientsList.querySelectorAll('input[name="ingredients"]');
       if (fields.length === 0) {
-        // Show "Create Ingredient" button
         if (!addIngredientWrapper.querySelector('.add-ingredient-btn')) {
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -520,7 +530,6 @@
     }
     function setStepsFields(steps) {
       stepsList.innerHTML = '<label>Preparation Steps</label>';
-      // Parse steps if it's a string, or use as array if already in array format
       let stepsArray = steps;
       if (typeof steps === 'string') {
         stepsArray = steps.split(/\r?\n/).filter(step => step.trim());
@@ -531,7 +540,6 @@
     function updateStepUI() {
       const fields = stepsList.querySelectorAll('input[name="steps"]');
       if (fields.length === 0) {
-        // Show "Create Step" button
         if (!addStepWrapper.querySelector('.add-step-btn')) {
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -549,7 +557,7 @@
       }
     }
 
-    // --- Image preview & max 5, with delete ---
+    // --- Image preview with resizing & re-encoding ---
     let imageBase64 = [];
     function renderImagePreview(images) {
       imagePreview.innerHTML = '';
@@ -558,7 +566,6 @@
         container.className = 'image-thumb-container';
         const img = document.createElement('img');
         img.src = src;
-        // Delete button
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.className = 'delete-image-btn';
@@ -569,8 +576,7 @@
           imageBase64 = images.slice();
           renderImagePreview(images);
         };
-        container.appendChild(img);
-        container.appendChild(delBtn);
+        container.append(img, delBtn);
         imagePreview.appendChild(container);
       });
     }
@@ -585,14 +591,25 @@
       createError.textContent = '';
       imageBase64 = [];
       let processed = 0;
+
+      const outW   = parseInt(document.getElementById('imgWidth').value, 10) || 0;
+      const outH   = parseInt(document.getElementById('imgHeight').value, 10) || 0;
+      const outType = document.getElementById('imgType').value;
+
       files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = function(e) {
-          imageBase64.push(e.target.result);
+        const img = new Image();
+
+        reader.onload = e => { img.src = e.target.result; };
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width  = outW > 0 ? outW : img.naturalWidth;
+          canvas.height = outH > 0 ? outH : img.naturalHeight;
+          canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+          const dataUrl = canvas.toDataURL(outType);
+          imageBase64.push(dataUrl);
           processed++;
-          if (processed === files.length) {
-            renderImagePreview(imageBase64);
-          }
+          if (processed === files.length) renderImagePreview(imageBase64);
         };
         reader.readAsDataURL(file);
       });
@@ -604,11 +621,7 @@
       publicStatusLabel.textContent = isPublic ? "Public" : "Private";
       publicStatusLabel.style.color = isPublic ? "#FF8C42" : "#888";
     }
-
-    // Toggle handler
-    publicToggle.addEventListener('change', function() {
-      setPublicToggleUI(publicToggle.checked);
-    });
+    publicToggle.addEventListener('change', () => setPublicToggleUI(publicToggle.checked));
 
     // --- Form submission (create recipe) ---
     document.getElementById('createRecipeForm').onsubmit = async function(e) {
@@ -620,29 +633,25 @@
 
         const title = document.getElementById('title').value.trim();
         const ingredients = Array.from(
-          ingredientsList.querySelectorAll('input[name="ingredients"]')
-        ).map(el => el.value.trim()).filter(Boolean);
+          document.querySelectorAll('input[name="ingredients"]')
+        ).map(i => i.value.trim()).filter(Boolean);
         const steps = Array.from(
-          stepsList.querySelectorAll('input[name="steps"]')
-        ).map(el => el.value.trim()).filter(Boolean);
+          document.querySelectorAll('input[name="steps"]')
+        ).map(i => i.value.trim()).filter(Boolean);
         const isPublic = publicToggle.checked;
 
-        // Validate
         if (!title) throw new Error("Title is required.");
         if (!ingredients.length) throw new Error("At least one ingredient is required.");
         if (!steps.length) throw new Error("At least one preparation step is required.");
 
-        const recipe = {
-          title,
-          ingredients,
-          steps,
+        await db.collection('recipes').add({
+          title, ingredients, steps,
           photos: imageBase64,
           public: isPublic,
           authorId: currentUser.uid,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
+        });
 
-        await db.collection('recipes').add(recipe);
         alert("Recipe created successfully!");
         window.location.href = "yourrecipes.html";
       } catch (err) {
