@@ -21,7 +21,7 @@
       --light: #FFFFFF;
       --gray-light: #F5F5F5;
     }
-    * { box-sizing: border-box; margin:0; padding:0 }
+    * { box-sizing:border-box; margin:0; padding:0 }
     body {
       font-family:'Playfair Display',serif;
       background: var(--gray-light);
@@ -37,8 +37,7 @@
       background: var(--dark);
       color: var(--light);
       height: 100vh;
-      position: fixed;
-      left: 0; top: 0;
+      position: fixed; top:0; left:0;
       display:flex; flex-direction:column;
       overflow-y:auto; transition: all .3s ease;
       z-index: 100;
@@ -104,7 +103,7 @@
       display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0;
     }
     .photo-gallery img {
-      width:120px; height:120px; object-fit:cover; border-radius:8px;
+      width:100px; height:100px; object-fit:cover; border-radius:8px;
       cursor:pointer; transition:transform .2s;
     }
     .photo-gallery img:hover { transform:scale(1.05) }
@@ -120,15 +119,15 @@
       background: var(--dark-overlay);
       display:flex; align-items:center; justify-content:center;
       opacity:0; visibility:hidden; transition:opacity .3s ease;
-      z-index:1000; cursor: zoom-out;
+      z-index:1000; cursor: pointer;
     }
     #lightboxOverlay.visible {
       opacity:1; visibility:visible;
     }
     #lightboxOverlay img {
-      max-width:90%; max-height:90%; border-radius:4px;
+      max-width:70%; max-height:70%; border-radius:4px;
       box-shadow:0 0 20px rgba(0,0,0,0.5);
-      cursor: default;
+      opacity:1; transition:opacity .4s ease;
     }
     .lightbox-btn {
       position:absolute; top:50%; transform:translateY(-50%);
@@ -140,22 +139,17 @@
     .lightbox-btn:hover { background:rgba(255,255,255,0.4) }
     #lightboxPrev { left:2% }
     #lightboxNext { right:2% }
-
     /* triangle arrows */
     #lightboxPrev::before,
     #lightboxNext::before {
       content: '';
       display: block;
       width: 0; height: 0;
-      border-top: 10px solid transparent;
-      border-bottom: 10px solid transparent;
+      border-top: 12px solid transparent;
+      border-bottom: 12px solid transparent;
     }
-    #lightboxPrev::before {
-      border-right: 14px solid #fff;
-    }
-    #lightboxNext::before {
-      border-left: 14px solid #fff;
-    }
+    #lightboxPrev::before { border-right: 16px solid #fff; }
+    #lightboxNext::before { border-left: 16px solid #fff; }
 
     @media (max-width:992px) {
       .sidebar { width:80px }
@@ -321,24 +315,36 @@
       location.href = 'index.html';
     };
 
-    // Lightbox functions
+    // Lightbox functions with fade
     function openLightbox(index) {
       currentIndex = index;
+      lbImg.style.opacity = 1;
       lbImg.src = gallerySrcs[currentIndex];
       overlay.classList.add('visible');
     }
     function closeLightbox() {
       overlay.classList.remove('visible');
     }
+    function changeImage(newIndex) {
+      // fade out
+      lbImg.style.opacity = 0;
+      lbImg.addEventListener('transitionend', function handler() {
+        lbImg.removeEventListener('transitionend', handler);
+        currentIndex = newIndex;
+        lbImg.src = gallerySrcs[currentIndex];
+        // fade in
+        requestAnimationFrame(() => {
+          lbImg.style.opacity = 1;
+        });
+      });
+    }
     function showPrev(e) {
       e.stopPropagation();
-      currentIndex = (currentIndex - 1 + gallerySrcs.length) % gallerySrcs.length;
-      lbImg.src = gallerySrcs[currentIndex];
+      changeImage((currentIndex - 1 + gallerySrcs.length) % gallerySrcs.length);
     }
     function showNext(e) {
       e.stopPropagation();
-      currentIndex = (currentIndex + 1) % gallerySrcs.length;
-      lbImg.src = gallerySrcs[currentIndex];
+      changeImage((currentIndex + 1) % gallerySrcs.length);
     }
 
     overlay.addEventListener('click', closeLightbox);
@@ -346,6 +352,7 @@
     prevBtn.addEventListener('click', showPrev);
     nextBtn.addEventListener('click', showNext);
     document.addEventListener('keydown', e => {
+      if (e.repeat) return;
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') showPrev(e);
       if (e.key === 'ArrowRight') showNext(e);
