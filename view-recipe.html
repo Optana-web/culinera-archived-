@@ -158,6 +158,13 @@
     #lightboxPrev::before { border-right: 16px solid #fff; }
     #lightboxNext::before { border-left: 16px solid #fff; }
 
+    /* Share Toast */
+    #shareToast {
+      display:none; position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+      background:var(--primary-color); color:#fff; padding:0.8em 1.5em; border-radius:8px;
+      font-family:'Roboto Mono',monospace; font-size:1rem; z-index:2000; box-shadow:0 2px 12px rgba(0,0,0,0.15);
+    }
+
     @media (max-width:992px) {
       .sidebar { width:80px }
       .sidebar .logo span, .user-info, .nav-link span, .sidebar-footer { display:none }
@@ -203,6 +210,10 @@
           <button onclick="history.back()" class="btn mono">
             <i class="fas fa-arrow-left"></i> Back
           </button>
+          <!-- Share Button -->
+          <button id="shareBtn" class="btn mono" title="Share this recipe" style="margin-left:0.5rem;">
+            <i class="fas fa-share-alt"></i> Share
+          </button>
         </div>
       </header>
 
@@ -228,6 +239,9 @@
     <img id="lightboxImage" src="" alt="Full preview">
     <button id="lightboxNext" class="lightbox-btn"></button>
   </div>
+
+  <!-- Share Toast -->
+  <div id="shareToast">Link copied!</div>
 
   <script>
     // Firebase init
@@ -340,7 +354,6 @@
       animating = true;
       const offsetOut = direction === 'next' ? '-100%' : '100%';
       const offsetIn = direction === 'next' ? '100%' : '-100%';
-
       lbImg.style.transition = 'transform .4s ease, opacity .4s ease';
       lbImg.style.transform = `translateX(${offsetOut})`;
       lbImg.style.opacity = '0';
@@ -395,13 +408,51 @@
     lbImg.addEventListener('click', e => e.stopPropagation());
     prevBtn.addEventListener('click', showPrev);
     nextBtn.addEventListener('click', showNext);
-
     document.addEventListener('keydown', e => {
       if (e.repeat) return;
       if (e.key === 'Escape') closeLightbox();
       if (e.key === 'ArrowLeft') showPrev(e);
       if (e.key === 'ArrowRight') showNext(e);
     });
+
+    // --- Share Button functionality ---
+    const shareBtn = document.getElementById('shareBtn');
+    const shareToast = document.getElementById('shareToast');
+
+    shareBtn.addEventListener('click', async () => {
+      // Get recipe title and URL
+      const title = document.getElementById('recipeTitle').textContent.trim() || 'Recipe';
+      const url = window.location.href;
+
+      // Try Web Share API (best for mobile)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: title,
+            text: `Check out this recipe on Culinera: "${title}"`,
+            url: url
+          });
+        } catch (err) {
+          // User cancelled or error, do nothing
+        }
+      } else {
+        // Fallback: copy to clipboard
+        try {
+          await navigator.clipboard.writeText(url);
+          showShareToast('Link copied!');
+        } catch (err) {
+          showShareToast('Could not copy link');
+        }
+      }
+    });
+
+    function showShareToast(msg) {
+      shareToast.textContent = msg;
+      shareToast.style.display = 'block';
+      setTimeout(() => {
+        shareToast.style.display = 'none';
+      }, 1800);
+    }
   </script>
 </body>
 </html>
