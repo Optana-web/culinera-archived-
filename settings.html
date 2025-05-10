@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culinera – Account Settings</title>
+    <meta name="description" content="Manage your account settings">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #FF8C42;
+            --accent-light: #FFBC80;
+            --danger-color: #FF5252;
+            --danger-hover: #FF7070;
+            --dark: #333333;
+            --light: #FFFFFF;
+            --gray-light: #F5F5F5;
+            --gray: #E0E0E0;
+            --sidebar-width: 260px;
+        }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body {
+            font-family: 'Playfair Display', serif;
+            color: var(--dark);
+            background: var(--gray-light);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .mono { 
+            font-family: 'Roboto Mono', monospace; 
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--dark);
+            color: var(--light);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .logo span {
+            color: var(--primary-color);
+        }
+        
+        .logo a {
+            text-decoration: none;
+            color: var(--light);
+        }
+        
+        .user-profile {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--light);
+        }
+        
+        .user-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-email {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .nav-menu {
+            padding: 1.5rem 0;
+            flex-grow: 1;
+        }
+        
+        .nav-item {
+            list-style: none;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            color: var(--gray);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+        
+        .nav-link.active {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .nav-link i {
+            margin-right: 0.8rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .btn {
+            font-family: 'Roboto Mono', monospace;
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            text-align: center;
+            border: none;
+            outline: none;
+            width: 100%;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-light);
+        }
+        
+        .btn-danger {
+            background: var(--danger-color);
+            color: var(--light);
+        }
+        
+        .btn-danger:hover {
+            background: var(--danger-hover);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        /* Settings Cards */
+        .settings-card {
+            background: var(--light);
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+        
+        .settings-card-header {
+            background: var(--gray-light);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .settings-card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .settings-card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--gray);
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.95rem;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .password-input-wrapper {
+            position: relative;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: transparent;
+            border: none;
+            color: #777;
+            cursor: pointer;
+        }
+        
+        .password-toggle:hover {
+            color: var(--primary-color);
+        }
+        
+        .auth-error {
+            color: var(--danger-color);
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .auth-success {
+            color: #4CAF50;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .section-divider {
+            margin: 2rem 0;
+            border: 0;
+            border-top: 1px solid var(--gray);
+        }
+        
+        .auth-method-note {
+            background: var(--gray-light);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        
+        .auth-method-note i {
+            margin-right: 0.5rem;
+            color: var(--primary-color);
+        }
+        
+        /* Danger Zone */
+        .danger-zone {
+            background: #fff5f5;
+            border: 1px solid #ffdbdb;
+            border-radius: 12px;
+            padding: 1.5rem;
+        }
+        
+        .danger-zone-header {
+            color: var(--danger-color);
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .danger-zone-header i {
+            margin-right: 0.8rem;
+        }
+        
+        .danger-zone-description {
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                overflow: visible;
+            }
+            
+            .logo span, .user-info, .nav-link span, .sidebar-footer {
+                display: none;
+            }
+            
+            .logo {
+                font-size: 1.4rem;
+            }
+            
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1.4rem;
+            }
+            
+            .nav-link {
+                justify-content: center;
+                padding: 1rem;
+            }
+            
+            .nav-link i {
+                margin-right: 0;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper {
+                padding: 1.5rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s linear 0.3s, opacity 0.3s;
+        }
+        
+        .modal.show {
+            visibility: visible;
+            opacity: 1;
+            transition-delay: 0s;
+        }
+        
+        .modal-content {
+            background: var(--light);
+            border-radius: 12px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            background: var(--gray-light);
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            margin: 0;
+            color: var(--dark);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--gray);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+        
+        .modal .btn {
+            width: auto;
+        }
+        
+        .modal-close {
+            background: transparent;
+            border: none;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+            transition: color 0.2s;
+        }
+        
+        .modal-close:hover {
+            color: var(--dark);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
+        </div>
+        
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-info">
+                <h3 id="profileUsername">User</h3>
+                <div class="user-email" id="profileEmail">user@example.com</div>
+            </div>
+        </div>
+        
+        <nav class="nav-menu" aria-label="Main Navigation">
+            <ul>
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="yourrecipes.html" class="nav-link">
+                        <i class="fas fa-utensils"></i>
+                        <span>Your Recipes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="browse.html" class="nav-link">
+                        <i class="fas fa-search"></i>
+                        <span>Browse Recipes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="popular.html" class="nav-link">
+                        <i class="fas fa-fire"></i>
+                        <span>Popular</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="categories.html" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        <span>Categories</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="favorites.html" class="nav-link">
+                        <i class="fas fa-heart"></i>
+                        <span>Favorites</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="settings.html" class="nav-link active">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="about.html" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button id="logoutBtn" type="button" class="btn btn-primary">
+                <i class="fas fa-sign-out-alt"></i> Log Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <header class="page-header">
+                <h1 class="page-title">Account Settings</h1>
+            </header>
+            
+            <!-- Password Section -->
+            <section class="settings-card">
+                <div class="settings-card-header">
+                    <h2 class="settings-card-title">Security Settings</h2>
+                </div>
+                <div class="settings-card-body">
+                    <!-- Auth Method Notice -->
+                    <div id="authMethodNote" class="auth-method-note">
+                        <i class="fas fa-info-circle"></i>
+                        <span id="authMessage">Loading authentication information...</span>
+                    </div>
+
+                    <!-- Password Change Form (only for email auth) -->
+                    <div id="passwordChangeSection" style="display: none;">
+                        <h3>Change Password</h3>
+                        <form id="passwordChangeForm">
+                            <div class="form-group">
+                                <label for="currentPassword">Current Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="currentPassword" class="form-control" required>
+                                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="newPassword">New Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="newPassword" class="form-control" required
+                                        pattern="^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$" 
+                                        title="Password must be at least 8 characters long and include at least one letter and one number">
+                                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <small class="mono" style="color: #777; margin-top: 0.5rem; display: block;">
+                                    Password must be at least 8 characters long and include both letters and numbers
+                                </small>
+                            </div>
+                            <div class="form-group">
+                                <label for="confirmPassword">Confirm New Password</label>
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="confirmPassword" class="form-control" required>
+                                    <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="passwordChangeError" class="auth-error" style="display: none;"></div>
+                            <div id="passwordChangeSuccess" class="auth-success" style="display: none;"></div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-key"></i> Update Password
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Danger Zone Section -->
+            <section class="settings-card">
+                <div class="settings-card-header">
+                    <h2 class="settings-card-title">Danger Zone</h2>
+                </div>
+                <div class="settings-card-body">
+                    <div class="danger-zone">
+                        <h3 class="danger-zone-header">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            Delete Account
+                        </h3>
+                        <p class="danger-zone-description">
+                            This action is permanent and cannot be undone. All your recipes, personal data, and account information will be removed from our system.
+                        </p>
+                        <button id="deleteAccountBtn" class="btn btn-danger">
+                            <i class="fas fa-trash-alt"></i> Delete My Account
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <!-- Delete Account Confirmation Modal -->
+    <div id="deleteAccountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Delete Account</h3>
+                <button type="button" class="modal-close" data-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+                <div id="deleteAccountEmailSection">
+                    <div class="form-group">
+                        <label for="deletePassword">Please enter your password to confirm</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="deletePassword" class="form-control" required>
+                            <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="deleteAccountGoogleSection" style="display: none;">
+                    <p>Since you signed in with Google, you'll need to re-authenticate with Google to confirm your identity.</p>
+                    <button id="googleReauthBtn" class="btn btn-primary" style="background: #4285F4; margin-top: 1rem;">
+                        <i class="fab fa-google"></i> Authenticate with Google
+                    </button>
+                </div>
+                <div id="deleteAccountError" class="auth-error" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" style="background: var(--gray); color: var(--dark);" data-dismiss="modal">
+                    Cancel
+                </button>
+                <button id="confirmDeleteBtn" type="button" class="btn btn-danger">
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
+            authDomain: "culinera-recipes.firebaseapp.com",
+            projectId: "culinera-recipes",
+            storageBucket: "culinera-recipes.appspot.com",
+            messagingSenderId: "64221926914",
+            appId: "1:64221926914:web:f621b8581a4f0791694ae3",
+            measurementId: "G-LJTEX9XC99"
+        };
+
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM Elements
+        const logoutBtn = document.getElementById('logoutBtn');
+        const profileUsername = document.getElementById('profileUsername');
+        const profileEmail = document.getElementById('profileEmail');
+        const userAvatar = document.getElementById('userAvatar');
+        const authMethodNote = document.getElementById('authMethodNote');
+        const authMessage = document.getElementById('authMessage');
+        const passwordChangeSection = document.getElementById('passwordChangeSection');
+        const passwordChangeForm = document.getElementById('passwordChangeForm');
+        const passwordChangeError = document.getElementById('passwordChangeError');
+        const passwordChangeSuccess = document.getElementById('passwordChangeSuccess');
+        const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+        const deleteAccountModal = document.getElementById('deleteAccountModal');
+        const deleteAccountEmailSection = document.getElementById('deleteAccountEmailSection');
+        const deleteAccountGoogleSection = document.getElementById('deleteAccountGoogleSection');
+        const googleReauthBtn = document.getElementById('googleReauthBtn');
+        const deletePassword = document.getElementById('deletePassword');
+        const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+        const deleteAccountError = document.getElementById('deleteAccountError');
+
+        // Current user variable
+        let currentUser = null;
+        let isGoogleUser = false;
+
+        // Check authentication state
+        auth.onAuthStateChanged(async user => {
+            if (user) {
+                // User is logged in
+                currentUser = user;
+                try {
+                    // Get user data from Firestore
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    let username = "";
+                    
+                    if (userDoc.exists) {
+                        const data = userDoc.data();
+                        username = data.username || (user.displayName || user.email.split('@')[0]);
+                    } else {
+                        username = user.displayName || user.email.split('@')[0];
+                    }
+                    
+                    // Update profile display
+                    profileUsername.textContent = username;
+                    profileEmail.textContent = user.email;
+                    
+                    // Set avatar
+                    if (!user.photoURL) {
+                        userAvatar.innerHTML = `<span>${username.charAt(0).toUpperCase()}</span>`;
+                    } else {
+                        userAvatar.innerHTML = `<img src="${user.photoURL}" alt="User avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                    }
+
+                    // Check provider (email or Google)
+                    const providerData = user.providerData;
+                    isGoogleUser = providerData.some(provider => provider.providerId === 'google.com');
+                    
+                    if (isGoogleUser) {
+                        // Google authentication
+                        authMessage.innerHTML = '<strong>Google Account:</strong> Password management is handled through your Google account settings.';
+                        authMethodNote.style.background = '#e8f0fe';
+                        authMethodNote.style.borderLeft = '4px solid #4285F4';
+                        passwordChangeSection.style.display = 'none';
+                    } else {
+                        // Email authentication
+                        authMessage.innerHTML = '<strong>Email Account:</strong> You can change your password below.';
+                        authMethodNote.style.background = '#e9f5e9';
+                        authMethodNote.style.borderLeft = '4px solid #4CAF50';
+                        passwordChangeSection.style.display = 'block';
+                    }
+                    
+                } catch (err) {
+                    console.error('Error fetching user data:', err);
+                }
+            } else {
+                // Not logged in, redirect to index
+                location.href = 'index.html';
+            }
+        });
+
+        // Logout handler
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await auth.signOut();
+                location.href = 'index.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+            }
+        });
+
+        // Toggle password visibility
+        document.querySelectorAll('.password-toggle').forEach(button => {
+            button.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                const icon = this.querySelector('i');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                }
+            });
+        });
+
+        // Password change handler
+        passwordChangeForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Hide previous messages
+            passwordChangeError.style.display = 'none';
+            passwordChangeSuccess.style.display = 'none';
+            
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Validate
+            if (newPassword !== confirmPassword) {
+                passwordChangeError.textContent = 'New passwords do not match';
+                passwordChangeError.style.display = 'block';
+                return;
+            }
+            
+            // Password requirements (at least 8 chars, 1 letter, 1 number)
+            const passwordPattern = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+            if (!passwordPattern.test(newPassword)) {
+                passwordChangeError.textContent = 'Password must be at least 8 characters long and include both letters and numbers';
+                passwordChangeError.style.display = 'block';
+                return;
+            }
+            
+            try {
+                // Reauthenticate user first
+                const credential = firebase.auth.EmailAuthProvider.credential(
+                    currentUser.email,
+                    currentPassword
+                );
+                
+                await currentUser.reauthenticateWithCredential(credential);
+                
+                // Update password
+                await currentUser.updatePassword(newPassword);
+                
+                // Success
+                passwordChangeSuccess.textContent = 'Password updated successfully';
+                passwordChangeSuccess.style.display = 'block';
+                passwordChangeForm.reset();
+                
+            } catch (error) {
+                console.error('Error changing password:', error);
+                let errorMessage = 'Failed to update password';
+                
+                // Handle specific errors
+                if (error.code === 'auth/wrong-password') {
+                    errorMessage = 'Current password is incorrect';
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = 'New password is too weak';
+                }
+                
+                passwordChangeError.textContent = errorMessage;
+                passwordChangeError.style.display = 'block';
+            }
+         });
+  </script>
+</body>
+</html>
