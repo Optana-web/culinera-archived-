@@ -4,14 +4,15 @@ import { getAnalytics } from "firebase/analytics";
 
 // Firebase configuration loaded from environment variables
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyCfA_-PJU1pb3qDMWuHk-sl0H85dpOJS40",
+  authDomain: "vernecipe.firebaseapp.com",
+  projectId: "vernecipe",
+  storageBucket: "vernecipe.firebasestorage.app",
+  messagingSenderId: "317986656278",
+  appId: "1:317986656278:web:034899fc23050432cb2537",
+  measurementId: "G-XBSPY8BW68"
 };
+
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
