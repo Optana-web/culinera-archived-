@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Culinera - Log In</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Normalize & Fonts -->
+  <link
+    href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
+    rel="stylesheet"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Firebase compat SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+
   <style>
     :root {
       --primary-color: #FF8C42;
@@ -19,10 +33,12 @@
       --info-border: #bee5eb;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Playfair Display', serif; color: var(--dark); line-height: 1.6; background-color: var(--gray-light); }
+    body { font-family: 'Playfair Display', serif; color: var(--dark); line-height: 1.6; background: var(--gray-light); }
     .mono { font-family: 'Roboto Mono', monospace; }
     .container { width: 90%; max-width: 1200px; margin: 0 auto; }
-    header { padding: 1.5rem 0; border-bottom: 1px solid var(--gray); }
+
+    /* Header / Nav */
+    header { padding: 1.5rem 0; background-color: var(--light); border-bottom: 1px solid var(--gray); }
     nav { display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 1.8rem; font-weight: 700; }
     .logo span { color: var(--primary-color); }
@@ -31,35 +47,46 @@
     .nav-links a { text-decoration: none; color: var(--dark); font-size: 1rem; transition: color 0.3s; }
     .nav-links a:hover { color: var(--primary-color); }
     .auth-buttons { display: flex; gap: 1rem; }
-    .btn { font-family: 'Roboto Mono', monospace; padding: 0.5rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; text-decoration: none; display: inline-block; }
+    .btn { font-family: 'Roboto Mono', monospace; padding: 0.5rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; text-decoration: none; display: inline-block; text-align: center; }
     .btn-outline { background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
     .btn-outline:hover { background: var(--primary-color); color: var(--light); }
     .btn-primary { background: var(--primary-color); color: var(--light); }
     .btn-primary:hover { background: var(--accent-light); }
-    .full-width { width: 100%; }
+
+    /* Login container */
     .login-container { max-width: 500px; margin: 4rem auto; padding: 2rem; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background-color: var(--light); }
     .page-title { text-align: center; margin-bottom: 2rem; font-size: 2rem; }
     .page-title span { color: var(--primary-color); }
-    .form-group { margin-bottom: 1.5rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
-    .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--gray); border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: 1rem; }
-    .form-group input:focus { outline: none; border-color: var(--primary-color); }
-    .form-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 2rem; }
-    .forgot-password { color: var(--primary-color); text-decoration: none; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
-    .forgot-password:hover { text-decoration: underline; }
-    .alt-action { text-align: center; margin-top: 2rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
-    .alt-action a { color: var(--primary-color); text-decoration: none; }
-    .alt-action a:hover { text-decoration: underline; }
+
     .alert { padding: 0.75rem; margin-bottom: 1.5rem; border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; display: none; }
     .alert-info { background-color: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-border); }
     .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    .form-group { margin-bottom: 1.5rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
+    .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--gray); border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: 1rem; }
+    .form-group input:focus { outline: none; border-color: var(--primary-color); }
+
+    .form-footer { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
+    .form-footer .controls { display: flex; justify-content: space-between; align-items: center; }
+    .forgot-password { color: var(--primary-color); text-decoration: none; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
+    .forgot-password:hover { text-decoration: underline; }
+
+    .google-btn { width: 100%; padding: 0.75rem; border: 1px solid var(--primary-color); border-radius: 8px; background: transparent; font-family: 'Roboto Mono', monospace; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .google-btn:hover { background: var(--primary-color); color: var(--light); }
+
+    .alt-action { text-align: center; margin-top: 2rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
+    .alt-action a { color: var(--primary-color); text-decoration: none; }
+    .alt-action a:hover { text-decoration: underline; }
+
+    /* Footer */
     footer { background-color: var(--gray-light); padding: 2rem 0; text-align: center; margin-top: 4rem; }
-    .footer-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
-    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; }
     .footer-links a { text-decoration: none; color: var(--dark); font-size: 0.9rem; transition: color 0.3s; }
     .footer-links a:hover { color: var(--primary-color); }
     .copyright { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: #888; }
+
     @media (max-width: 768px) {
       .nav-links { display: none; }
       .login-container { margin: 2rem auto; padding: 1.5rem; }
@@ -88,108 +115,104 @@
 
   <main>
     <div class="container">
-      <h1 class="page-title">Log in to <span>Culinera</span></h1>
-      <div id="authMessage" class="alert" aria-live="assertive"></div>
       <div class="login-container">
+        <h1 class="page-title">Log in to <span>Culinera</span></h1>
+        <div id="notification" class="alert" aria-live="assertive"></div>
+
         <form id="loginForm">
           <div class="form-group">
-            <label for="loginEmail">Email Address</label>
-            <input type="email" id="loginEmail" name="email" required autocomplete="username">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required autocomplete="username" />
           </div>
           <div class="form-group">
-            <label for="loginPassword">Password</label>
-            <input type="password" id="loginPassword" name="password" required autocomplete="current-password">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password" />
           </div>
+
           <div class="form-footer">
-            <a href="forgot-password.html" class="forgot-password">Forgot Password?</a>
-            <button type="submit" class="btn btn-primary">Log In</button>
+            <div class="controls">
+              <a href="forgot-password.html" class="forgot-password">Forgot Password?</a>
+              <button type="submit" class="btn btn-primary">Log In</button>
+            </div>
+            <button type="button" id="googleBtn" class="google-btn">
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
+              Sign in with Google
+            </button>
           </div>
-          <button type="button" id="googleSignIn" class="btn btn-outline full-width" style="margin-top:1rem;">Sign in with Google</button>
         </form>
-        <div class="alt-action">Don't have an account? <a href="signup.html">Sign up</a></div>
+
+        <div class="alt-action">
+          Don't have an account? <a href="signup.html">Sign up</a>
+        </div>
       </div>
     </div>
   </main>
 
   <footer>
-    <div class="container">
-      <div class="footer-content">
-        <div class="logo">Culin<span>era</span></div>
-        <div class="footer-links">
-          <a href="about.html">About Us</a>
-          <a href="contact.html">Contact</a>
-          <a href="terms.html">Terms of Service</a>
-          <a href="privacy.html">Privacy Policy</a>
-        </div>
-      </div>
-      <p class="copyright">&copy; 2025 Culinera. All rights reserved.</p>
+    <div class="footer-links">
+      <a href="about.html">About Us</a>
+      <a href="contact.html">Contact</a>
+      <a href="terms.html">Terms of Service</a>
+      <a href="privacy.html">Privacy Policy</a>
     </div>
+    <p class="copyright">&copy; 2025 Culinera. All rights reserved.</p>
   </footer>
 
-  <!-- Firebase Compat SDKs & Logic -->
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const loginForm = document.getElementById('loginForm');
-      const authMessage = document.getElementById('authMessage');
-      const googleBtn = document.getElementById('googleSignIn');
+    // Initialize Firebase app if not already
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
 
-      loginForm.addEventListener('submit', async e => {
-        e.preventDefault();
-        showMessage('Logging in…', 'info');
-        const email = loginEmail.value.trim();
-        const password = loginPassword.value;
-        try {
-          const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-          const user = userCredential.user;
-          if (user.emailVerified) {
-            showMessage('Login successful! Redirecting…', 'success');
-            setTimeout(() => window.location.href = 'index.html', 1500);
-          } else {
-            showMessage('Please verify your email before logging in.', 'error');
-            await firebase.auth().signOut();
-          }
-        } catch (error) {
-          handleAuthError(error);
-        }
-      });
+    const auth = firebase.auth();
+    const loginForm = document.getElementById('loginForm');
+    const notification = document.getElementById('notification');
+    const googleBtn = document.getElementById('googleBtn');
 
-      googleBtn.addEventListener('click', async () => {
-        try {
-          const provider = new firebase.auth.GoogleAuthProvider();
-          provider.addScope('email');
-          await firebase.auth().signInWithPopup(provider);
-          showMessage('Google login successful! Redirecting…', 'success');
+    function showAlert(message, type = 'success') {
+      notification.textContent = message;
+      notification.className = `alert alert-${type}`;
+      notification.style.display = 'block';
+    }
+
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      showAlert('Logging in…', 'info');
+
+      const email = loginForm.email.value.trim();
+      const password = loginForm.password.value;
+
+      try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        if (user.emailVerified) {
+          showAlert('Login successful! Redirecting…', 'success');
           setTimeout(() => window.location.href = 'index.html', 1500);
-        } catch (error) {
-          handleAuthError(error);
+        } else {
+          showAlert('Please verify your email before logging in.', 'danger');
+          await auth.signOut();
         }
-      });
-
-      function showMessage(message, type) {
-        authMessage.textContent = message;
-        authMessage.className = `alert alert-${type}`;
-        authMessage.style.display = 'block';
+      } catch (err) {
+        showAlert(err.message, 'danger');
       }
+    });
 
-      function handleAuthError(error) {
-        console.error('Login error:', error);
-        let msg;
-        switch (error.code) {
-          case 'auth/user-not-found': msg = 'User not found. Please check your email or sign up.'; break;
-          case 'auth/wrong-password': msg = 'Incorrect password. Please try again.'; break;
-          case 'auth/network-request-failed': msg = 'Network error. Please check your connection.'; break;
-          case 'auth/popup-blocked': msg = 'Popup blocked. Please allow popups for this site.'; break;
-          default: msg = error.message;
-        }
-        showMessage(msg, 'error');
+    googleBtn.addEventListener('click', async () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      try {
+        showAlert('Opening Google Sign-In…', 'info');
+        const result = await auth.signInWithPopup(provider);
+        showAlert('Google login successful! Redirecting…', 'success');
+        setTimeout(() => window.location.href = 'index.html', 1500);
+      } catch (error) {
+        showAlert(error.message, 'danger');
       }
+    });
 
-      firebase.auth().onAuthStateChanged(user => {
-        if (user && user.emailVerified) window.location.href = 'index.html';
-      });
+    auth.onAuthStateChanged((user) => {
+      if (user && user.emailVerified) {
+        window.location.href = 'index.html';
+      }
     });
   </script>
 </body>
