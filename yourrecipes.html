@@ -13,7 +13,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
   <style>
-    /* reuse same styles */
+    /* reuse same styles as before */
     :root {
       --primary-color: #FF8C42; --accent-light: #FFBC80;
       --dark: #333333; --light: #FFFFFF;
@@ -54,38 +54,33 @@
     .content-card { background:var(--light); border-radius:12px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,.05); }
     .content-card-header { background:var(--gray-light); padding:1rem 1.5rem; border-bottom:1px solid var(--gray); display:flex;justify-content:space-between;align-items:center }
     .content-card-title { font-size:1.2rem; font-weight:700 }
-    .content-card-body { padding:1.5rem }
-    .recipe-item { display:flex;align-items:center;padding:.8rem 0;border-bottom:1px solid var(--gray-light) }
-    .recipe-item:last-child { border-bottom:none }
-    .recipe-thumb { width:60px;height:60px;border-radius:8px;background:var(--gray-light);margin-right:1rem;display:flex;align-items:center;justify-content:center;color:var(--primary-color);overflow:hidden }
-    .recipe-thumb img { width:100%;height:100%;object-fit:cover }
+    .content-card-body { padding:1.5rem; display:flex; align-items:center; }
+    .recipe-thumb { width:60px; height:60px; border-radius:8px; background:var(--gray-light); margin-right:1rem; display:flex; align-items:center; justify-content:center; color:var(--primary-color); overflow:hidden }
+    .recipe-thumb img { width:100%; height:100%; object-fit:cover }
     .recipe-info { flex:1 }
     .recipe-title { font-size:1.1rem; margin-bottom:.3rem }
-    .recipe-meta { font-family:'Roboto Mono',monospace; font-size:.8rem; color:#777; display:flex;gap:1rem }
-    .recipe-meta i { margin-right:.3rem }
+    .recipe-meta { font-family:'Roboto Mono',monospace; font-size:.8rem; color:#777 }
     .recipe-actions { display:flex; gap:.5rem }
-    .btn-icon { width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:var(--gray-light);color:var(--dark);border:none;cursor:pointer;transition:all .3s }
-    .btn-icon:hover { background:var(--primary-color);color:var(--light) }
+    .btn-icon { width:36px; height:36px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:var(--gray-light); color:var(--dark); border:none; cursor:pointer; transition:all .3s }
+    .btn-icon:hover { background:var(--primary-color); color:var(--light) }
 
     @media (max-width:992px) {
-      .sidebar { width:80px;overflow:visible }
+      .sidebar { width:80px; overflow:visible }
       .logo span, .user-info, .nav-link span, .sidebar-footer { display:none }
-      .logo { font-size:1.4rem }
-      .user-avatar { width:50px;height:50px;font-size:1.4rem }
-      .nav-link { justify-content:center;padding:1rem }
-      .nav-link i { margin-right:0 }
       .main-content { margin-left:80px }
     }
     @media (max-width:768px) {
       .content-grid { grid-template-columns:1fr }
-      .page-header { flex-direction:column;align-items:flex-start;gap:1rem }
+      .page-header { flex-direction:column; align-items:flex-start; gap:1rem }
     }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div class="sidebar-header"><div class="logo"><a href="index.html">Culin<span>era</span></a></div></div>
+    <div class="sidebar-header">
+      <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
+    </div>
     <div class="user-profile">
       <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
       <div class="user-info">
@@ -100,7 +95,9 @@
         <li class="nav-item"><a href="create-recipe.html" class="nav-link"><i class="fas fa-plus"></i><span>Create Recipe</span></a></li>
       </ul>
     </nav>
-    <div class="sidebar-footer"><button id="logoutBtn" type="button" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button></div>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+    </div>
   </aside>
 
   <main class="main-content">
@@ -132,24 +129,33 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(), db = firebase.firestore();
 
-    // Populate user info & load recipes
+    // Auth & load
     auth.onAuthStateChanged(async user => {
-      if (!user) return location.href='index.html';
-      // sidebar user info
-      const doc = await db.collection('users').doc(user.uid).get();
-      const name = doc.exists && doc.data().username ? doc.data().username : (user.displayName||user.email.split('@')[0]);
+      if (!user) return location.href = 'index.html';
+
+      // populate sidebar profile
+      const udoc = await db.collection('users').doc(user.uid).get();
+      const name = udoc.exists && udoc.data().username
+        ? udoc.data().username
+        : (user.displayName || user.email.split('@')[0]);
       document.getElementById('profileUsername').textContent = name;
       document.getElementById('profileEmail').textContent = user.email;
       const avatar = document.getElementById('userAvatar');
-      if (user.photoURL) avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-      else avatar.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
+      if (user.photoURL) {
+        avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar"
+          style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+      } else {
+        avatar.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
+      }
 
-      // fetch recipes
+      // fetch and render recipes
       const grid = document.getElementById('recipesGrid');
-      const snapshot = await db.collection('recipes')
-        .where('authorId','==',user.uid)
-        .orderBy('createdAt','desc')
+      const snapshot = await db
+        .collection('recipes')
+        .where('authorId', '==', user.uid)
+        .orderBy('createdAt', 'desc')
         .get();
+
       if (snapshot.empty) {
         grid.innerHTML = '<p>You haven’t created any recipes yet.</p>';
       } else {
@@ -160,21 +166,23 @@
           card.innerHTML = `
             <div class="content-card-header">
               <h3 class="content-card-title">${r.title}</h3>
-              <span class="mono">${r.createdAt && r.createdAt.toDate().toLocaleDateString()}</span>
+              <span class="mono">${r.createdAt?.toDate().toLocaleDateString()||''}</span>
             </div>
-            <div class="content-card-body recipe-item">
+            <div class="content-card-body">
               <div class="recipe-thumb">
-                ${r.photos && r.photos[0] ? `<img src="${r.photos[0]}" alt="">` : '<i class="fas fa-utensils"></i>'}
+                ${r.photos?.[0]
+                  ? `<img src="${r.photos[0]}" alt="${r.title}">`
+                  : '<i class="fas fa-utensils"></i>'}
               </div>
               <div class="recipe-info">
                 <h4 class="recipe-title">${r.title}</h4>
                 <div class="recipe-meta">
-                  <span><i class="fas fa-heart"></i> ${r.favorites||0}</span>
+                  <span><i class="fas fa-calendar"></i> ${r.createdAt?.toDate().toLocaleDateString()||''}</span>
                 </div>
               </div>
               <div class="recipe-actions">
-                <button class="btn-icon" onclick="edit('${doc.id}')" aria-label="Edit"><i class="fas fa-edit"></i></button>
-                <button class="btn-icon" onclick="share('${doc.id}')" aria-label="Share"><i class="fas fa-share-alt"></i></button>
+                <button class="btn-icon" onclick="editRecipe('${doc.id}')" aria-label="Edit"><i class="fas fa-edit"></i></button>
+                <button class="btn-icon" onclick="viewRecipe('${doc.id}')" aria-label="View"><i class="fas fa-eye"></i></button>
               </div>
             </div>`;
           grid.appendChild(card);
@@ -184,14 +192,14 @@
 
     document.getElementById('logoutBtn').onclick = async () => {
       await auth.signOut();
-      location.href='index.html';
+      location.href = 'index.html';
     };
 
-    function edit(id) {
+    function editRecipe(id) {
       location.href = `edit-recipe.html?id=${id}`;
     }
-    function share(id) {
-      prompt('Shareable link:', `${location.origin}/view-recipe.html?id=${id}`);
+    function viewRecipe(id) {
+      location.href = `view-recipe.html?id=${id}`;
     }
   </script>
 </body>
