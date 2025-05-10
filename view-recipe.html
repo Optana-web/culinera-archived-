@@ -31,7 +31,7 @@
     }
     .mono { font-family:'Roboto Mono',monospace }
 
-    /* Sidebar */
+    /* Sidebar (unchanged) */
     .sidebar {
       width: var(--sidebar-width);
       background: var(--dark);
@@ -127,16 +127,18 @@
     #lightboxOverlay img {
       max-width:70%; max-height:70%; border-radius:4px;
       box-shadow:0 0 20px rgba(0,0,0,0.5);
-      opacity:1; transition:opacity .4s ease;
+      /* prepare for slide animation */
+      transform: translateX(0);
+      transition: transform .4s ease, opacity .4s ease;
     }
     .lightbox-btn {
       position:absolute; top:50%; transform:translateY(-50%);
-      width:48px; height:48px; background:rgba(255,255,255,0.2);
+      width:48px; height:48px; background:var(--primary-color);
       border:none; border-radius:50%; cursor:pointer;
       display:flex; align-items:center; justify-content:center;
       transition:background .2s;
     }
-    .lightbox-btn:hover { background:rgba(255,255,255,0.4) }
+    .lightbox-btn:hover { background:#e67e22 }
     #lightboxPrev { left:2% }
     #lightboxNext { right:2% }
     /* triangle arrows */
@@ -240,7 +242,7 @@
       return new URLSearchParams(window.location.search).get(name);
     }
 
-    let gallerySrcs = [], currentIndex = 0;
+    let gallerySrcs = [], currentIndex = 0, animating = false;
     const overlay = document.getElementById('lightboxOverlay');
     const lbImg = document.getElementById('lightboxImage');
     const prevBtn = document.getElementById('lightboxPrev');
@@ -305,7 +307,9 @@
         const img = document.createElement('img');
         img.src = src;
         img.alt = `Photo ${i+1}`;
-        img.addEventListener('click', () => openLightbox(i));
+        img.addEventListener('click', () => {
+          if (!animating) openLightbox(i);
+        });
         gallery.appendChild(img);
       });
     });
@@ -315,42 +319,65 @@
       location.href = 'index.html';
     };
 
-    // Lightbox functions with fade
+    // Lightbox with slide and guard
     function openLightbox(index) {
       currentIndex = index;
-      lbImg.style.opacity = 1;
+      lbImg.style.transition = 'none';
+      lbImg.style.transform = 'translateX(0)';
       lbImg.src = gallerySrcs[currentIndex];
       overlay.classList.add('visible');
     }
-    function closeLightbox() {
-      overlay.classList.remove('visible');
-    }
-    function changeImage(newIndex) {
-      // fade out
-      lbImg.style.opacity = 0;
-      lbImg.addEventListener('transitionend', function handler() {
-        lbImg.removeEventListener('transitionend', handler);
+
+    function changeImage(newIndex, direction) {
+      if (animating) return;
+      animating = true;
+      const offsetOut = direction === 'next' ? '-100%' : '100%';
+      const offsetIn = direction === 'next' ? '100%' : '-100%';
+
+      lbImg.style.transition = 'transform .4s ease, opacity .4s ease';
+      lbImg.style.transform = `translateX(${offsetOut})`;
+      lbImg.style.opacity = '0';
+
+      lbImg.addEventListener('transitionend', function handleOut() {
+        lbImg.removeEventListener('transitionend', handleOut);
         currentIndex = newIndex;
         lbImg.src = gallerySrcs[currentIndex];
-        // fade in
+        lbImg.style.transition = 'none';
+        lbImg.style.transform = `translateX(${offsetIn})`;
+        lbImg.style.opacity = '0';
+
         requestAnimationFrame(() => {
-          lbImg.style.opacity = 1;
+          lbImg.style.transition = 'transform .4s ease, opacity .4s ease';
+          lbImg.style.transform = 'translateX(0)';
+          lbImg.style.opacity = '1';
+        });
+
+        lbImg.addEventListener('transitionend', function handleIn() {
+          lbImg.removeEventListener('transitionend', handleIn);
+          animating = false;
         });
       });
     }
+
     function showPrev(e) {
       e.stopPropagation();
-      changeImage((currentIndex - 1 + gallerySrcs.length) % gallerySrcs.length);
+      changeImage((currentIndex - 1 + gallerySrcs.length) % gallerySrcs.length, 'prev');
     }
     function showNext(e) {
       e.stopPropagation();
-      changeImage((currentIndex + 1) % gallerySrcs.length);
+      changeImage((currentIndex + 1) % gallerySrcs.length, 'next');
+    }
+
+    function closeLightbox() {
+      if (animating) return;
+      overlay.classList.remove('visible');
     }
 
     overlay.addEventListener('click', closeLightbox);
     lbImg.addEventListener('click', e => e.stopPropagation());
     prevBtn.addEventListener('click', showPrev);
     nextBtn.addEventListener('click', showNext);
+
     document.addEventListener('keydown', e => {
       if (e.repeat) return;
       if (e.key === 'Escape') closeLightbox();
