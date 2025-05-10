@@ -98,6 +98,48 @@
             margin-top: 0.25em;
             font-family: 'Roboto Mono', monospace;
         }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color);
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+            display: none;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        #verificationModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -131,7 +173,10 @@
                         <div class="form-group">
                             <label for="username">Username</label>
                             <input type="text" id="username" name="username" required minlength="3" maxlength="15" pattern="^[a-zA-Z0-9_]+$" autocomplete="off" />
-                            <div id="username-status"></div>
+                            <div id="username-check">
+                                <span class="spinner" id="usernameSpinner"></span>
+                                <span id="username-status"></span>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="email">Email Address</label>
@@ -139,19 +184,24 @@
                         </div>
                         <div class="form-group">
                             <label for="password">Password</label>
-                            <input type="password" id="password" name="password" required autocomplete="new-password" />
+                            <input type="password" id="password" name="password" required minlength="6" autocomplete="new-password" />
                         </div>
                         <div class="form-group">
                             <label for="confirmPassword">Confirm Password</label>
                             <input type="password" id="confirmPassword" name="confirmPassword" required autocomplete="new-password" />
                         </div>
                         <div class="form-footer">
-                            <button type="submit" class="btn btn-primary">Sign Up</button>
+                            <button type="submit" class="btn btn-primary" id="signupButton">Sign Up</button>
                         </div>
                     </form>
                     <div style="margin: 1.5em 0; text-align: center;">
                         <button type="button" id="googleSignupBtn" class="google-btn">
-                            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" width="20" height="20" />
+                            <svg width="20" height="20" viewBox="0 0 24 24">
+                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                            </svg>
                             Sign up with Google
                         </button>
                     </div>
@@ -162,6 +212,19 @@
             </div>
         </div>
     </main>
+
+    <!-- Email Verification Modal -->
+    <div id="verificationModal" class="modal">
+        <div class="modal-content">
+            <h2>Verify Your Email</h2>
+            <p style="margin-top: 1rem;">We've sent a verification email to <span id="verificationEmail"></span></p>
+            <p style="margin-top: 0.5rem;">Please check your inbox and click the verification link to activate your account.</p>
+            <div class="modal-buttons">
+                <button id="resendVerificationBtn" class="btn btn-outline">Resend Email</button>
+                <button id="closeModalBtn" class="btn btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
 
     <footer>
         <div class="footer-links">
@@ -185,21 +248,43 @@
             measurementId: "G-LJTEX9XC99"
         };
 
+        // Initialize Firebase
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
         const auth = firebase.auth();
         const db = firebase.firestore();
+        
+        // Wait for Firebase to initialize fully
+        function waitForFirebase() {
+            return new Promise(resolve => {
+                const checkFirebase = setInterval(() => {
+                    if (firebase.apps.length && auth && db) {
+                        clearInterval(checkFirebase);
+                        resolve();
+                    }
+                }, 100);
+            });
+        }
 
+        // DOM Elements
         const signupForm = document.getElementById('signupForm');
         const notification = document.getElementById('notification');
         const signupFormSection = document.getElementById('signupFormSection');
         const authButtons = document.getElementById('authButtons');
         const usernameInput = document.getElementById('username');
         const usernameStatus = document.getElementById('username-status');
+        const usernameSpinner = document.getElementById('usernameSpinner');
         const googleSignupBtn = document.getElementById('googleSignupBtn');
+        const signupButton = document.getElementById('signupButton');
+        
+        // Modal elements
+        const verificationModal = document.getElementById('verificationModal');
+        const verificationEmail = document.getElementById('verificationEmail');
+        const resendVerificationBtn = document.getElementById('resendVerificationBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
 
-        // Utility: debounce
+        // Utility: debounce function to limit API calls
         function debounce(fn, delay) {
             let timeout;
             return (...args) => {
@@ -208,159 +293,348 @@
             };
         }
 
+        // Show notification messages
         function showAlert(msg, type='success') {
             notification.textContent = msg;
             notification.className = `alert alert-${type}`;
             notification.style.display = 'block';
+            
+            // Scroll to notification if needed
+            notification.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        // Hide notification messages
+        function hideAlert() {
+            notification.style.display = 'none';
+        }
+        
+        // Set loading state on buttons
+        function setLoading(isLoading) {
+            if (isLoading) {
+                signupButton.disabled = true;
+                signupButton.innerHTML = '<span class="spinner"></span> Signing up...';
+                googleSignupBtn.disabled = true;
+            } else {
+                signupButton.disabled = false;
+                signupButton.innerHTML = 'Sign Up';
+                googleSignupBtn.disabled = false;
+            }
         }
 
         // --- Username availability check (live, for feedback only) ---
         usernameInput.addEventListener('input', debounce(async function(e) {
             const username = e.target.value.trim().toLowerCase();
             usernameStatus.textContent = '';
-
-            if (!username.match(/^[a-zA-Z0-9_]{3,15}$/)) {
-                usernameStatus.textContent = "Usernames must be 3-15 letters, numbers, or underscores.";
-                usernameStatus.style.color = "#721c24";
+            
+            // Don't check empty or too short usernames
+            if (!username || username.length < 3) {
+                usernameStatus.textContent = "Username must be at least 3 characters";
+                usernameStatus.style.color = "var(--danger-text)";
                 return;
             }
 
-            // Check if username exists
-            const doc = await db.collection('usernames').doc(username).get();
-            if (doc.exists) {
-                usernameStatus.textContent = "Username is taken.";
-                usernameStatus.style.color = "#721c24";
-            } else {
-                usernameStatus.textContent = "Username is available!";
-                usernameStatus.style.color = "#155724";
+            if (!username.match(/^[a-zA-Z0-9_]{3,15}$/)) {
+                usernameStatus.textContent = "Usernames must be 3-15 letters, numbers, or underscores.";
+                usernameStatus.style.color = "var(--danger-text)";
+                return;
             }
-        }, 350));
 
-        // --- Auth state ---
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                window.location.href = 'dashboard.html';
-            } else {
-                signupFormSection.style.display = 'block';
-                if (authButtons) authButtons.style.display = 'flex';
+            // Show spinner during check
+            usernameSpinner.style.display = 'inline-block';
+            
+            try {
+                // Check if username exists
+                const doc = await db.collection('usernames').doc(username).get();
+                
+                // Hide spinner after check
+                usernameSpinner.style.display = 'none';
+                
+                if (doc.exists) {
+                    usernameStatus.textContent = "Username is taken.";
+                    usernameStatus.style.color = "var(--danger-text)";
+                } else {
+                    usernameStatus.textContent = "Username is available!";
+                    usernameStatus.style.color = "var(--success-text)";
+                }
+            } catch (error) {
+                // Hide spinner on error
+                usernameSpinner.style.display = 'none';
+                console.error("Error checking username:", error);
+                usernameStatus.textContent = "Couldn't check availability.";
+                usernameStatus.style.color = "var(--info-text)";
+            }
+        }, 400));
+
+        // --- Auth state observer ---
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                await waitForFirebase();
+                
+                // Setup auth state observer
+                auth.onAuthStateChanged(user => {
+                    if (user) {
+                        // If signed in and on signup page, redirect to dashboard
+                        if (window.location.pathname.includes('signup.html')) {
+                            window.location.href = 'dashboard.html';
+                        }
+                    } else {
+                        // Show signup form when not signed in
+                        signupFormSection.style.display = 'block';
+                        if (authButtons) authButtons.style.display = 'flex';
+                    }
+                });
+                
+                // Initial state (before auth observer triggers)
+                signupFormSection.style.display = 'none';
+                if (authButtons) authButtons.style.display = 'none';
+            } catch (error) {
+                console.error("Firebase initialization error:", error);
+                showAlert("Error loading authentication. Please refresh the page.", "danger");
             }
         });
-        signupFormSection.style.display = 'none';
-        if (authButtons) authButtons.style.display = 'none';
 
         // --- Email/password signup ---
         signupForm.addEventListener('submit', async e => {
             e.preventDefault();
-            showAlert('Signing up…', 'info');
-
+            hideAlert();
+            setLoading(true);
+            
             const username = signupForm.username.value.trim().toLowerCase();
             const email = signupForm.email.value.trim();
             const password = signupForm.password.value;
             const confirmPassword = signupForm.confirmPassword.value;
 
+            // Basic validation
             if (!username.match(/^[a-zA-Z0-9_]{3,15}$/)) {
-                showAlert('Invalid username format.', 'danger');
+                showAlert('Username must be 3-15 characters with only letters, numbers, and underscores.', 'danger');
+                setLoading(false);
                 return;
             }
 
-            // FINAL username availability check (no race condition)
-            try {
-                const usernameDoc = await db.collection('usernames').doc(username).get();
-                if (usernameDoc.exists) {
-                    showAlert('Username is taken. Please choose another.', 'danger');
-                    return;
-                }
-            } catch (err) {
-                showAlert('Error checking username availability. Try again.', 'danger');
+            if (password.length < 6) {
+                showAlert('Password must be at least 6 characters long.', 'danger');
+                setLoading(false);
                 return;
             }
 
             if (password !== confirmPassword) {
                 showAlert('Passwords do not match.', 'danger');
+                setLoading(false);
                 return;
             }
 
             try {
-                // Create user
-                const { user } = await auth.createUserWithEmailAndPassword(email, password);
+                // FINAL username availability check (prevents race condition)
+                const usernameDoc = await db.collection('usernames').doc(username).get();
+                if (usernameDoc.exists) {
+                    showAlert('Username is taken. Please choose another.', 'danger');
+                    setLoading(false);
+                    return;
+                }
 
-                // Batch write: user profile and username mapping
-                const batch = db.batch();
-                const userDoc = db.collection('users').doc(user.uid);
-                const usernameRef = db.collection('usernames').doc(username);
+                // Create user with email and password
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
 
-                batch.set(userDoc, {
-                    username: username,
-                    email: email,
-                    provider: 'password'
-                });
-                batch.set(usernameRef, {
-                    uid: user.uid
-                });
+                // Using a transaction to ensure atomicity
+                try {
+                    // Batch write for atomicity
+                    const batch = db.batch();
+                    
+                    // User profile document
+                    const userDoc = db.collection('users').doc(user.uid);
+                    batch.set(userDoc, {
+                        username: username,
+                        email: email,
+                        provider: 'password',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        emailVerified: false
+                    });
+                    
+                    // Username document for uniqueness
+                    const usernameRef = db.collection('usernames').doc(username);
+                    batch.set(usernameRef, {
+                        uid: user.uid,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
 
-                await batch.commit();
+                    // Commit both documents atomically
+                    await batch.commit();
+                    
+                    // Update profile with displayName
+                    await user.updateProfile({ displayName: username });
+                    
+                    // Send verification email
+                    await user.sendEmailVerification();
 
-                await user.updateProfile({ displayName: username });
-
-                // --- SEND VERIFICATION EMAIL ---
-                await user.sendEmailVerification();
-
-                showAlert('Signup successful! Please check your email and verify your account before logging in. (Check your spam folder too!)', 'success');
-                await auth.signOut();
+                    // Show verification modal
+                    verificationEmail.textContent = email;
+                    verificationModal.style.display = 'flex';
+                    
+                    // Sign out after successful setup
+                    await auth.signOut();
+                    
+                    showAlert('Account created! Please check your email to verify your account.', 'success');
+                } catch (error) {
+                    // If error in Firestore operations, delete the Auth user
+                    console.error("Error in signup transaction:", error);
+                    await user.delete();
+                    throw new Error("Error creating user profile. Please try again.");
+                }
             } catch (err) {
-                showAlert(err.message, 'danger');
+                let errorMessage = err.message;
+                
+                // Handle common Firebase auth errors
+                if (err.code === 'auth/email-already-in-use') {
+                    errorMessage = 'This email is already registered. Please log in instead.';
+                } else if (err.code === 'auth/invalid-email') {
+                    errorMessage = 'Please enter a valid email address.';
+                } else if (err.code === 'auth/weak-password') {
+                    errorMessage = 'Password must be at least 6 characters.';
+                }
+                
+                showAlert(errorMessage, 'danger');
+            } finally {
+                setLoading(false);
             }
         });
 
         // --- Google signup ---
         googleSignupBtn.addEventListener('click', async () => {
-            showAlert('Opening Google Sign-Up…', 'info');
-            const provider = new firebase.auth.GoogleAuthProvider();
+            hideAlert();
+            setLoading(true);
+            
             try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                provider.addScope('email');
+                provider.addScope('profile');
+                provider.setCustomParameters({ prompt: 'select_account' });
+                
                 const result = await auth.signInWithPopup(provider);
                 const user = result.user;
                 const email = user.email;
-                let username = "";
+                const isNewUser = result.additionalUserInfo.isNewUser;
+                
+                // Only process if this is a new user
+                if (isNewUser) {
+                    let username = "";
+                    
+                    // Extract username from email (remove domain)
+                    if (email.includes('@')) {
+                        username = email.split('@')[0].toLowerCase();
+                        
+                        // Remove special characters
+                        username = username.replace(/[^a-zA-Z0-9_]/g, '');
+                        
+                        // Ensure username length is within bounds
+                        if (username.length > 15) {
+                            username = username.substring(0, 15);
+                        }
+                        if (username.length < 3) {
+                            username += '123'; // Add suffix to meet minimum length
+                        }
+                    } else {
+                        // Fallback if email parsing fails
+                        username = 'user_' + Math.floor(Math.random() * 100000);
+                    }
 
-                // Only allow Gmail addresses
-                if (!email.endsWith('@gmail.com')) {
-                    await auth.signOut();
-                    showAlert('Only Gmail accounts are allowed for Google sign up.', 'danger');
-                    return;
+                    // Check username uniqueness and modify if needed
+                    let usernameExists = true;
+                    let counter = 1;
+                    let baseUsername = username;
+                    
+                    while (usernameExists) {
+                        const usernameDoc = await db.collection('usernames').doc(username).get();
+                        if (!usernameDoc.exists) {
+                            usernameExists = false;
+                        } else {
+                            // Try a new username with counter
+                            username = baseUsername + counter;
+                            if (username.length > 15) {
+                                // Ensure we don't exceed maximum length
+                                username = baseUsername.substring(0, 15 - String(counter).length) + counter;
+                            }
+                            counter++;
+                        }
+                    }
+
+                    try {
+                        // Batch write for atomicity
+                        const batch = db.batch();
+                        
+                        // User profile document
+                        const userDoc = db.collection('users').doc(user.uid);
+                        batch.set(userDoc, {
+                            username: username,
+                            email: email,
+                            provider: 'google',
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                            emailVerified: user.emailVerified
+                        });
+                        
+                        // Username document for uniqueness
+                        const usernameRef = db.collection('usernames').doc(username);
+                        batch.set(usernameRef, {
+                            uid: user.uid,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+
+                        // Commit both documents atomically
+                        await batch.commit();
+                        
+                        // Update profile with displayName
+                        await user.updateProfile({ displayName: username });
+                        
+                        showAlert('Google sign up successful! Redirecting...', 'success');
+                        setTimeout(() => window.location.href = 'dashboard.html', 1500);
+                    } catch (error) {
+                        console.error("Error in Google signup transaction:", error);
+                        // Clean up - sign out if profile creation failed
+                        await auth.signOut();
+                        throw new Error("Error creating user profile. Please try again.");
+                    }
+                } else {
+                    // Existing user - simply redirect
+                    showAlert('Welcome back! Redirecting...', 'success');
+                    setTimeout(() => window.location.href = 'dashboard.html', 1500);
                 }
-                username = email.replace('@gmail.com', '').toLowerCase();
-
-                // Check username uniqueness (again, no race condition)
-                const usernameDoc = await db.collection('usernames').doc(username).get();
-                if (usernameDoc.exists) {
-                    await auth.signOut();
-                    showAlert('This Gmail username is already taken. Please sign in or use another account.', 'danger');
-                    return;
-                }
-
-                // Batch write: user profile and username mapping
-                const batch = db.batch();
-                const userDoc = db.collection('users').doc(user.uid);
-                const usernameRef = db.collection('usernames').doc(username);
-
-                batch.set(userDoc, {
-                    username: username,
-                    email: email,
-                    provider: 'google'
-                });
-                batch.set(usernameRef, {
-                    uid: user.uid
-                });
-
-                await batch.commit();
-
-                await user.updateProfile({ displayName: username });
-
-                showAlert('Google sign up successful! Redirecting…', 'success');
-                setTimeout(() => location.href = 'dashboard.html', 1200);
             } catch (err) {
-                showAlert(err.message, 'danger');
+                let errorMessage = err.message;
+                
+                // Handle common Google sign-in errors
+                if (err.code === 'auth/popup-closed-by-user') {
+                    errorMessage = 'Sign-in popup was closed. Please try again.';
+                } else if (err.code === 'auth/cancelled-popup-request') {
+                    errorMessage = 'Sign-in was cancelled. Please try again.';
+                } else if (err.code === 'auth/popup-blocked') {
+                    errorMessage = 'Pop-up was blocked by your browser. Please enable pop-ups for this site.';
+                }
+                
+                showAlert(errorMessage, 'danger');
+            } finally {
+                setLoading(false);
             }
+        });
+
+        // --- Verification modal handlers ---
+        resendVerificationBtn.addEventListener('click', async () => {
+            try {
+                const user = auth.currentUser;
+                if (user) {
+                    await user.sendEmailVerification();
+                    showAlert('Verification email resent!', 'success');
+                } else {
+                    // If user signed out, show info
+                    showAlert('Please sign in to resend verification email.', 'info');
+                }
+            } catch (error) {
+                showAlert('Error sending verification email. Please try again later.', 'danger');
+            }
+        });
+            
+        closeModalBtn.addEventListener('click', () => {
+            verificationModal.style.display = 'none';
+            window.location.href = 'login.html';
         });
     </script>
 </body>
