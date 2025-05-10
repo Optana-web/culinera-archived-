@@ -34,6 +34,7 @@
         body { font-family: 'Playfair Display', serif; color: var(--dark); background: var(--gray-light); line-height: 1.6; }
         .mono { font-family: 'Roboto Mono', monospace; }
         .container { width: 90%; max-width: 1200px; margin: 0 auto; }
+
         header { padding: 1.5rem 0; background: var(--light); border-bottom: 1px solid var(--gray); }
         nav { display: flex; justify-content: space-between; align-items: center; }
         .logo { font-size: 1.8rem; font-weight: 700; }
@@ -90,7 +91,7 @@
             .page-title { font-size: 1.8rem; }
         }
         #signupFormSection {
-            display: none; /* Initially hide the signup form */
+            display: none;
         }
         #username-status {
             font-size: 0.9em;
@@ -184,7 +185,9 @@
             measurementId: "G-LJTEX9XC99"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
         const auth = firebase.auth();
         const db = firebase.firestore();
 
@@ -297,8 +300,10 @@
 
                 await user.updateProfile({ displayName: username });
 
+                // --- SEND VERIFICATION EMAIL ---
                 await user.sendEmailVerification();
-                showAlert('Signup successful! Please verify your email before logging in.', 'success');
+
+                showAlert('Signup successful! Please check your email and verify your account before logging in.', 'success');
                 await auth.signOut();
             } catch (err) {
                 showAlert(err.message, 'danger');
