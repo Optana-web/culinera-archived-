@@ -39,9 +39,8 @@
       height: 100vh;
       position: fixed; top:0; left:0;
       display:flex; flex-direction:column;
-      overflow-y:auto; transition: all .3s cubic-bezier(.44,1.6,.6,1);
+      overflow-y:auto; transition: all .3s ease;
       z-index: 100;
-      box-shadow: 2px 0 16px 0 rgba(0,0,0,0.08);
     }
     .sidebar-header { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,.1) }
     .logo { font-size:1.8rem; font-weight:700; text-align:center }
@@ -66,30 +65,10 @@
       text-decoration:none;
       font-family:'Roboto Mono',monospace;
       font-size:.95rem;
-      position: relative;
-      overflow: hidden;
-      transition: all .25s cubic-bezier(.44,1.6,.6,1);
+      transition: all .3s;
     }
-    .nav-link::after {
-      content: '';
-      display: block;
-      position: absolute;
-      left: 0; bottom: 0;
-      width: 0;
-      height: 3px;
-      background: var(--primary-color);
-      transition: width 0.3s cubic-bezier(.4,1.6,.6,1);
-    }
-    .nav-link:hover::after,
-    .nav-link.active::after {
-      width: 100%;
-    }
-    .nav-link:hover, .nav-link.active {
-      background: rgba(255,255,255,0.12);
-      color: var(--primary-color);
-      transform: scale(1.04);
-      box-shadow: 0 2px 8px 0 rgba(255,140,66,0.10);
-    }
+    .nav-link:hover { background:rgba(255,255,255,.1); color:var(--light) }
+    .nav-link.active { background:var(--primary-color); color:var(--light) }
     .nav-link i { margin-right:.8rem; width:20px; text-align:center }
     .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid rgba(255,255,255,.1) }
     .btn {
@@ -97,21 +76,16 @@
       padding:.5rem 1.5rem;
       border:none; border-radius:8px;
       cursor:pointer; font-size:.9rem;
-      text-align:center; transition:background .2s, box-shadow .2s, transform .15s cubic-bezier(.4,1.6,.6,1);
+      text-align:center; transition:all .3s;
       color:var(--light); background:var(--primary-color);
       width:100%;
-      box-shadow: 0 2px 8px 0 rgba(255,140,66,0.09);
     }
-    .btn:hover {
-      background: #e67e22;
-      transform: scale(1.06) translateY(-2px);
-      box-shadow: 0 6px 18px 0 rgba(255,140,66,0.17);
-    }
+    .btn:hover { background: #e67e22 }
 
     /* Main content */
     .main-content {
       flex:1; margin-left: var(--sidebar-width);
-      transition: all .3s cubic-bezier(.44,1.6,.6,1);
+      transition: all .3s ease;
     }
     .content-wrapper { max-width:800px; margin:0 auto; padding:2rem }
     .page-header {
@@ -130,29 +104,11 @@
     }
     .photo-gallery img {
       width:100px; height:100px; object-fit:cover; border-radius:8px;
-      cursor:pointer;
-      transition: transform 0.18s cubic-bezier(.42,1.7,.62,.99), box-shadow 0.18s;
-      box-shadow: 0 2px 8px 0 rgba(0,0,0,0.08);
+      cursor:pointer; transition:transform .2s;
     }
-    .photo-gallery img:hover {
-      transform: scale(1.12) rotate(-2deg);
-      box-shadow: 0 6px 24px 0 rgba(255,140,66,0.13);
-      z-index: 2;
-    }
+    .photo-gallery img:hover { transform:scale(1.05) }
 
-    .section {
-      margin-bottom:2rem;
-      opacity: 0;
-      transform: translateY(24px);
-      animation: sectionFadeIn 0.7s cubic-bezier(.44,1.6,.6,1) forwards;
-      animation-delay: 0.2s;
-    }
-    @keyframes sectionFadeIn {
-      to {
-        opacity: 1;
-        transform: none;
-      }
-    }
+    .section { margin-bottom:2rem }
     .section h2 { font-size:1.5rem; margin-bottom:.5rem }
     .ingredients-list, .steps-list { padding-left:1.5rem }
     .ingredients-list li, .steps-list li { margin-bottom:.5rem }
@@ -162,28 +118,20 @@
       position:fixed; top:0; left:0; width:100%; height:100%;
       background: var(--dark-overlay);
       display:flex; align-items:center; justify-content:center;
-      opacity:0; visibility:hidden; transition:opacity .38s cubic-bezier(.44,1.6,.6,1);
+      opacity:0; visibility:hidden; transition:opacity .3s ease;
       z-index:1000; cursor: pointer;
     }
     #lightboxOverlay.visible {
       opacity:1; visibility:visible;
-      animation: lightboxFadeIn .38s cubic-bezier(.44,1.6,.6,1);
-    }
-    @keyframes lightboxFadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
     #lightboxOverlay img {
       max-width:70%; max-height:70%; border-radius:4px;
       box-shadow:0 0 20px rgba(0,0,0,0.5);
-      opacity: 0;
-      transform: scale(0.92) translateX(0);
-      transition: transform .38s cubic-bezier(.44,1.6,.6,1), opacity .32s cubic-bezier(.44,1.6,.6,1);
-      background: #fff;
-    }
-    #lightboxOverlay.visible img {
+      /* prepare for slide animation */
+      transform: translateX(0);
       opacity: 1;
-      transform: scale(1) translateX(0);
+      transition: transform .4s cubic-bezier(.44,1.6,.6,1), opacity .4s cubic-bezier(.44,1.6,.6,1);
+      background: #fff;
     }
     .lightbox-btn {
       position:absolute; top:50%; transform:translateY(-50%);
@@ -195,6 +143,7 @@
     .lightbox-btn:hover { background:#e67e22 }
     #lightboxPrev { left:2% }
     #lightboxNext { right:2% }
+    /* triangle arrows */
     #lightboxPrev::before,
     #lightboxNext::before {
       content: '';
@@ -365,11 +314,6 @@
         });
         gallery.appendChild(img);
       });
-
-      // Section fade-in animation (staggered)
-      document.querySelectorAll('.section').forEach((el, idx) => {
-        el.style.animationDelay = (0.2 + idx * 0.1) + 's';
-      });
     });
 
     document.getElementById('logoutBtn').onclick = async () => {
@@ -377,29 +321,27 @@
       location.href = 'index.html';
     };
 
-    // Lightbox with springy pop transitions
+    // Lightbox with slide and guard
     function openLightbox(index) {
       currentIndex = index;
       lbImg.style.transition = 'none';
-      lbImg.style.transform = 'scale(0.92)';
-      lbImg.style.opacity = '0';
+      lbImg.style.transform = 'translateX(0)';
+      lbImg.style.opacity = '1';
       lbImg.src = gallerySrcs[currentIndex];
       overlay.classList.add('visible');
-      setTimeout(() => {
-        lbImg.style.transition = 'transform .38s cubic-bezier(.44,1.6,.6,1), opacity .32s cubic-bezier(.44,1.6,.6,1)';
-        lbImg.style.transform = 'scale(1)';
-        lbImg.style.opacity = '1';
-      }, 10);
     }
 
     function changeImage(newIndex, direction) {
       if (animating) return;
       animating = true;
-      const offsetOut = direction === 'next' ? '-80px' : '80px';
-      const offsetIn = direction === 'next' ? '80px' : '-80px';
+      // Flip the direction logic!
+      // 'next' means current image slides LEFT, new image comes in from RIGHT
+      // 'prev' means current image slides RIGHT, new image comes in from LEFT
+      const offsetOut = direction === 'next' ? '-100%' : '100%';
+      const offsetIn = direction === 'next' ? '100%' : '-100%';
 
-      lbImg.style.transition = 'transform .28s cubic-bezier(.44,1.6,.6,1), opacity .22s cubic-bezier(.44,1.6,.6,1)';
-      lbImg.style.transform = `scale(0.95) translateX(${offsetOut})`;
+      lbImg.style.transition = 'transform .4s cubic-bezier(.44,1.6,.6,1), opacity .3s cubic-bezier(.44,1.6,.6,1)';
+      lbImg.style.transform = `translateX(${offsetOut})`;
       lbImg.style.opacity = '0';
 
       lbImg.addEventListener('transitionend', function handleOut() {
@@ -407,14 +349,15 @@
         currentIndex = newIndex;
         lbImg.src = gallerySrcs[currentIndex];
         lbImg.style.transition = 'none';
-        lbImg.style.transform = `scale(0.95) translateX(${offsetIn})`;
+        lbImg.style.transform = `translateX(${offsetIn})`;
         lbImg.style.opacity = '0';
 
-        requestAnimationFrame(() => {
-          lbImg.style.transition = 'transform .38s cubic-bezier(.44,1.6,.6,1), opacity .32s cubic-bezier(.44,1.6,.6,1)';
-          lbImg.style.transform = 'scale(1) translateX(0)';
-          lbImg.style.opacity = '1';
-        });
+        // Force reflow for transition to take effect
+        void lbImg.offsetWidth;
+
+        lbImg.style.transition = 'transform .4s cubic-bezier(.44,1.6,.6,1), opacity .3s cubic-bezier(.44,1.6,.6,1)';
+        lbImg.style.transform = 'translateX(0)';
+        lbImg.style.opacity = '1';
 
         lbImg.addEventListener('transitionend', function handleIn() {
           lbImg.removeEventListener('transitionend', handleIn);
