@@ -150,18 +150,21 @@
       font-size: 1rem;
     }
     .form-group textarea { resize: vertical; min-height: 100px; }
-    .ingredients-list .form-control {
+    .ingredients-list .form-control,
+    .steps-list .form-control {
       display: flex;
       align-items: center;
       margin-bottom: .5rem;
     }
-    .ingredients-list input {
+    .ingredients-list input,
+    .steps-list input {
       flex: 1;
       padding: .5rem;
       border: 1px solid var(--gray);
       border-radius: 6px;
     }
-    .ingredients-list .remove-btn {
+    .ingredients-list .remove-btn,
+    .steps-list .remove-btn {
       background: transparent;
       border: none;
       font-size: 1.2rem;
@@ -169,7 +172,10 @@
       cursor: pointer;
       color: #888;
     }
-    .ingredients-list .remove-btn:hover { color: var(--primary-color); }
+    .ingredients-list .remove-btn:hover,
+    .steps-list .remove-btn:hover { 
+      color: var(--primary-color); 
+    }
     #imagePreview {
       display: flex;
       flex-wrap: wrap;
@@ -209,7 +215,8 @@
       transition: background .2s;
     }
     .delete-image-btn:hover { background: #ffeaea; }
-    .add-ingredient-btn {
+    .add-ingredient-btn,
+    .add-step-btn {
       display: inline-block;
       margin-top: .5rem;
       margin-bottom: .5rem;
@@ -223,7 +230,10 @@
       cursor: pointer;
       transition: background .2s;
     }
-    .add-ingredient-btn:hover { background: var(--accent-light); }
+    .add-ingredient-btn:hover,
+    .add-step-btn:hover { 
+      background: var(--accent-light); 
+    }
 
     /* Toggle Switch Styles */
     .switch {
@@ -354,10 +364,11 @@
 
             <div id="addIngredientWrapper"></div>
 
-            <div class="form-group">
-              <label for="steps">Preparation Steps</label>
-              <textarea id="steps" name="steps" required></textarea>
+            <div class="form-group steps-list" id="stepsList">
+              <label>Preparation Steps</label>
             </div>
+
+            <div id="addStepWrapper"></div>
 
             <div class="form-group">
               <label for="photoUpload">Upload Photos (max 5)</label>
@@ -395,6 +406,7 @@
     const imagePreview = document.getElementById('imagePreview');
     const editError = document.getElementById('editError');
     const addIngredientWrapper = document.getElementById('addIngredientWrapper');
+    const addStepWrapper = document.getElementById('addStepWrapper');
     const publicToggle = document.getElementById('publicToggle');
     const publicStatusLabel = document.getElementById('publicStatusLabel');
     const deleteRecipeBtn = document.getElementById('deleteRecipeBtn');
@@ -501,6 +513,70 @@
       }
     }
 
+    // --- Dynamic steps ---
+    const stepsList = document.getElementById('stepsList');
+    function addStepField(value = '') {
+      const row = document.createElement('div');
+      row.className = 'form-control';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'steps';
+      input.value = value;
+      input.placeholder = 'Type step and press Enter';
+      input.autocomplete = 'off';
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'remove-btn';
+      remove.innerHTML = '&times;';
+      remove.onclick = () => {
+        row.remove();
+        updateStepUI();
+      };
+      input.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const all = stepsList.querySelectorAll('input[name="steps"]');
+          if (all[all.length - 1] === input && input.value.trim()) {
+            addStepField();
+          }
+        }
+      };
+      row.append(input, remove);
+      stepsList.appendChild(row);
+      input.focus();
+      updateStepUI();
+    }
+    function setStepsFields(steps) {
+      stepsList.innerHTML = '<label>Preparation Steps</label>';
+      // Parse steps if it's a string, or use as array if already in array format
+      let stepsArray = steps;
+      if (typeof steps === 'string') {
+        stepsArray = steps.split(/\r?\n/).filter(step => step.trim());
+      }
+      (stepsArray && stepsArray.length ? stepsArray : ['']).forEach(val => addStepField(val));
+      updateStepUI();
+    }
+    function updateStepUI() {
+      const fields = stepsList.querySelectorAll('input[name="steps"]');
+      if (fields.length === 0) {
+        // Show "Create Step" button
+        if (!addStepWrapper.querySelector('.add-step-btn')) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'add-step-btn';
+          btn.textContent = 'Create Step';
+          btn.onclick = () => {
+            addStepField();
+            btn.remove();
+          };
+          addStepWrapper.innerHTML = '';
+          addStepWrapper.appendChild(btn);
+        }
+      } else {
+        addStepWrapper.innerHTML = '';
+      }
+    }
+
     // --- Image preview & max 5, with delete ---
     let imageBase64 = [];
     let originalPhotos = [];
@@ -578,7 +654,7 @@
         // Populate form fields
         document.getElementById('title').value = data.title || '';
         setIngredientsFields(data.ingredients || []);
-        document.getElementById('steps').value = data.steps || '';
+        setStepsFields(data.steps || '');
         originalPhotos = Array.isArray(data.photos) ? data.photos.slice() : [];
         renderImagePreview(originalPhotos);
 
@@ -635,15 +711,17 @@
       editError.textContent = '';
       try {
         const title = document.getElementById('title').value.trim();
-        const steps = document.getElementById('steps').value.trim();
         const ingredients = Array.from(
           ingredientsList.querySelectorAll('input[name="ingredients"]')
+        ).map(el => el.value.trim()).filter(Boolean);
+        const steps = Array.from(
+          stepsList.querySelectorAll('input[name="steps"]')
         ).map(el => el.value.trim()).filter(Boolean);
 
         // Validate
         if (!title) throw new Error("Title is required.");
-        if (!steps) throw new Error("Preparation steps required.");
-        if (!ingredients.length) throw new Error("At least one ingredient.");
+        if (!ingredients.length) throw new Error("At least one ingredient is required.");
+        if (!steps.length) throw new Error("At least one preparation step is required.");
 
         // Handle photos
         let photos = originalPhotos.slice();
@@ -655,8 +733,8 @@
 
         await db.collection('recipes').doc(recipeId).update({
           title,
-          steps,
           ingredients,
+          steps,
           photos
         });
 
