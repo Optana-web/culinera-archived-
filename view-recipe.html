@@ -113,7 +113,7 @@
     .ingredients-list, .steps-list { padding-left:1.5rem }
     .ingredients-list li, .steps-list li { margin-bottom:.5rem }
 
-    /* Lightbox overlay */
+    /* Lightbox overlay with fade-in and fade-out */
     #lightboxOverlay {
       position:fixed; top:0; left:0; width:100%; height:100%;
       background: var(--dark-overlay);
@@ -123,14 +123,18 @@
     }
     #lightboxOverlay.visible {
       opacity:1; visibility:visible;
+      transition:opacity .3s ease;
+    }
+    #lightboxOverlay.fading-out {
+      opacity:0; visibility:visible;
+      transition:opacity .3s ease;
     }
     #lightboxOverlay img {
       max-width:70%; max-height:70%; border-radius:4px;
       box-shadow:0 0 20px rgba(0,0,0,0.5);
       /* prepare for slide animation */
       transform: translateX(0);
-      opacity: 1;
-      transition: transform .4s cubic-bezier(.44,1.6,.6,1), opacity .4s cubic-bezier(.44,1.6,.6,1);
+      transition: transform .4s ease, opacity .4s ease;
       background: #fff;
     }
     .lightbox-btn {
@@ -143,7 +147,6 @@
     .lightbox-btn:hover { background:#e67e22 }
     #lightboxPrev { left:2% }
     #lightboxNext { right:2% }
-    /* triangle arrows */
     #lightboxPrev::before,
     #lightboxNext::before {
       content: '';
@@ -321,7 +324,7 @@
       location.href = 'index.html';
     };
 
-    // Lightbox with slide and guard
+    // Lightbox with slide and fade animations
     function openLightbox(index) {
       currentIndex = index;
       lbImg.style.transition = 'none';
@@ -329,18 +332,16 @@
       lbImg.style.opacity = '1';
       lbImg.src = gallerySrcs[currentIndex];
       overlay.classList.add('visible');
+      overlay.classList.remove('fading-out');
     }
 
     function changeImage(newIndex, direction) {
       if (animating) return;
       animating = true;
-      // Flip the direction logic!
-      // 'next' means current image slides LEFT, new image comes in from RIGHT
-      // 'prev' means current image slides RIGHT, new image comes in from LEFT
       const offsetOut = direction === 'next' ? '-100%' : '100%';
       const offsetIn = direction === 'next' ? '100%' : '-100%';
 
-      lbImg.style.transition = 'transform .4s cubic-bezier(.44,1.6,.6,1), opacity .3s cubic-bezier(.44,1.6,.6,1)';
+      lbImg.style.transition = 'transform .4s ease, opacity .4s ease';
       lbImg.style.transform = `translateX(${offsetOut})`;
       lbImg.style.opacity = '0';
 
@@ -352,12 +353,11 @@
         lbImg.style.transform = `translateX(${offsetIn})`;
         lbImg.style.opacity = '0';
 
-        // Force reflow for transition to take effect
-        void lbImg.offsetWidth;
-
-        lbImg.style.transition = 'transform .4s cubic-bezier(.44,1.6,.6,1), opacity .3s cubic-bezier(.44,1.6,.6,1)';
-        lbImg.style.transform = 'translateX(0)';
-        lbImg.style.opacity = '1';
+        requestAnimationFrame(() => {
+          lbImg.style.transition = 'transform .4s ease, opacity .4s ease';
+          lbImg.style.transform = 'translateX(0)';
+          lbImg.style.opacity = '1';
+        });
 
         lbImg.addEventListener('transitionend', function handleIn() {
           lbImg.removeEventListener('transitionend', handleIn);
@@ -375,12 +375,23 @@
       changeImage((currentIndex + 1) % gallerySrcs.length, 'next');
     }
 
+    // Fade-out overlay when clicking the background
     function closeLightbox() {
-      if (animating) return;
+      if (animating || !overlay.classList.contains('visible')) return;
       overlay.classList.remove('visible');
+      overlay.classList.add('fading-out');
+      setTimeout(() => {
+        overlay.classList.remove('fading-out');
+        lbImg.src = "";
+      }, 300); // match CSS transition
     }
 
-    overlay.addEventListener('click', closeLightbox);
+    overlay.addEventListener('click', function(e) {
+      // Only close if the background (not the image or buttons) is clicked
+      if (e.target === overlay) {
+        closeLightbox();
+      }
+    });
     lbImg.addEventListener('click', e => e.stopPropagation());
     prevBtn.addEventListener('click', showPrev);
     nextBtn.addEventListener('click', showNext);
