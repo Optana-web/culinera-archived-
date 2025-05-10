@@ -23,75 +23,251 @@
       --gray: #E0E0E0;
       --sidebar-width: 260px;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
     body {
       font-family: 'Playfair Display', serif;
       color: var(--dark);
       background: var(--gray-light);
-      display: flex; min-height: 100vh; line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      line-height: 1.6;
     }
     .mono { font-family: 'Roboto Mono', monospace; }
 
-    /* Sidebar (same as before) */
-    .sidebar { width: var(--sidebar-width); background: var(--dark); color: var(--light); height: 100vh; position: fixed; display: flex; flex-direction: column; overflow-y: auto; transition: .3s; }
-    .sidebar-header { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,.1); }
-    .logo { text-align:center; font-size:1.8rem; font-weight:700; }
-    .logo span { color: var(--primary-color); }
-    .logo a { color: var(--light); text-decoration:none; }
-    .user-profile { padding:1.5rem; text-align:center; border-bottom:1px solid rgba(255,255,255,.1); }
-    .user-avatar { width:80px; height:80px; border-radius:50%; background:var(--primary-color); margin:0 auto 1rem; display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--light); }
-    .user-info h3 { font-size:1.2rem; margin-bottom:.5rem; }
-    .user-email { font-size:.8rem; color:rgba(255,255,255,.7); font-family:'Roboto Mono',monospace; }
-    .nav-menu { flex-grow:1; padding:1.5rem 0; }
-    .nav-item { list-style:none; }
-    .nav-link { display:flex; align-items:center; padding:.8rem 1.5rem; color:var(--gray); text-decoration:none; font-family:'Roboto Mono',monospace; font-size:.95rem; transition:.3s; }
-    .nav-link.active, .nav-link:hover { background:rgba(255,255,255,.1); color:var(--light); }
-    .nav-link.active { background:var(--primary-color); }
-    .nav-link i { margin-right:.8rem; width:20px; text-align:center; }
-    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid rgba(255,255,255,.1); }
-    .btn { font-family:'Roboto Mono',monospace; padding:.5rem 1.5rem; border:none; border-radius:8px; cursor:pointer; font-size:.9rem; text-align:center; transition:.3s; width:100%; }
-    .btn-primary { background:var(--primary-color); color:var(--light); }
-    .btn-primary:hover { background:var(--accent-light); }
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--dark);
+      color: var(--light);
+      height: 100vh;
+      position: fixed;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: all .3s ease;
+    }
+    .sidebar-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .logo {
+      text-align: center;
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .logo span {
+      color: var(--primary-color);
+    }
+    .logo a {
+      color: var(--light);
+      text-decoration: none;
+    }
+    .user-profile {
+      padding: 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    .user-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      margin: 0 auto 1rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: var(--light);
+    }
+    .user-info h3 {
+      font-size: 1.2rem;
+      margin-bottom: .5rem;
+    }
+    .user-email {
+      font-size: .8rem;
+      color: rgba(255,255,255,.7);
+      font-family: 'Roboto Mono', monospace;
+    }
+    .nav-menu {
+      flex-grow: 1;
+      padding: 1.5rem 0;
+    }
+    .nav-item { list-style: none; }
+    .nav-link {
+      display: flex; align-items: center;
+      padding: .8rem 1.5rem;
+      color: var(--gray);
+      text-decoration: none;
+      font-family: 'Roboto Mono', monospace;
+      font-size: .95rem;
+      transition: all .3s;
+    }
+    .nav-link:hover {
+      background: rgba(255,255,255,.1);
+      color: var(--light);
+    }
+    .nav-link.active {
+      background: var(--primary-color);
+      color: var(--light);
+    }
+    .nav-link i {
+      margin-right: .8rem;
+      width: 20px;
+      text-align: center;
+    }
+    .sidebar-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+    .btn {
+      font-family: 'Roboto Mono', monospace;
+      padding: .5rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .9rem;
+      text-align: center;
+      transition: all .3s;
+      width: 100%;
+    }
+    .btn-primary {
+      background: var(--primary-color);
+      color: var(--light);
+    }
+    .btn-primary:hover {
+      background: var(--accent-light);
+    }
 
-    /* Main content */
-    .main-content { flex:1; margin-left: var(--sidebar-width); transition:.3s; }
-    .content-wrapper { max-width:1200px; margin:0 auto; padding:2rem; }
-    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--gray); }
-    .page-title { font-size:2rem; font-weight:700; }
-    .page-actions .btn { width:auto; }
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: var(--sidebar-width);
+      transition: all .3s ease;
+    }
+    .content-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--gray);
+    }
+    .page-title {
+      font-size: 2rem;
+      font-weight: 700;
+    }
+    .page-actions .btn {
+      width: auto;
+    }
 
-    .content-card { background:var(--light); border-radius:12px; box-shadow:0 5px 15px rgba(0,0,0,.05); overflow:hidden; margin-bottom:2rem; }
-    .content-card-header { padding:1rem 1.5rem; background:var(--gray-light); border-bottom:1px solid var(--gray); }
-    .content-card-title { font-size:1.5rem; font-weight:700; }
-    .content-card-body { padding:1.5rem; }
+    .content-card {
+      background: var(--light);
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,.05);
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .content-card-header {
+      padding: 1rem 1.5rem;
+      background: var(--gray-light);
+      border-bottom: 1px solid var(--gray);
+    }
+    .content-card-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    .content-card-body {
+      padding: 1.5rem;
+    }
 
-    .form-group { margin-bottom:1rem; }
-    .form-group label { display:block; margin-bottom:.5rem; font-family:'Roboto Mono',monospace; font-size:.9rem; }
-    .form-group input, .form-group textarea { width:100%; padding:.5rem; border:1px solid var(--gray); border-radius:6px; font-family:'Playfair Display',serif; font-size:1rem; }
-    .form-group textarea { resize:vertical; min-height:100px; }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: .5rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: .9rem;
+    }
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: .5rem;
+      border: 1px solid var(--gray);
+      border-radius: 6px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
 
-    .ingredients-list .form-control { display:flex; align-items:center; margin-bottom:.5rem; }
-    .ingredients-list input { flex:1; padding:.5rem; border:1px solid var(--gray); border-radius:6px; }
-    .ingredients-list .remove-btn { background:transparent; border:none; font-size:1.2rem; margin-left:.5rem; cursor:pointer; color:#888; }
-    .ingredients-list .remove-btn:hover { color:var(--primary-color); }
+    .ingredients-list .form-control {
+      display: flex;
+      align-items: center;
+      margin-bottom: .5rem;
+    }
+    .ingredients-list input {
+      flex: 1;
+      padding: .5rem;
+      border: 1px solid var(--gray);
+      border-radius: 6px;
+    }
+    .ingredients-list .remove-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.2rem;
+      margin-left: .5rem;
+      cursor: pointer;
+      color: #888;
+    }
+    .ingredients-list .remove-btn:hover {
+      color: var(--primary-color);
+    }
 
-    #imagePreview { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:.5rem; }
-    #imagePreview img { width:80px; height:80px; object-fit:cover; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.1); }
+    #imagePreview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .5rem;
+    }
+    #imagePreview img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1);
+    }
 
     @media (max-width: 992px) {
       .sidebar { width: 80px; }
-      .sidebar .logo span, .user-info, .nav-link span, .sidebar-footer { display: none; }
+      .sidebar .logo span,
+      .user-info,
+      .nav-link span,
+      .sidebar-footer { display: none; }
       .main-content { margin-left: 80px; }
     }
     @media (max-width: 768px) {
-      .page-header { flex-direction:column; align-items:flex-start; gap:1rem; }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
     }
   </style>
 </head>
 <body>
 
   <aside class="sidebar">
-    <div class="sidebar-header"><div class="logo"><a href="index.html">Culin<span>era</span></a></div></div>
+    <div class="sidebar-header">
+      <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
+    </div>
     <div class="user-profile">
       <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
       <div class="user-info">
@@ -101,9 +277,15 @@
     </div>
     <nav class="nav-menu" aria-label="Main Navigation">
       <ul>
-        <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-        <li class="nav-item"><a href="yourrecipes.html" class="nav-link"><i class="fas fa-utensils"></i><span>Your Recipes</span></a></li>
-        <li class="nav-item"><a href="create-recipe.html" class="nav-link active"><i class="fas fa-plus"></i><span>Create Recipe</span></a></li>
+        <li class="nav-item">
+          <a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="yourrecipes.html" class="nav-link"><i class="fas fa-utensils"></i><span>Your Recipes</span></a>
+        </li>
+        <li class="nav-item">
+          <a href="create-recipe.html" class="nav-link active"><i class="fas fa-plus"></i><span>Create Recipe</span></a>
+        </li>
       </ul>
     </nav>
     <div class="sidebar-footer">
@@ -121,7 +303,9 @@
       </header>
 
       <div class="content-card">
-        <div class="content-card-header"><h2 class="content-card-title">New Recipe Details</h2></div>
+        <div class="content-card-header">
+          <h2 class="content-card-title">New Recipe Details</h2>
+        </div>
         <div class="content-card-body">
           <form id="createRecipeForm">
             <div class="form-group">
@@ -144,7 +328,9 @@
               <div id="imagePreview"></div>
             </div>
 
-            <button type="submit" class="btn btn-primary mono"><i class="fas fa-save"></i> Save Recipe</button>
+            <button type="submit" class="btn btn-primary mono" disabled id="submitBtn">
+              <i class="fas fa-save"></i> Save Recipe
+            </button>
           </form>
         </div>
       </div>
@@ -165,9 +351,21 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(), db = firebase.firestore();
 
-    // Populate sidebar user info
+    let currentUser = null;
+    const submitBtn = document.getElementById('submitBtn');
+    const photoUpload = document.getElementById('photoUpload');
+    const imagePreview = document.getElementById('imagePreview');
+
+    // Auth state & sidebar profile
     auth.onAuthStateChanged(async user => {
-      if (!user) return location.href = 'index.html';
+      if (!user) {
+        location.href = 'index.html';
+        return;
+      }
+      currentUser = user;
+      submitBtn.disabled = false;
+
+      // populate profile info
       const udoc = await db.collection('users').doc(user.uid).get();
       const name = udoc.exists && udoc.data().username
         ? udoc.data().username
@@ -187,7 +385,7 @@
       location.href = 'index.html';
     };
 
-    // Dynamic ingredient fields
+    // Dynamic ingredients
     const ingredientsList = document.getElementById('ingredientsList');
     function addIngredientField(value = '') {
       const row = document.createElement('div');
@@ -219,62 +417,61 @@
     ingredientsList.innerHTML = '<label>Ingredients</label>';
     addIngredientField();
 
-    // Image preview & enforce max 5
+    // Image preview & max 5
     let imageBase64 = [];
-    const photoInput = document.getElementById('photoUpload');
-    const preview = document.getElementById('imagePreview');
-    photoInput.onchange = () => {
-      const files = Array.from(photoInput.files);
+    photoUpload.onchange = () => {
+      const files = Array.from(photoUpload.files);
       if (files.length > 5) {
-        alert('You can upload up to 5 photos only.');
-        photoInput.value = '';
-        preview.innerHTML = '';
+        alert('You can upload a maximum of 5 photos.');
+        photoUpload.value = '';
+        imagePreview.innerHTML = '';
         imageBase64 = [];
         return;
       }
-      preview.innerHTML = '';
+      imagePreview.innerHTML = '';
       imageBase64 = [];
-      files.forEach(file => {
+      files.forEach(f => {
         const reader = new FileReader();
         reader.onload = () => {
           imageBase64.push(reader.result);
           const img = document.createElement('img');
           img.src = reader.result;
-          preview.appendChild(img);
+          imagePreview.appendChild(img);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(f);
       });
     };
 
-    // Form submission
+    // Submit form
     document.getElementById('createRecipeForm').onsubmit = async e => {
       e.preventDefault();
-      const user = auth.currentUser;
-      if (!user) return alert('Please log in first.');
+      if (!currentUser) return alert('Please log in first.');
 
+      const title = e.target.title.value.trim();
       const ingredients = Array.from(e.target.elements['ingredients'])
         .map(i => i.value.trim())
         .filter(v => v);
-      if (!ingredients.length) {
-        return alert('Add at least one ingredient.');
+      const steps = e.target.steps.value.trim().split('\n').filter(l => l);
+
+      if (!title || !ingredients.length || !steps.length) {
+        return alert('Please fill in title, at least one ingredient, and steps.');
       }
 
-      const data = {
-        title: e.target.title.value.trim(),
+      const recipe = {
+        title,
         ingredients,
-        steps: e.target.steps.value.trim().split('\n').filter(l => l),
+        steps,
         photos: imageBase64,
-        authorId: user.uid,
+        authorId: currentUser.uid,
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
       try {
-        await db.collection('recipes').add(data);
-        alert('Recipe saved!');
+        await db.collection('recipes').add(recipe);
         location.href = 'yourrecipes.html';
       } catch (err) {
-        console.error(err);
-        alert('Error saving. Try again.');
+        console.error('SAVE ERROR:', err);
+        alert('Error saving recipe: ' + err.message);
       }
     };
   </script>
