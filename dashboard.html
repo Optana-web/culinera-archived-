@@ -193,28 +193,22 @@
         // Listen for auth state and fetch Firestore profile
         auth.onAuthStateChanged(async user => {
             if (user) {
-                // Only require email verification for email/password users
-                const provider = user.providerData[0]?.providerId;
-                if (provider === 'password' && !user.emailVerified) {
-                    // Not verified, sign out and redirect
-                    await auth.signOut();
-                    location.href = 'index.html';
-                    return;
-                }
-
+                // User is logged in - no email verification check needed
                 try {
                     // Try to get username and provider from Firestore
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     let username = "";
                     let providerDisplay = "";
+                    
                     if (userDoc.exists) {
                         const data = userDoc.data();
                         username = data.username || (user.displayName || user.email.split('@')[0]);
-                        providerDisplay = data.provider || provider || "unknown";
+                        providerDisplay = data.provider || user.providerData[0]?.providerId || "unknown";
                     } else {
                         username = user.displayName || user.email.split('@')[0];
-                        providerDisplay = provider || "unknown";
+                        providerDisplay = user.providerData[0]?.providerId || "unknown";
                     }
+                    
                     welcomeText.textContent = `Welcome back, ${username}!`;
 
                     profileUsername.textContent = username;
@@ -222,10 +216,12 @@
                     profileProvider.textContent = providerDisplay.charAt(0).toUpperCase() + providerDisplay.slice(1);
                     profileInfo.style.display = "block";
                 } catch (err) {
+                    console.error('Error fetching user data:', err);
                     welcomeText.textContent = "Welcome back!";
                     profileInfo.style.display = "none";
                 }
             } else {
+                // No user is signed in, redirect to index
                 location.href = 'index.html';
             }
         });
