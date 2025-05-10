@@ -230,7 +230,7 @@
       
       <section class="section">
         <h2>Preparation Steps</h2>
-        <ul id="stepsList" class="steps-list"></ul>
+        <ol id="stepsList" class="steps-list"></ol>
       </section>
     </div>
   </main>
@@ -320,8 +320,6 @@
 
         // Ingredients
         const il = document.getElementById('ingredientsList');
-        il.innerHTML = ''; // Clear any existing content
-        
         if (Array.isArray(r.ingredients) && r.ingredients.length > 0) {
           r.ingredients.forEach(item => {
             const li = document.createElement('li');
@@ -329,27 +327,30 @@
             il.appendChild(li);
           });
         } else {
-          il.innerHTML = '<li>No ingredients listed</li>';
+          const li = document.createElement('li');
+          li.textContent = 'No ingredients listed';
+          il.appendChild(li);
         }
 
-        // Steps - Handle preparation steps similar to ingredients
+        // Steps - Fixed to properly handle preparation steps
         const sl = document.getElementById('stepsList');
-        // Determine which field to use for steps (steps or preparationSteps)
-        const stepsArray = Array.isArray(r.steps) ? r.steps : 
-                         (Array.isArray(r.preparationSteps) ? r.preparationSteps : []);
-        
-        if (stepsArray.length > 0) {
-          // Clear the list first
-          sl.innerHTML = '';
-          
-          // Add each step as a list item
-          stepsArray.forEach(step => {
+        if (Array.isArray(r.steps) && r.steps.length > 0) {
+          r.steps.forEach((step, index) => {
+            const li = document.createElement('li');
+            li.textContent = step;
+            sl.appendChild(li);
+          });
+        } else if (Array.isArray(r.preparationSteps) && r.preparationSteps.length > 0) {
+          // Alternative field name for steps
+          r.preparationSteps.forEach((step, index) => {
             const li = document.createElement('li');
             li.textContent = step;
             sl.appendChild(li);
           });
         } else {
-          sl.innerHTML = '<li>No preparation steps listed</li>';
+          const li = document.createElement('li');
+          li.textContent = 'No preparation steps listed';
+          sl.appendChild(li);
         }
 
         // Photos + lightbox setup
