@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Culinera - Sign Up</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #FF8C42;
+            --accent-light: #FFBC80;
+            --dark: #333333;
+            --light: #FFFFFF;
+            --gray-light: #F5F5F5;
+            --gray: #E0E0E0;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Playfair Display', serif;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .mono {
+            font-family: 'Roboto Mono', monospace;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            padding: 1.5rem 0;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+        
+        .logo span {
+            color: var(--primary-color);
+        }
+        
+        .logo a {
+            text-decoration: none;
+            color: var(--dark);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 1rem;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary-color);
+        }
+        
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            font-family: 'Roboto Mono', monospace;
+            padding: 0.5rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        .btn-outline:hover {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .btn-primary:hover {
+            background: var(--accent-light);
+        }
+        
+        .signup-container {
+            max-width: 600px;
+            margin: 4rem auto;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            background-color: var(--light);
+        }
+        
+        .page-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+        
+        .page-title span {
+            color: var(--primary-color);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray);
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1rem;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .form-footer {
+            margin-top: 2rem;
+            text-align: center;
+        }
+        
+        .alt-action {
+            text-align: center;
+            margin-top: 2rem;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+        }
+        
+        .alt-action a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .alt-action a:hover {
+            text-decoration: underline;
+        }
+        
+        .alert {
+            padding: 0.75rem;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .terms {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.85rem;
+            margin-top: 1.5rem;
+            color: #666;
+            text-align: center;
+        }
+        
+        .terms a {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .terms a:hover {
+            text-decoration: underline;
+        }
+        
+        .verification-section {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .verification-icon {
+            width: 80px;
+            height: 80px;
+            background-color: var(--primary-color);
+            color: var(--light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 2rem;
+        }
+        
+        footer {
+            background-color: var(--gray-light);
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: 4rem;
+        }
+        
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .footer-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+        
+        .copyright {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: #888;
+        }
+        
+        .password-requirements {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .signup-container {
+                margin: 2rem auto;
+                padding: 1.5rem;
+            }
+            
+            .page-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
+                <div class="nav-links">
+                    <a href="browse.html">Browse Recipes</a>
+                    <a href="popular.html">Popular</a>
+                    <a href="categories.html">Categories</a>
+                    <a href="about.html">About</a>
+                </div>
+                <div class="auth-buttons">
+                    <a href="login.html" class="btn btn-outline">Log In</a>
+                    <a href="signup.html" class="btn btn-primary">Sign Up</a>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="signup-container">
+                <div id="signupForm">
+                    <h1 class="page-title">Join <span>Culinera</span></h1>
+                    
+                    <div id="signupError" class="alert alert-danger">
+                        Error message will appear here.
+                    </div>
+                    
+                    <form id="registerForm">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" id="username" name="username" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" required minlength="8">
+                            <div class="password-requirements">
+                                Must be at least 8 characters long
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                        </div>
+                        
+                        <div class="terms">
+                            By signing up, you agree to our <a href="terms.html">Terms of Service</a> and <a href="privacy.html">Privacy Policy</a>.
+                        </div>
+                        
+                        <div class="form-footer">
+                            <button type="submit" class="btn btn-primary">Create Account</button>
+                        </div>
+                    </form>
+                    
+                    <div class="alt-action">
+                        Already have an account? <a href="login.html">Log in</a>
+                    </div>
+                </div>
+                
+                <div id="verificationSection" class="verification-section">
+                    <div class="verification-icon">✉️</div>
+                    <h2>Verify Your Email</h2>
+                    <p>We've sent a verification link to your email address. Please check your inbox and click the link to verify your account.</p>
+                    <p class="mono" style="margin-top: 1rem;">Didn't receive an email?</p>
+                    <button id="resendEmail" class="btn btn-outline" style="margin-top: 1rem;">Resend Verification Email</button>
+                    <div id="resendSuccess" class="alert alert-success" style="margin-top: 1rem;">
+                        Verification email resent!
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="logo">Culin<span>era</span></div>
+                <div class="footer-links">
+                    <a href="about.html">About Us</a>
+                    <a href="contact.html">Contact</a>
+                    <a href="terms.html">Terms of Service</a>
+                    <a href="privacy.html">Privacy Policy</a>
+                </div>
+            </div>
+            <p class="copyright">&copy; 2025 Culinera. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Firebase Integration -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <script src="firebase-config.js"></script>
+    <script>
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        
+        // Get form element
+        const registerForm = document.getElementById('registerForm');
+        const signupError = document.getElementById('signupError');
+        const signupForm = document.getElementById('signupForm');
+        const verificationSection = document.getElementById('verificationSection');
+        const resendEmail = document.getElementById('resendEmail');
+        const resendSuccess = document.getElementById('resendSuccess');
+        
+        // Add submit event listener
+        registerForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            // Check if passwords match
+            if (password !== confirmPassword) {
+                signupError.textContent = 'Passwords do not match.';
+                signupError.style.display = 'block';
+                return;
+            }
+            
+            // Create user with email and password
+            firebase.auth().createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Update profile with username
+                    userCredential.user.updateProfile({
+                        displayName: username
+                    });
+                    
+                    // Send email verification
+                    userCredential.user.sendEmailVerification().then(() => {
+                        // Show verification section
+                        signupForm.style.display = 'none';
+                        verificationSection.style.display = 'block';
+                    });
+                })
+                .catch((error) => {
+                    // Registration failed
+                    signupError.textContent = error.message;
+                    signupError.style.display = 'block';
+                });
+        });
+        
+        // Resend verification email
+        resendEmail.addEventListener('click', function() {
+            const user = firebase.auth().currentUser;
+            
+            if (user) {
+                user.sendEmailVerification().then(() => {
+                    resendSuccess.style.display = 'block';
+                    setTimeout(() => {
+                        resendSuccess.style.display = 'none';
+                    }, 3000);
+                }).catch((error) => {
+                    console.error("Error sending email verification:", error);
+                });
+            } else {
+                console.error("No user is currently signed in");
+            }
+        });
+        
+        // Check if user is already logged in
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (user) {
+                if (user.emailVerified) {
+                    // User is signed in and verified
+                    window.location.href = 'index.html';
+                } else {
+                    // User is signed in but not verified
+                    // Show verification section
+                    signupForm.style.display = 'none';
+                    verificationSection.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
