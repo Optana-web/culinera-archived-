@@ -122,11 +122,14 @@
       box-shadow: 0 5px 15px rgba(0,0,0,.05);
       overflow: hidden;
       margin-bottom: 2rem;
+      position: relative;
     }
     .content-card-header {
       padding: 1rem 1.5rem;
       background: var(--gray-light);
       border-bottom: 1px solid var(--gray);
+      position: relative;
+      min-height: 48px;
     }
     .content-card-title { font-size: 1.5rem; font-weight: 700; }
     .content-card-body { padding: 1.5rem; }
@@ -221,6 +224,51 @@
       transition: background .2s;
     }
     .add-ingredient-btn:hover { background: var(--accent-light); }
+
+    /* Toggle Switch Styles */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px; width: 18px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: var(--primary-color);
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Delete Recipe Button */
+    #deleteRecipeBtn {
+      background: #fff; border: 2px solid #FF8C42; color: #FF8C42;
+      border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background .2s;
+      margin-left: 8px;
+    }
+    #deleteRecipeBtn:hover {
+      background: #FFBC80;
+      color: #fff;
+      border-color: #FF8C42;
+    }
     @media (max-width: 992px) {
       .sidebar { width: 80px; }
       .sidebar .logo span,
@@ -276,10 +324,22 @@
           <a href="yourrecipes.html" class="btn btn-primary mono"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
       </header>
-
       <div class="content-card">
         <div class="content-card-header">
           <h2 class="content-card-title">Edit Recipe Details</h2>
+          <!-- Toggle and Delete Buttons -->
+          <div style="position:absolute; top:18px; right:24px; display:flex; gap:16px; align-items:center;">
+            <!-- Toggle Switch -->
+            <label class="switch" title="Toggle public/private">
+              <input type="checkbox" id="publicToggle" disabled>
+              <span class="slider round"></span>
+            </label>
+            <span id="publicStatusLabel" style="font-size:0.95rem; font-family:'Roboto Mono',monospace;"></span>
+            <!-- Delete Button -->
+            <button id="deleteRecipeBtn" title="Delete Recipe" disabled>
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
         </div>
         <div class="content-card-body">
           <form id="editRecipeForm">
@@ -335,6 +395,9 @@
     const imagePreview = document.getElementById('imagePreview');
     const editError = document.getElementById('editError');
     const addIngredientWrapper = document.getElementById('addIngredientWrapper');
+    const publicToggle = document.getElementById('publicToggle');
+    const publicStatusLabel = document.getElementById('publicStatusLabel');
+    const deleteRecipeBtn = document.getElementById('deleteRecipeBtn');
 
     // --- Get recipe ID from URL ---
     function getRecipeIdFromUrl() {
@@ -455,7 +518,6 @@
         delBtn.title = 'Delete this image';
         delBtn.innerHTML = '&times;';
         delBtn.onclick = () => {
-          // Remove the image at idx
           images.splice(idx, 1);
           if (imageBase64.length) {
             imageBase64 = images.slice();
@@ -469,99 +531,141 @@
         imagePreview.appendChild(container);
       });
     }
-    photoUpload.onchange = () => {
+
+    photoUpload.addEventListener('change', function() {
       const files = Array.from(photoUpload.files);
-      if (files.length > 5) {
-        alert('You can upload a maximum of 5 photos.');
+      if (files.length + originalPhotos.length > 5) {
+        editError.textContent = 'You can upload up to 5 photos total.';
         photoUpload.value = '';
-        imagePreview.innerHTML = '';
-        imageBase64 = [];
-        renderImagePreview(originalPhotos);
         return;
       }
+      editError.textContent = '';
       imageBase64 = [];
-      imagePreview.innerHTML = '';
-      let loaded = 0;
-      files.forEach((f, idx) => {
+      let processed = 0;
+      files.forEach(file => {
         const reader = new FileReader();
-        reader.onload = () => {
-          imageBase64.push(reader.result);
-          loaded++;
-          if (loaded === files.length) {
-            renderImagePreview(imageBase64);
+        reader.onload = function(e) {
+          imageBase64.push(e.target.result);
+          processed++;
+          if (processed === files.length) {
+            renderImagePreview(originalPhotos.concat(imageBase64));
           }
         };
-        reader.readAsDataURL(f);
+        reader.readAsDataURL(file);
       });
-    };
+    });
 
-    // --- Load recipe data for editing ---
+    // --- Public/Private Toggle & Delete Logic ---
+    function setPublicToggleUI(isPublic) {
+      publicToggle.checked = !!isPublic;
+      publicStatusLabel.textContent = isPublic ? "Public" : "Private";
+      publicStatusLabel.style.color = isPublic ? "#FF8C42" : "#888";
+    }
+
+    // Load recipe and set toggle
     async function loadRecipeForEdit() {
       try {
         const doc = await db.collection('recipes').doc(recipeId).get();
-        if (!doc.exists) {
-          editError.textContent = 'Recipe not found.';
-          submitBtn.disabled = true;
-          return;
-        }
+        if (!doc.exists) throw new Error("Recipe not found.");
         const data = doc.data();
-        // Only allow edit if current user is author
+
+        // Only allow owner to edit/delete (rules also enforce this)
         if (data.authorId !== currentUser.uid) {
-          editError.textContent = 'You do not have permission to edit this recipe.';
-          submitBtn.disabled = true;
-          document.getElementById('editRecipeForm').querySelectorAll('input,textarea,button').forEach(el => el.disabled = true);
-          return;
+          document.body.innerHTML = '<h2 style="color:red;text-align:center;">You do not have permission to edit this recipe.</h2>';
+          throw new Error('Not owner');
         }
-        // Pre-fill form
-        document.getElementById('title').value = data.title;
-        setIngredientsFields(data.ingredients);
-        document.getElementById('steps').value = Array.isArray(data.steps) ? data.steps.join('\n') : data.steps;
-        // Show images (if any)
-        originalPhotos = Array.isArray(data.photos) ? data.photos : [];
+
+        // Populate form fields
+        document.getElementById('title').value = data.title || '';
+        setIngredientsFields(data.ingredients || []);
+        document.getElementById('steps').value = data.steps || '';
+        originalPhotos = Array.isArray(data.photos) ? data.photos.slice() : [];
         renderImagePreview(originalPhotos);
+
+        // Set public/private toggle
+        setPublicToggleUI(data.public);
+
+        // Enable toggle and delete
+        publicToggle.disabled = false;
+        deleteRecipeBtn.disabled = false;
       } catch (err) {
-        editError.textContent = 'Error loading recipe: ' + err.message;
+        editError.textContent = err.message;
         submitBtn.disabled = true;
+        publicToggle.disabled = true;
+        deleteRecipeBtn.disabled = true;
       }
     }
 
-    // --- Submit form (update recipe) ---
-    document.getElementById('editRecipeForm').onsubmit = async e => {
-      e.preventDefault();
-      if (!currentUser) return alert('Please log in first.');
-
-      const title = e.target.title.value.trim();
-      const ingredients = Array.from(e.target.elements['ingredients'])
-        .map(i => i.value.trim())
-        .filter(v => v);
-      const steps = e.target.steps.value.trim().split('\n').filter(l => l);
-
-      if (!title || !ingredients.length || !steps.length) {
-        return alert('Please fill in title, at least one ingredient, and steps.');
-      }
-
-      // Use new images if uploaded, otherwise keep original
-      const photos = imageBase64.length ? imageBase64 : originalPhotos;
-
-      if (photos.length > 5) {
-        alert('You can upload a maximum of 5 photos.');
-        return;
-      }
-
-      const recipe = {
-        title,
-        ingredients,
-        steps,
-        photos,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
+    // Toggle handler
+    publicToggle.addEventListener('change', async function() {
       try {
-        await db.collection('recipes').doc(recipeId).update(recipe);
-        location.href = 'yourrecipes.html';
+        submitBtn.disabled = true;
+        publicToggle.disabled = true;
+        const isPublic = publicToggle.checked;
+        await db.collection('recipes').doc(recipeId).update({ public: isPublic });
+        setPublicToggleUI(isPublic);
+        editError.textContent = '';
       } catch (err) {
-        console.error('UPDATE ERROR:', err);
-        alert('Error updating recipe: ' + err.message);
+        editError.textContent = "Failed to update public/private: " + err.message;
+        publicToggle.checked = !publicToggle.checked;
+      } finally {
+        submitBtn.disabled = false;
+        publicToggle.disabled = false;
+      }
+    });
+
+    // Delete handler
+    deleteRecipeBtn.addEventListener('click', async function() {
+      if (!confirm("Are you sure you want to delete this recipe? This cannot be undone.")) return;
+      try {
+        deleteRecipeBtn.disabled = true;
+        await db.collection('recipes').doc(recipeId).delete();
+        alert("Recipe deleted.");
+        window.location.href = "yourrecipes.html";
+      } catch (err) {
+        editError.textContent = "Failed to delete recipe: " + err.message;
+        deleteRecipeBtn.disabled = false;
+      }
+    });
+
+    // --- Form submission (update recipe) ---
+    document.getElementById('editRecipeForm').onsubmit = async function(e) {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      editError.textContent = '';
+      try {
+        const title = document.getElementById('title').value.trim();
+        const steps = document.getElementById('steps').value.trim();
+        const ingredients = Array.from(
+          ingredientsList.querySelectorAll('input[name="ingredients"]')
+        ).map(el => el.value.trim()).filter(Boolean);
+
+        // Validate
+        if (!title) throw new Error("Title is required.");
+        if (!steps) throw new Error("Preparation steps required.");
+        if (!ingredients.length) throw new Error("At least one ingredient.");
+
+        // Handle photos
+        let photos = originalPhotos.slice();
+        if (imageBase64.length) {
+          // For demo: just append new base64s (in real app, upload to storage and get URLs)
+          photos = photos.concat(imageBase64);
+          if (photos.length > 5) photos = photos.slice(0, 5);
+        }
+
+        await db.collection('recipes').doc(recipeId).update({
+          title,
+          steps,
+          ingredients,
+          photos
+        });
+
+        alert("Recipe updated!");
+        window.location.href = "yourrecipes.html";
+      } catch (err) {
+        editError.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
       }
     };
   </script>
