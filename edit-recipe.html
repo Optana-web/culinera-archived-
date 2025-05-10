@@ -43,237 +43,142 @@
       overflow-y: auto;
       transition: all .3s ease;
     }
-    .sidebar-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid rgba(255,255,255,.1);
-    }
-    .logo {
-      text-align: center;
-      font-size: 1.8rem;
-      font-weight: 700;
-    }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,.1); }
+    .logo { text-align: center; font-size: 1.8rem; font-weight: 700; }
     .logo span { color: var(--primary-color); }
     .logo a { color: var(--light); text-decoration: none; }
     .user-profile {
-      padding: 1.5rem;
-      text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,.1);
+      padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,.1);
     }
     .user-avatar {
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      background: var(--primary-color);
-      margin: 0 auto 1rem;
+      width: 80px; height: 80px; border-radius: 50%;
+      background: var(--primary-color); margin: 0 auto 1rem;
       display: flex; align-items: center; justify-content: center;
       font-size: 2rem; color: var(--light);
     }
     .user-info h3 { font-size: 1.2rem; margin-bottom: .5rem; }
     .user-email {
-      font-size: .8rem;
-      color: rgba(255,255,255,.7);
+      font-size: .8rem; color: rgba(255,255,255,.7);
       font-family: 'Roboto Mono', monospace;
     }
     .nav-menu { flex-grow: 1; padding: 1.5rem 0; }
     .nav-item { list-style: none; }
     .nav-link {
-      display: flex; align-items: center;
-      padding: .8rem 1.5rem;
-      color: var(--gray);
-      text-decoration: none;
-      font-family: 'Roboto Mono', monospace;
-      font-size: .95rem;
+      display: flex; align-items: center; padding: .8rem 1.5rem;
+      color: var(--gray); text-decoration: none;
+      font-family: 'Roboto Mono', monospace; font-size: .95rem;
       transition: all .3s;
     }
     .nav-link:hover { background: rgba(255,255,255,.1); color: var(--light); }
     .nav-link.active { background: var(--primary-color); color: var(--light); }
     .nav-link i { margin-right: .8rem; width: 20px; text-align: center; }
     .sidebar-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid rgba(255,255,255,.1);
+      padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,.1);
     }
     .btn {
-      font-family: 'Roboto Mono', monospace;
-      padding: .5rem 1.5rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: .9rem;
-      text-align: center;
-      transition: all .3s;
-      width: 100%;
+      font-family: 'Roboto Mono', monospace; padding: .5rem 1.5rem;
+      border: none; border-radius: 8px; cursor: pointer;
+      font-size: .9rem; text-align: center; transition: all .3s; width: 100%;
     }
     .btn-primary { background: var(--primary-color); color: var(--light); }
     .btn-primary:hover { background: var(--accent-light); }
-    .main-content { flex: 1; margin-left: var(--sidebar-width); transition: all .3s ease; }
+    .main-content {
+      flex: 1; margin-left: var(--sidebar-width); transition: all .3s ease;
+    }
     .content-wrapper { max-width: 1200px; margin: 0 auto; padding: 2rem; }
     .page-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--gray);
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray);
     }
     .page-title { font-size: 2rem; font-weight: 700; }
     .page-actions .btn { width: auto; }
     .content-card {
-      background: var(--light);
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,.05);
-      overflow: hidden;
-      margin-bottom: 2rem;
-      position: relative;
+      background: var(--light); border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,.05);
+      overflow: hidden; margin-bottom: 2rem; position: relative;
     }
     .content-card-header {
-      padding: 1rem 1.5rem;
-      background: var(--gray-light);
-      border-bottom: 1px solid var(--gray);
-      position: relative;
-      min-height: 48px;
+      padding: 1rem 1.5rem; background: var(--gray-light); border-bottom: 1px solid var(--gray);
+      position: relative; min-height: 48px;
     }
     .content-card-title { font-size: 1.5rem; font-weight: 700; }
     .content-card-body { padding: 1.5rem; }
     .form-group { margin-bottom: 1rem; }
     .form-group label {
-      display: block;
-      margin-bottom: .5rem;
-      font-family: 'Roboto Mono', monospace;
-      font-size: .9rem;
+      display: block; margin-bottom: .5rem;
+      font-family: 'Roboto Mono', monospace; font-size: .9rem;
     }
     .form-group input,
     .form-group textarea {
-      width: 100%;
-      padding: .5rem;
-      border: 1px solid var(--gray);
-      border-radius: 6px;
-      font-family: 'Playfair Display', serif;
-      font-size: 1rem;
+      width: 100%; padding: .5rem; border: 1px solid var(--gray);
+      border-radius: 6px; font-family: 'Playfair Display', serif; font-size: 1rem;
     }
     .form-group textarea { resize: vertical; min-height: 100px; }
     .ingredients-list .form-control,
     .steps-list .form-control {
-      display: flex;
-      align-items: center;
-      margin-bottom: .5rem;
+      display: flex; align-items: center; margin-bottom: .5rem;
     }
     .ingredients-list input,
     .steps-list input {
-      flex: 1;
-      padding: .5rem;
-      border: 1px solid var(--gray);
-      border-radius: 6px;
+      flex: 1; padding: .5rem; border: 1px solid var(--gray); border-radius: 6px;
     }
     .ingredients-list .remove-btn,
     .steps-list .remove-btn {
-      background: transparent;
-      border: none;
-      font-size: 1.2rem;
-      margin-left: .5rem;
-      cursor: pointer;
-      color: #888;
+      background: transparent; border: none; font-size: 1.2rem; margin-left: .5rem;
+      cursor: pointer; color: #888;
     }
     .ingredients-list .remove-btn:hover,
-    .steps-list .remove-btn:hover {
-      color: var(--primary-color);
-    }
+    .steps-list .remove-btn:hover { color: var(--primary-color); }
     #imagePreview {
-      display: flex;
-      flex-wrap: wrap;
-      gap: .5rem;
-      margin-top: .5rem;
+      display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem;
     }
-    .image-thumb-container {
-      position: relative;
-      display: inline-block;
-    }
+    .image-thumb-container { position: relative; display: inline-block; }
     .image-thumb-container img {
-      width: 80px;
-      height: 80px;
-      object-fit: cover;
-      border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,.1);
-      cursor: pointer;
-      border: 2px solid transparent;
-      transition: border .2s;
+      width: 80px; height: 80px; object-fit: cover; border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.1); cursor: pointer;
+      border: 2px solid transparent; transition: border .2s;
     }
-    .image-thumb-container img:hover {
-      border: 2px solid var(--primary-color);
-    }
+    .image-thumb-container img:hover { border: 2px solid var(--primary-color); }
     .delete-image-btn {
-      position: absolute;
-      top: 2px; right: 2px;
-      background: rgba(255,255,255,0.8);
-      color: #d00;
-      border: none;
-      border-radius: 50%;
-      font-size: 1.1rem;
-      width: 22px; height: 22px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer;
-      z-index: 2;
-      box-shadow: 0 1px 3px rgba(0,0,0,.12);
-      transition: background .2s;
+      position: absolute; top: 2px; right: 2px; background: rgba(255,255,255,0.8);
+      color: #d00; border: none; border-radius: 50%; font-size: 1.1rem;
+      width: 22px; height: 22px; display: flex; align-items: center;
+      justify-content: center; cursor: pointer; z-index: 2;
+      box-shadow: 0 1px 3px rgba(0,0,0,.12); transition: background .2s;
     }
     .delete-image-btn:hover { background: #ffeaea; }
     .add-ingredient-btn,
     .add-step-btn {
-      display: inline-block;
-      margin-top: .5rem;
-      margin-bottom: .5rem;
-      padding: .3rem 1.2rem;
-      background: var(--primary-color);
-      color: var(--light);
-      border: none;
-      border-radius: 6px;
-      font-family: 'Roboto Mono', monospace;
-      font-size: .95rem;
-      cursor: pointer;
-      transition: background .2s;
+      display: inline-block; margin: .5rem 0; padding: .3rem 1.2rem;
+      background: var(--primary-color); color: var(--light); border: none;
+      border-radius: 6px; font-family: 'Roboto Mono', monospace; font-size: .95rem;
+      cursor: pointer; transition: background .2s;
     }
     .add-ingredient-btn:hover,
-    .add-step-btn:hover {
-      background: var(--accent-light);
-    }
+    .add-step-btn:hover { background: var(--accent-light); }
     .switch {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
+      position: relative; display: inline-block; width: 44px; height: 24px;
     }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-color: #ccc;
-      transition: .4s;
-      border-radius: 24px;
+      position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: .4s; border-radius: 24px;
     }
     .slider:before {
-      position: absolute;
-      content: "";
-      height: 18px; width: 18px;
-      left: 3px; bottom: 3px;
-      background-color: white;
-      transition: .4s;
+      position: absolute; content: ""; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background-color: white; transition: .4s;
       border-radius: 50%;
     }
-    input:checked + .slider {
-      background-color: var(--primary-color);
-    }
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
+    input:checked + .slider { background-color: var(--primary-color); }
+    input:checked + .slider:before { transform: translateX(20px); }
     #deleteRecipeBtn {
       background: #fff; border: 2px solid #FF8C42; color: #FF8C42;
-      border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
-      cursor: pointer; font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: background .2s;
-      margin-left: 8px;
+      border-radius: 50%; width: 38px; height: 38px; display: flex;
+      align-items: center; justify-content: center; cursor: pointer;
+      font-size: 1.1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+      transition: background .2s; margin-left: 8px;
     }
     #deleteRecipeBtn:hover {
-      background: #FFBC80;
-      color: #fff;
-      border-color: #FF8C42;
+      background: #FFBC80; color: #fff; border-color: #FF8C42;
     }
     @media (max-width: 992px) {
       .sidebar { width: 80px; }
@@ -285,9 +190,7 @@
     }
     @media (max-width: 768px) {
       .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+        flex-direction: column; align-items: flex-start; gap: 1rem;
       }
     }
   </style>
@@ -335,7 +238,7 @@
           <h2 class="content-card-title">Edit Recipe Details</h2>
           <div style="position:absolute; top:18px; right:24px; display:flex; gap:16px; align-items:center;">
             <label class="switch" title="Toggle public/private">
-              <input type="checkbox" id="publicToggle" disabled>  
+              <input type="checkbox" id="publicToggle" disabled>
               <span class="slider round"></span>
             </label>
             <span id="publicStatusLabel" class="mono"></span>
@@ -388,30 +291,30 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(), db = firebase.firestore();
 
-     let currentUser = null;
+    let currentUser = null;
     const recipeId = new URLSearchParams(window.location.search).get('id');
     if (!recipeId) {
       document.body.innerHTML = '<h2 style="text-align:center;color:red;">No recipe ID provided.</h2>';
       throw new Error('No recipe ID');
     }
 
-    const submitBtn = document.getElementById('submitBtn'),
-          photoUpload = document.getElementById('photoUpload'),
-          imagePreview = document.getElementById('imagePreview'),
-          editError = document.getElementById('editError'),
-          publicToggle = document.getElementById('publicToggle'),
-          publicStatusLabel = document.getElementById('publicStatusLabel'),
-          deleteRecipeBtn = document.getElementById('deleteRecipeBtn'),
-          ingredientsList = document.getElementById('ingredientsList'),
-          stepsList = document.getElementById('stepsList'),
-          addIngredientWrapper = document.getElementById('addIngredientWrapper'),
-          addStepWrapper = document.getElementById('addStepWrapper');
+    const submitBtn         = document.getElementById('submitBtn');
+    const photoUpload       = document.getElementById('photoUpload');
+    const imagePreview      = document.getElementById('imagePreview');
+    const editError         = document.getElementById('editError');
+    const publicToggle      = document.getElementById('publicToggle');
+    const publicStatusLabel = document.getElementById('publicStatusLabel');
+    const deleteRecipeBtn   = document.getElementById('deleteRecipeBtn');
+    const ingredientsList   = document.getElementById('ingredientsList');
+    const stepsList         = document.getElementById('stepsList');
+    const addIngredientWrapper = document.getElementById('addIngredientWrapper');
+    const addStepWrapper    = document.getElementById('addStepWrapper');
 
     let originalPhotos = [], newPhotos = [];
 
-    auth.onAuthStateChanged(u => {
-      if (!u) return location.href = 'index.html';
-      currentUser = u;
+    auth.onAuthStateChanged(user => {
+      if (!user) return location.href = 'index.html';
+      currentUser = user;
       submitBtn.disabled = false;
       loadSidebarProfile();
       loadRecipe();
@@ -419,7 +322,7 @@
 
     function loadSidebarProfile() {
       db.collection('users').doc(currentUser.uid).get().then(doc => {
-        const name = doc.exists && doc.data().username
+        const name = (doc.exists && doc.data().username)
           ? doc.data().username
           : (currentUser.displayName || currentUser.email.split('@')[0]);
         document.getElementById('profileUsername').textContent = name;
@@ -439,152 +342,192 @@
       location.href = 'index.html';
     };
 
-    // Dynamic ingredients/steps (same as create page)
-    function addIngredientField(v=''){ /* … */ }
-    function setIngredientsFields(a){ /* … */ }
-    function updateIngredientUI(){ /* … */ }
-    function addStepField(v=''){ /* … */ }
-    function setStepsFields(a){ /* … */ }
-    function updateStepUI(){ /* … */ }
+    function addIngredientField(v = '') {
+      const row = document.createElement('div'); row.className = 'form-control';
+      const input = document.createElement('input');
+      input.type = 'text'; input.name = 'ingredients'; input.value = v;
+      input.placeholder = 'Type ingredient and press Enter'; input.autocomplete = 'off';
+      const remove = document.createElement('button');
+      remove.type = 'button'; remove.className = 'remove-btn'; remove.innerHTML = '&times;';
+      remove.onclick = () => { row.remove(); updateIngredientUI(); };
+      input.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const all = ingredientsList.querySelectorAll('input[name="ingredients"]');
+          if (all[all.length - 1] === input && input.value.trim()) addIngredientField();
+        }
+      };
+      row.append(input, remove);
+      ingredientsList.appendChild(row);
+      input.focus();
+      updateIngredientUI();
+    }
+    function setIngredientsFields(arr) {
+      ingredientsList.innerHTML = '<label>Ingredients</label>';
+      (arr.length ? arr : ['']).forEach(v => addIngredientField(v));
+      updateIngredientUI();
+    }
+    function updateIngredientUI() {
+      const fields = ingredientsList.querySelectorAll('input[name="ingredients"]');
+      if (!fields.length) {
+        if (!addIngredientWrapper.querySelector('.add-ingredient-btn')) {
+          const btn = document.createElement('button');
+          btn.type = 'button'; btn.className = 'add-ingredient-btn';
+          btn.textContent = 'Add Ingredient';
+          btn.onclick = () => { addIngredientField(); btn.remove(); };
+          addIngredientWrapper.innerHTML = '';
+          addIngredientWrapper.appendChild(btn);
+        }
+      } else addIngredientWrapper.innerHTML = '';
+    }
 
-    // Automatically resize to max 1024px, preserve aspect ratio, keep original format
-    function renderImagePreview(list) {
-      imagePreview.innerHTML = '';
-      list.forEach((src, i) => {
-        const c = document.createElement('div');
-        c.className = 'image-thumb-container';
-        const img = document.createElement('img');
-        img.src = src;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'delete-image-btn';
-        btn.innerHTML = '&times;';
-        btn.onclick = () => {
-          list.splice(i,1);
-          if (newPhotos.length) newPhotos = list.slice();
-          else originalPhotos = list.slice();
-          renderImagePreview(list);
-        };
-        c.append(img, btn);
-        imagePreview.appendChild(c);
+    function addStepField(v='') {
+      const row = document.createElement('div'); row.className='form-control';
+      const input = document.createElement('input');
+      input.type='text'; input.name='steps'; input.value=v;
+      input.placeholder='Type step and press Enter'; input.autocomplete='off';
+      const remove = document.createElement('button');
+      remove.type = 'button'; remove.className='remove-btn'; remove.innerHTML='&times;';
+      remove.onclick = () => { row.remove(); updateStepUI(); };
+      input.onkeydown = e => {
+        if (e.key==='Enter') {
+          e.preventDefault();
+          const all = stepsList.querySelectorAll('input[name="steps"]');
+          if (all[all.length-1]===input && input.value.trim()) addStepField();
+        }
+      };
+      row.append(input, remove);
+      stepsList.appendChild(row);
+      input.focus();
+      updateStepUI();
+    }
+    function setStepsFields(arr) {
+      stepsList.innerHTML='<label>Preparation Steps</label>';
+      const data = (typeof arr==='string')
+        ? arr.split(/\r?\n/).filter(s=>s.trim())
+        : (arr.length?arr:['']);
+      data.forEach(v=>addStepField(v));
+      updateStepUI();
+    }
+    function updateStepUI() {
+      const fields = stepsList.querySelectorAll('input[name="steps"]');
+      if (!fields.length) {
+        if (!addStepWrapper.querySelector('.add-step-btn')) {
+          const btn = document.createElement('button');
+          btn.type='button'; btn.className='add-step-btn'; btn.textContent='Add Step';
+          btn.onclick = () => { addStepField(); btn.remove(); };
+          addStepWrapper.innerHTML=''; addStepWrapper.appendChild(btn);
+        }
+      } else addStepWrapper.innerHTML='';
+    }
+
+    function renderImagePreview(arr) {
+      imagePreview.innerHTML='';
+      arr.forEach((src,i)=>{
+        const c=document.createElement('div'); c.className='image-thumb-container';
+        const img=document.createElement('img'); img.src=src;
+        const btn=document.createElement('button');
+        btn.type='button'; btn.className='delete-image-btn'; btn.innerHTML='&times;';
+        btn.onclick=()=>{ arr.splice(i,1); if(newPhotos.length) newPhotos=arr.slice(); else originalPhotos=arr.slice(); renderImagePreview(arr); };
+        c.append(img,btn); imagePreview.appendChild(c);
       });
     }
 
-    photoUpload.addEventListener('change', () => {
-      const files = Array.from(photoUpload.files);
-      if (files.length + originalPhotos.length > 5) {
-        editError.textContent = 'Up to 5 photos allowed.';
-        photoUpload.value = '';
-        return;
+    photoUpload.addEventListener('change',()=> {
+      const files=Array.from(photoUpload.files);
+      if(files.length+originalPhotos.length>5){
+        editError.textContent='Up to 5 photos allowed.';
+        photoUpload.value=''; return;
       }
-      editError.textContent = '';
-      newPhotos = [];
-      let processed = 0;
-
-      const MAX_DIM = 1024;
-
-      files.forEach(file => {
-        const reader = new FileReader();
-        const img = new Image();
-        reader.onload = e => img.src = e.target.result;
-        img.onload = () => {
-          // calculate scale
-          const ratio = Math.min(MAX_DIM / img.naturalWidth, MAX_DIM / img.naturalHeight, 1);
-          const w = Math.round(img.naturalWidth * ratio);
-          const h = Math.round(img.naturalHeight * ratio);
-
-          const canvas = document.createElement('canvas');
-          canvas.width = w;
-          canvas.height = h;
-          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-
-          // preserve original MIME type
-          newPhotos.push(canvas.toDataURL(file.type, 0.8));
-          if (++processed === files.length) {
-            renderImagePreview(originalPhotos.concat(newPhotos));
-          }
+      editError.textContent=''; newPhotos=[]; let done=0;
+      const MAX_DIM=1024;
+      files.forEach(file=>{
+        const reader=new FileReader(), img=new Image();
+        reader.onload=e=>img.src=e.target.result;
+        img.onload=()=>{
+          const ratio=Math.min(MAX_DIM/img.naturalWidth,MAX_DIM/img.naturalHeight,1);
+          const w=Math.round(img.naturalWidth*ratio), h=Math.round(img.naturalHeight*ratio);
+          const canvas=document.createElement('canvas');
+          canvas.width=w; canvas.height=h;
+          canvas.getContext('2d').drawImage(img,0,0,w,h);
+          newPhotos.push(canvas.toDataURL(file.type,0.8));
+          if(++done===files.length) renderImagePreview(originalPhotos.concat(newPhotos));
         };
         reader.readAsDataURL(file);
       });
     });
 
-    // Load recipe data
-    async function loadRecipe() {
+    async function loadRecipe(){
       try {
-        const snap = await db.collection('recipes').doc(recipeId).get();
-        if (!snap.exists) throw 'Recipe not found.';
-        const d = snap.data();
-        if (d.authorId !== currentUser.uid) {
-          document.body.innerHTML = '<h2 style="text-align:center;color:red;">Access denied.</h2>';
+        const snap=await db.collection('recipes').doc(recipeId).get();
+        if(!snap.exists) throw new Error('Recipe not found.');
+        const d=snap.data();
+        if(d.authorId!==currentUser.uid){
+          document.body.innerHTML='<h2 style="text-align:center;color:red;">Access denied.</h2>';
           return;
         }
-        document.getElementById('title').value = d.title || '';
-        setIngredientsFields(d.ingredients || []);
-        setStepsFields(d.steps || '');
-        originalPhotos = Array.isArray(d.photos) ? d.photos.slice() : [];
+        document.getElementById('title').value=d.title||'';
+        setIngredientsFields(d.ingredients||[]);
+        setStepsFields(d.steps||'');
+        originalPhotos=Array.isArray(d.photos)?d.photos.slice():[];
         renderImagePreview(originalPhotos);
         setPublicUI(d.public);
-        publicToggle.disabled = false;
-        deleteRecipeBtn.disabled = false;
-      } catch (e) {
-        editError.textContent = e;
-        submitBtn.disabled = true;
+        publicToggle.disabled=false;
+        deleteRecipeBtn.disabled=false;
+      } catch(e){
+        editError.textContent=e.message||e;
+        submitBtn.disabled=true;
       }
     }
-
-    function setPublicUI(pub) {
-      publicToggle.checked = !!pub;
-      publicStatusLabel.textContent = pub ? 'Public' : 'Private';
-      publicStatusLabel.style.color = pub ? '#FF8C42' : '#888';
+    function setPublicUI(pub){
+      publicToggle.checked=!!pub;
+      publicStatusLabel.textContent=pub?'Public':'Private';
+      publicStatusLabel.style.color=pub?'#FF8C42':'#888';
     }
 
-    publicToggle.addEventListener('change', async () => {
-      publicToggle.disabled = true;
+    publicToggle.addEventListener('change',async()=>{
+      publicToggle.disabled=true;
       try {
         await db.collection('recipes').doc(recipeId).update({ public: publicToggle.checked });
         setPublicUI(publicToggle.checked);
       } catch {
-        editError.textContent = 'Visibility update failed.';
-        publicToggle.checked = !publicToggle.checked;
+        editError.textContent='Visibility update failed.';
+        publicToggle.checked=!publicToggle.checked;
       }
-      publicToggle.disabled = false;
+      publicToggle.disabled=false;
     });
 
-    deleteRecipeBtn.addEventListener('click', async () => {
-      if (!confirm('Delete this recipe?')) return;
-      deleteRecipeBtn.disabled = true;
+    deleteRecipeBtn.addEventListener('click',async()=>{
+      if(!confirm('Delete this recipe?'))return;
+      deleteRecipeBtn.disabled=true;
       try {
         await db.collection('recipes').doc(recipeId).delete();
         alert('Recipe deleted.');
-        location.href = 'yourrecipes.html';
+        location.href='yourrecipes.html';
       } catch {
-        editError.textContent = 'Delete failed.';
-        deleteRecipeBtn.disabled = false;
+        editError.textContent='Delete failed.'; deleteRecipeBtn.disabled=false;
       }
     });
 
-    document.getElementById('editRecipeForm').onsubmit = async e => {
+    document.getElementById('editRecipeForm').onsubmit=async e=>{
       e.preventDefault();
-      submitBtn.disabled = true;
-      editError.textContent = '';
+      submitBtn.disabled=true; editError.textContent='';
       try {
-        const title = document.getElementById('title').value.trim();
-        const ingredients = Array.from(ingredientsList.querySelectorAll('input[name="ingredients"]'))
-          .map(i => i.value.trim()).filter(Boolean);
-        const steps = Array.from(stepsList.querySelectorAll('input[name="steps"]'))
-          .map(i => i.value.trim()).filter(Boolean);
-        if (!title) throw 'Title required.';
-        if (!ingredients.length) throw 'At least one ingredient.';
-        if (!steps.length) throw 'At least one step.';
-        let photos = originalPhotos.slice();
-        if (newPhotos.length) photos = photos.concat(newPhotos).slice(0,5);
+        const title=document.getElementById('title').value.trim();
+        const ingredients=Array.from(ingredientsList.querySelectorAll('input[name="ingredients"]')).map(i=>i.value.trim()).filter(Boolean);
+        const steps=Array.from(stepsList.querySelectorAll('input[name="steps"]')).map(i=>i.value.trim()).filter(Boolean);
+        if(!title)throw new Error('Title required.');
+        if(!ingredients.length)throw new Error('At least one ingredient.');
+        if(!steps.length)throw new Error('At least one step.');
+        let photos=originalPhotos.slice();
+        if(newPhotos.length)photos=photos.concat(newPhotos).slice(0,5);
         await db.collection('recipes').doc(recipeId).update({ title, ingredients, steps, photos });
         alert('Recipe updated!');
-        location.href = 'yourrecipes.html';
-      } catch (err) {
-        editError.textContent = err;
+        location.href='yourrecipes.html';
+      } catch(err){
+        editError.textContent=err.message||err;
       }
-      submitBtn.disabled = false;
+      submitBtn.disabled=false;
     };
   </script>
 </body>
