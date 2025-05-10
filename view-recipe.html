@@ -58,7 +58,14 @@
     .recipe-header h1 { font-size:2.5rem; margin-bottom:.5rem; }
     .recipe-meta { font-family:'Roboto Mono',monospace; color:#777; font-size:.9rem; display:flex; gap:1rem; }
     .photo-gallery { display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0; }
-    .photo-gallery img { width:120px; height:120px; object-fit:cover; border-radius:8px; }
+    .photo-gallery img {
+      width:120px; height:120px; object-fit:cover; border-radius:8px;
+      cursor: pointer; /* show clickable */
+      transition:transform .2s;
+    }
+    .photo-gallery img:hover {
+      transform: scale(1.05);
+    }
 
     .section { margin-bottom:2rem; }
     .section h2 { font-size:1.5rem; margin-bottom:.5rem; }
@@ -106,9 +113,7 @@
       </header>
 
       <div class="recipe-header">
-        <div class="recipe-meta" id="recipeMeta">
-          <!-- date & author -->
-        </div>
+        <div class="recipe-meta" id="recipeMeta"></div>
         <div class="photo-gallery" id="photoGallery"></div>
       </div>
 
@@ -138,15 +143,14 @@
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(), db = firebase.firestore();
 
-    // Helpers
     function getQueryParam(name) {
       return new URLSearchParams(window.location.search).get(name);
     }
 
-    // Populate sidebar user & fetch recipe
     auth.onAuthStateChanged(async user => {
       if (!user) return location.href='index.html';
-      // sidebar profile
+
+      // populate profile
       const uDoc = await db.collection('users').doc(user.uid).get();
       const uname = uDoc.exists && uDoc.data().username
                    ? uDoc.data().username
@@ -168,31 +172,36 @@
       if (!doc.exists) return alert('Recipe not found');
       const r = doc.data();
 
-      // title
+      // title & meta
       document.getElementById('recipeTitle').textContent = r.title;
-
-      // meta: date & author
-      const metaEl = document.getElementById('recipeMeta');
       const date = r.createdAt ? r.createdAt.toDate().toLocaleDateString() : '';
       let authorName = 'Unknown';
       try {
         const aDoc = await db.collection('users').doc(r.authorId).get();
-        authorName = aDoc.exists && aDoc.data().username
-                     ? aDoc.data().username
-                     : '';
+        if (aDoc.exists) authorName = aDoc.data().username || authorName;
       } catch {}
-      metaEl.innerHTML = `<span><i class="fas fa-calendar"></i> ${date}</span>
-                         <span><i class="fas fa-user"></i> ${authorName}</span>`;
+      document.getElementById('recipeMeta').innerHTML =
+        `<span><i class="fas fa-calendar"></i> ${date}</span>
+         <span><i class="fas fa-user"></i> ${authorName}</span>`;
 
-      // photos
-      const pg = document.getElementById('photoGallery');
-      if (Array.isArray(r.photos)) {
-        r.photos.forEach(src => {
-          const img = document.createElement('img');
-          img.src = src;
-          pg.appendChild(img);
+      // photos + click handler
+      const gallery = document.getElementById('photoGallery');
+      (r.photos||[]).forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        // when clicked, compute natural size and alert ratio
+        img.addEventListener('click', () => {
+          const temp = new Image();
+          temp.src = src;
+          temp.onload = () => {
+            const w = temp.naturalWidth, h = temp.naturalHeight;
+            const gcd = (a,b)=> b? gcd(b,a%b): a;
+            const g = gcd(w,h);
+            alert(`Aspect ratio: ${w/g}:${h/g} (${w}×${h}px)`);
+          };
         });
-      }
+        gallery.appendChild(img);
+      });
 
       // ingredients
       const il = document.getElementById('ingredientsList');
