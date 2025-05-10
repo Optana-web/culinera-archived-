@@ -305,7 +305,7 @@
                 // --- SEND VERIFICATION EMAIL ---
                 await user.sendEmailVerification();
 
-                showAlert('Signup successful! Please check your email and verify your account before logging in.', 'success');
+                showAlert('Signup successful! Please check your email and verify your account before logging in. (Check your spam folder too!)', 'success');
                 await auth.signOut();
             } catch (err) {
                 showAlert(err.message, 'danger');
