@@ -214,15 +214,10 @@
             notification.style.display = 'block';
         }
 
-        // --- Username availability check ---
-        let usernameAvailable = false;
-        let lastCheckedUsername = "";
-
+        // --- Username availability check (live, for feedback only) ---
         usernameInput.addEventListener('input', debounce(async function(e) {
             const username = e.target.value.trim().toLowerCase();
-            lastCheckedUsername = username;
             usernameStatus.textContent = '';
-            usernameAvailable = false;
 
             if (!username.match(/^[a-zA-Z0-9_]{3,15}$/)) {
                 usernameStatus.textContent = "Usernames must be 3-15 letters, numbers, or underscores.";
@@ -235,11 +230,9 @@
             if (doc.exists) {
                 usernameStatus.textContent = "Username is taken.";
                 usernameStatus.style.color = "#721c24";
-                usernameAvailable = false;
             } else {
                 usernameStatus.textContent = "Username is available!";
                 usernameStatus.style.color = "#155724";
-                usernameAvailable = true;
             }
         }, 350));
 
@@ -269,10 +262,19 @@
                 showAlert('Invalid username format.', 'danger');
                 return;
             }
-            if (!usernameAvailable || username !== lastCheckedUsername) {
-                showAlert('Please choose an available username.', 'danger');
+
+            // FINAL username availability check (no race condition)
+            try {
+                const usernameDoc = await db.collection('usernames').doc(username).get();
+                if (usernameDoc.exists) {
+                    showAlert('Username is taken. Please choose another.', 'danger');
+                    return;
+                }
+            } catch (err) {
+                showAlert('Error checking username availability. Try again.', 'danger');
                 return;
             }
+
             if (password !== confirmPassword) {
                 showAlert('Passwords do not match.', 'danger');
                 return;
@@ -285,14 +287,14 @@
                 // Batch write: user profile and username mapping
                 const batch = db.batch();
                 const userDoc = db.collection('users').doc(user.uid);
-                const usernameDoc = db.collection('usernames').doc(username);
+                const usernameRef = db.collection('usernames').doc(username);
 
                 batch.set(userDoc, {
                     username: username,
                     email: email,
                     provider: 'password'
                 });
-                batch.set(usernameDoc, {
+                batch.set(usernameRef, {
                     uid: user.uid
                 });
 
@@ -328,7 +330,7 @@
                 }
                 username = email.replace('@gmail.com', '').toLowerCase();
 
-                // Check username uniqueness
+                // Check username uniqueness (again, no race condition)
                 const usernameDoc = await db.collection('usernames').doc(username).get();
                 if (usernameDoc.exists) {
                     await auth.signOut();
