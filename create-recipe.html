@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Culinera – Create Recipe</title>
   <meta name="description" content="Create a new recipe">
 
@@ -23,210 +22,76 @@
       --gray: #E0E0E0;
       --sidebar-width: 260px;
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      font-family: 'Playfair Display', serif;
-      color: var(--dark);
-      background: var(--gray-light);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-    }
-    .mono { font-family: 'Roboto Mono', monospace; }
+    * { box-sizing: border-box; margin:0; padding:0 }
+    body { font-family:'Playfair Display',serif; color:var(--dark); background:var(--gray-light); line-height:1.6; min-height:100vh; display:flex }
+    .mono {font-family:'Roboto Mono',monospace}
 
     /* Sidebar */
-    .sidebar {
-      width: var(--sidebar-width);
-      background: var(--dark);
-      color: var(--light);
-      height: 100vh;
-      position: fixed;
-      left: 0; top: 0;
-      display: flex; flex-direction: column;
-      overflow-y: auto; transition: all 0.3s ease;
-      z-index: 100;
-    }
-    .sidebar-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .logo {
-      font-size: 1.8rem; font-weight: 700; text-align: center;
-    }
-    .logo span { color: var(--primary-color); }
-    .logo a { text-decoration: none; color: var(--light); }
-    .user-profile {
-      padding: 1.5rem; text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .user-avatar {
-      width: 80px; height: 80px; border-radius: 50%;
-      background: var(--primary-color); margin: 0 auto 1rem;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; color: var(--light);
-    }
-    .user-info h3 {
-      font-size: 1.2rem; margin-bottom: 0.5rem;
-    }
-    .user-email {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.8rem; color: rgba(255,255,255,0.7);
-    }
-    .nav-menu {
-      padding: 1.5rem 0; flex-grow: 1;
-    }
-    .nav-item { list-style: none; }
-    .nav-link {
-      display: flex; align-items: center;
-      padding: 0.8rem 1.5rem;
-      color: var(--gray); text-decoration: none;
-      transition: all 0.3s;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.95rem;
-    }
-    .nav-link:hover {
-      background: rgba(255,255,255,0.1); color: var(--light);
-    }
-    .nav-link.active {
-      background: var(--primary-color); color: var(--light);
-    }
-    .nav-link i {
-      margin-right: 0.8rem; width: 20px; text-align: center;
-    }
-    .sidebar-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn {
-      font-family: 'Roboto Mono', monospace;
-      padding: 0.5rem 1.5rem;
-      border-radius: 8px; cursor: pointer;
-      font-size: 0.9rem; text-decoration: none;
-      display: inline-block; transition: all 0.3s;
-      text-align: center; border: none; outline: none;
-      width: 100%;
-    }
-    .btn-primary {
-      background: var(--primary-color); color: var(--light);
-    }
-    .btn-primary:hover {
-      background: var(--accent-light);
-    }
+    .sidebar { width: var(--sidebar-width); background:var(--dark); color:var(--light); height:100vh; position:fixed; left:0;top:0; display:flex;flex-direction:column;overflow-y:auto;transition:all .3s ease;z-index:100 }
+    .sidebar-header { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,.1) }
+    .logo { font-size:1.8rem; font-weight:700; text-align:center }
+    .logo span { color:var(--primary-color) }
+    .logo a { text-decoration:none; color:var(--light) }
+    .user-profile { padding:1.5rem; text-align:center; border-bottom:1px solid rgba(255,255,255,.1) }
+    .user-avatar { width:80px; height:80px; border-radius:50%; background:var(--primary-color); margin:0 auto 1rem; display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--light) }
+    .user-info h3 { font-size:1.2rem; margin-bottom:.5rem }
+    .user-email { font-family:'Roboto Mono',monospace; font-size:.8rem; color:rgba(255,255,255,.7) }
+    .nav-menu { padding:1.5rem 0; flex-grow:1 }
+    .nav-item { list-style:none }
+    .nav-link { display:flex;align-items:center;padding:.8rem 1.5rem;color:var(--gray);text-decoration:none;transition:all .3s;font-family:'Roboto Mono',monospace;font-size:.95rem }
+    .nav-link:hover { background:rgba(255,255,255,.1); color:var(--light) }
+    .nav-link.active { background:var(--primary-color); color:var(--light) }
+    .nav-link i { margin-right:.8rem;width:20px;text-align:center }
+    .sidebar-footer { padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.1) }
+    .btn { font-family:'Roboto Mono',monospace; padding:.5rem 1.5rem; border-radius:8px; cursor:pointer; font-size:.9rem; text-decoration:none; display:inline-block; transition:all .3s; text-align:center; border:none; outline:none; width:100% }
+    .btn-primary { background:var(--primary-color); color:var(--light) }
+    .btn-primary:hover { background:var(--accent-light) }
 
-    /* Main Content */
-    .main-content {
-      flex: 1; margin-left: var(--sidebar-width);
-      transition: all 0.3s ease;
-    }
-    .content-wrapper {
-      padding: 2rem; max-width: 1200px;
-      margin: 0 auto;
-    }
-    .page-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 2rem;
-      padding-bottom: 1rem; border-bottom: 1px solid var(--gray);
-    }
-    .page-title {
-      font-size: 2rem; font-weight: 700;
-    }
-    .page-actions {
-      display: flex; gap: 1rem;
-    }
+    /* Main */
+    .main-content { flex:1; margin-left: var(--sidebar-width); transition:all .3s ease }
+    .content-wrapper { padding:2rem; max-width:1200px; margin:0 auto }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; padding-bottom:1rem; border-bottom:1px solid var(--gray) }
+    .page-title { font-size:2rem; font-weight:700 }
+    .page-actions { display:flex; gap:1rem }
 
-    .content-card {
-      background: var(--light); border-radius: 12px;
-      overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    .content-card-header {
-      background: var(--gray-light);
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--gray);
-    }
-    .content-card-title {
-      font-size: 1.5rem; font-weight: 700;
-    }
-    .content-card-body {
-      padding: 1.5rem;
-    }
+    .content-card { background:var(--light); border-radius:12px; overflow:hidden; box-shadow:0 5px 15px rgba(0,0,0,.05) }
+    .content-card-header { background:var(--gray-light); padding:1rem 1.5rem; border-bottom:1px solid var(--gray) }
+    .content-card-title { font-size:1.5rem; font-weight:700 }
+    .content-card-body { padding:1.5rem }
 
-    .form-group { margin-bottom: 1rem; }
-    .form-group label {
-      display: block; margin-bottom: 0.5rem;
-      font-family: 'Roboto Mono', monospace; font-size: 0.9rem;
-    }
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%; padding: 0.5rem;
-      border: 1px solid var(--gray); border-radius: 6px;
-      font-family: 'Playfair Display', serif; font-size: 1rem;
-    }
-    .form-group textarea { resize: vertical; }
+    .form-group { margin-bottom:1rem }
+    .form-group label { display:block; margin-bottom:.5rem; font-family:'Roboto Mono',monospace; font-size:.9rem }
+    .form-group input, .form-group textarea { width:100%; padding:.5rem; border:1px solid var(--gray); border-radius:6px; font-family:'Playfair Display',serif; font-size:1rem }
+    .form-group textarea { resize:vertical; min-height:100px }
 
-    .ingredients-list .form-control {
-      display: flex; align-items: center;
-      margin-bottom: 0.5rem;
-    }
-    .ingredients-list input {
-      flex: 1; padding: 0.5rem;
-      border: 1px solid var(--gray); border-radius: 6px;
-      font-family: 'Playfair Display', serif;
-    }
-    .ingredients-list .remove-btn {
-      background: transparent; border: none;
-      font-size: 1.2rem; margin-left: 0.5rem;
-      cursor: pointer; color: #888;
-    }
-    .ingredients-list .remove-btn:hover {
-      color: var(--primary-color);
-    }
+    .ingredients-list .form-control { display:flex; align-items:center; margin-bottom:.5rem }
+    .ingredients-list input { flex:1; padding:.5rem; border:1px solid var(--gray); border-radius:6px; font-family:'Playfair Display',serif }
+    .ingredients-list .remove-btn { background:transparent; border:none; font-size:1.2rem; margin-left:.5rem; cursor:pointer; color:#888 }
+    .ingredients-list .remove-btn:hover { color:var(--primary-color) }
 
-    #imagePreview {
-      display: flex; gap: 0.5rem;
-      flex-wrap: wrap; margin-top: 0.5rem;
-    }
-    #imagePreview img {
-      width: 80px; height: 80px;
-      object-fit: cover; border-radius: 6px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    }
+    #imagePreview { display:flex; gap:.5rem; flex-wrap:wrap; margin-top:.5rem }
+    #imagePreview img { width:80px; height:80px; object-fit:cover; border-radius:6px; box-shadow:0 2px 6px rgba(0,0,0,.1) }
 
-    @media (max-width: 992px) {
-      .sidebar {
-        width: 80px; overflow: visible;
-      }
-      .logo span, .user-info, .nav-link span,
-      .sidebar-footer { display: none; }
-      .logo { font-size: 1.4rem; }
-      .user-avatar {
-        width: 50px; height: 50px; font-size: 1.4rem;
-      }
-      .nav-link { justify-content: center; padding: 1rem; }
-      .nav-link i { margin-right: 0; }
-      .main-content { margin-left: 80px; }
+    @media (max-width:992px) {
+      .sidebar { width:80px; overflow:visible }
+      .logo span, .user-info, .nav-link span, .sidebar-footer { display:none }
+      .logo { font-size:1.4rem }
+      .user-avatar { width:50px; height:50px; font-size:1.4rem }
+      .nav-link { justify-content:center; padding:1rem }
+      .nav-link i { margin-right:0 }
+      .main-content { margin-left:80px }
     }
-    @media (max-width: 768px) {
-      .page-header {
-        flex-direction: column;
-        align-items: flex-start; gap: 1rem;
-      }
+    @media (max-width:768px) {
+      .page-header { flex-direction:column; align-items:flex-start; gap:1rem }
     }
   </style>
 </head>
 <body>
+
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
-    </div>
+    <div class="sidebar-header"><div class="logo"><a href="index.html">Culin<span>era</span></a></div></div>
     <div class="user-profile">
-      <div class="user-avatar" id="userAvatar">
-        <i class="fas fa-user"></i>
-      </div>
+      <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
       <div class="user-info">
         <h3 id="profileUsername">User</h3>
         <div class="user-email" id="profileEmail">user@example.com</div>
@@ -234,28 +99,13 @@
     </div>
     <nav class="nav-menu" aria-label="Main Navigation">
       <ul>
-        <li class="nav-item">
-          <a href="dashboard.html" class="nav-link">
-            <i class="fas fa-home"></i><span>Dashboard</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="yourrecipes.html" class="nav-link">
-            <i class="fas fa-utensils"></i><span>Your Recipes</span>
-          </a>
-        </li>
-        <li class="nav-item">
-          <a href="create-recipe.html" class="nav-link active">
-            <i class="fas fa-plus"></i><span>Create Recipe</span>
-          </a>
-        </li>
-        <!-- other nav items… -->
+        <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+        <li class="nav-item"><a href="yourrecipes.html" class="nav-link"><i class="fas fa-utensils"></i><span>Your Recipes</span></a></li>
+        <li class="nav-item"><a href="create-recipe.html" class="nav-link active"><i class="fas fa-plus"></i><span>Create Recipe</span></a></li>
       </ul>
     </nav>
     <div class="sidebar-footer">
-      <button id="logoutBtn" type="button" class="btn btn-primary">
-        <i class="fas fa-sign-out-alt"></i> Log Out
-      </button>
+      <button id="logoutBtn" type="button" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
     </div>
   </aside>
 
@@ -264,16 +114,12 @@
       <header class="page-header">
         <h1 class="page-title">Create Recipe</h1>
         <div class="page-actions">
-          <a href="yourrecipes.html" class="btn btn-primary mono">
-            <i class="fas fa-arrow-left"></i> Back to Recipes
-          </a>
+          <a href="yourrecipes.html" class="btn btn-primary mono"><i class="fas fa-arrow-left"></i> Back to Recipes</a>
         </div>
       </header>
 
       <div class="content-card">
-        <div class="content-card-header">
-          <h2 class="content-card-title">New Recipe Details</h2>
-        </div>
+        <div class="content-card-header"><h2 class="content-card-title">New Recipe Details</h2></div>
         <div class="content-card-body">
           <form id="createRecipeForm">
             <div class="form-group">
@@ -292,14 +138,112 @@
 
             <div class="form-group">
               <label for="photoUpload">Upload Photos</label>
-              <input type="file" id="photoUpload" accept="image/*" multiple />
+              <input type="file" id="photoUpload" accept="image/*" multiple>
               <div id="imagePreview"></div>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-submit mono">
-              <i class="fas fa-save"></i> Save Recipe
-            </button>
+            <button type="submit" class="btn btn-primary btn-submit mono"><i class="fas fa-save"></i> Save Recipe</button>
           </form>
         </div>
       </div>
-    </div
+    </div>
+  </main>
+
+  <script>
+    // --- FIREBASE INIT ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
+      authDomain: "culinera-recipes.firebaseapp.com",
+      projectId: "culinera-recipes",
+      storageBucket: "culinera-recipes.appspot.com",
+      messagingSenderId: "64221926914",
+      appId: "1:64221926914:web:f621b8581a4f0791694ae3",
+      measurementId: "G-LJTEX9XC99"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(), db = firebase.firestore();
+
+    // populate user info
+    auth.onAuthStateChanged(async user => {
+      if (!user) return location.href = 'index.html';
+      const doc = await db.collection('users').doc(user.uid).get();
+      const name = doc.exists && doc.data().username ? doc.data().username : (user.displayName || user.email.split('@')[0]);
+      document.getElementById('profileUsername').textContent = name;
+      document.getElementById('profileEmail').textContent = user.email;
+      const avatar = document.getElementById('userAvatar');
+      if (user.photoURL) {
+        avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      } else {
+        avatar.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
+      }
+    });
+
+    document.getElementById('logoutBtn').onclick = async () => {
+      await auth.signOut();
+      location.href = 'index.html';
+    };
+
+    // dynamic ingredients
+    const ingredientsList = document.getElementById('ingredientsList');
+    function addIngredientField(val='') {
+      const row = document.createElement('div'); row.className='form-control';
+      const input = document.createElement('input');
+      input.type='text'; input.name='ingredients'; input.value=val;
+      input.placeholder='Type ingredient and press Enter'; input.autocomplete='off';
+      const btn = document.createElement('button');
+      btn.type='button'; btn.className='remove-btn'; btn.innerHTML='&times;';
+      btn.onclick = ()=>row.remove();
+      input.onkeydown = e => {
+        if (e.key==='Enter') {
+          e.preventDefault();
+          const all = ingredientsList.querySelectorAll('input[name="ingredients"]');
+          if (all[all.length-1] === input && input.value.trim()) addIngredientField();
+        }
+      };
+      row.append(input,btn); ingredientsList.appendChild(row); input.focus();
+    }
+    ingredientsList.innerHTML = '<label>Ingredients</label>';
+    addIngredientField();
+
+    // image preview & base64
+    let imageBase64Array = [];
+    const photoInput = document.getElementById('photoUpload');
+    const preview = document.getElementById('imagePreview');
+    photoInput.onchange = ()=> {
+      preview.innerHTML=''; imageBase64Array=[];
+      Array.from(photoInput.files).forEach(f=>{
+        const reader=new FileReader();
+        reader.onload=()=> {
+          imageBase64Array.push(reader.result);
+          const img=document.createElement('img'); img.src=reader.result;
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(f);
+      });
+    };
+
+    // submit form
+    document.getElementById('createRecipeForm').onsubmit = async e => {
+      e.preventDefault();
+      const user = auth.currentUser;
+      const data = {
+        title: e.target.title.value.trim(),
+        ingredients: Array.from(e.target.elements['ingredients'])
+                          .map(i=>i.value.trim()).filter(v=>v),
+        steps: e.target.steps.value.trim().split('\n').filter(l=>l),
+        photos: imageBase64Array,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        authorId: user.uid
+      };
+      try {
+        await db.collection('recipes').add(data);
+        alert('Recipe created!');
+        location.href='yourrecipes.html';
+      } catch (err) {
+        console.error(err);
+        alert('Error saving recipe.');
+      }
+    };
+  </script>
+</body>
+</html>
