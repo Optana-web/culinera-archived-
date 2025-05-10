@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Culinaera – View Recipe</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Culinera – View Recipe</title>
   <meta name="description" content="View a recipe">
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
@@ -205,7 +206,7 @@
   <main class="main-content">
     <div class="content-wrapper">
       <header class="page-header">
-        <div class="page-title" id="recipeTitle">Loading…</div>
+        <h1 class="page-title" id="recipeTitle">Loading…</h1>
         <div class="page-actions">
           <button onclick="history.back()" class="btn mono">
             <i class="fas fa-arrow-left"></i> Back
@@ -222,26 +223,27 @@
         <div id="photoGallery" class="photo-gallery"></div>
       </div>
 
-      <div class="section">
+      <section class="section">
         <h2>Ingredients</h2>
         <ul id="ingredientsList" class="ingredients-list"></ul>
-      </div>
-      <div class="section">
+      </section>
+      
+      <section class="section">
         <h2>Preparation Steps</h2>
         <ol id="stepsList" class="steps-list"></ol>
-      </div>
+      </section>
     </div>
   </main>
 
   <!-- Lightbox -->
-  <div id="lightboxOverlay">
-    <button id="lightboxPrev" class="lightbox-btn"></button>
+  <div id="lightboxOverlay" role="dialog" aria-label="Image gallery">
+    <button id="lightboxPrev" class="lightbox-btn" aria-label="Previous image"></button>
     <img id="lightboxImage" src="" alt="Full preview">
-    <button id="lightboxNext" class="lightbox-btn"></button>
+    <button id="lightboxNext" class="lightbox-btn" aria-label="Next image"></button>
   </div>
 
   <!-- Share Toast -->
-  <div id="shareToast">Link copied!</div>
+  <div id="shareToast" role="alert" aria-live="polite">Link copied!</div>
 
   <script>
     // Firebase init
@@ -286,56 +288,102 @@
 
       // Fetch recipe
       const id = getQueryParam('id');
-      if (!id) return alert('No recipe specified');
-      const doc = await db.collection('recipes').doc(id).get();
-      if (!doc.exists) return alert('Recipe not found');
-      const r = doc.data();
-
-      // Title & meta
-      document.getElementById('recipeTitle').textContent = r.title;
-      const date = r.createdAt?.toDate().toLocaleDateString() || '';
-      let authorName = 'Unknown';
+      if (!id) {
+        alert('No recipe specified');
+        return location.href = 'dashboard.html';
+      }
+      
       try {
-        const aDoc = await db.collection('users').doc(r.authorId).get();
-        if (aDoc.exists) authorName = aDoc.data().username || authorName;
-      } catch {}
-      document.getElementById('recipeMeta').innerHTML =
-        `<span><i class="fas fa-calendar"></i> ${date}</span>
-         <span><i class="fas fa-user"></i> ${authorName}</span>`;
+        const doc = await db.collection('recipes').doc(id).get();
+        if (!doc.exists) {
+          alert('Recipe not found');
+          return location.href = 'dashboard.html';
+        }
+        
+        const r = doc.data();
 
-      // Ingredients
-      const il = document.getElementById('ingredientsList');
-      (r.ingredients || []).forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        il.appendChild(li);
-      });
+        // Title & meta
+        document.getElementById('recipeTitle').textContent = r.title;
+        const date = r.createdAt?.toDate().toLocaleDateString() || 'Unknown date';
+        let authorName = 'Unknown';
+        
+        try {
+          const aDoc = await db.collection('users').doc(r.authorId).get();
+          if (aDoc.exists) authorName = aDoc.data().username || authorName;
+        } catch (err) {
+          console.error('Error fetching author details:', err);
+        }
+        
+        document.getElementById('recipeMeta').innerHTML =
+          `<span><i class="fas fa-calendar"></i> ${date}</span>
+           <span><i class="fas fa-user"></i> ${authorName}</span>`;
 
-      // Steps
-      const sl = document.getElementById('stepsList');
-      (r.steps || []).forEach(step => {
-        const li = document.createElement('li');
-        li.textContent = step;
-        sl.appendChild(li);
-      });
+        // Ingredients
+        const il = document.getElementById('ingredientsList');
+        if (Array.isArray(r.ingredients) && r.ingredients.length > 0) {
+          r.ingredients.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = item;
+            il.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'No ingredients listed';
+          il.appendChild(li);
+        }
 
-      // Photos + lightbox setup
-      gallerySrcs = r.photos || [];
-      const gallery = document.getElementById('photoGallery');
-      gallerySrcs.forEach((src, i) => {
-        const img = document.createElement('img');
-        img.src = src;
-        img.alt = `Photo ${i+1}`;
-        img.addEventListener('click', () => {
-          if (!animating) openLightbox(i);
-        });
-        gallery.appendChild(img);
-      });
+        // Steps - Fixed to properly handle preparation steps
+        const sl = document.getElementById('stepsList');
+        if (Array.isArray(r.steps) && r.steps.length > 0) {
+          r.steps.forEach((step, index) => {
+            const li = document.createElement('li');
+            li.textContent = step;
+            sl.appendChild(li);
+          });
+        } else if (Array.isArray(r.preparationSteps) && r.preparationSteps.length > 0) {
+          // Alternative field name for steps
+          r.preparationSteps.forEach((step, index) => {
+            const li = document.createElement('li');
+            li.textContent = step;
+            sl.appendChild(li);
+          });
+        } else {
+          const li = document.createElement('li');
+          li.textContent = 'No preparation steps listed';
+          sl.appendChild(li);
+        }
+
+        // Photos + lightbox setup
+        gallerySrcs = r.photos || [];
+        const gallery = document.getElementById('photoGallery');
+        if (gallerySrcs.length > 0) {
+          gallerySrcs.forEach((src, i) => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = `${r.title} - Photo ${i+1}`;
+            img.addEventListener('click', () => {
+              if (!animating) openLightbox(i);
+            });
+            gallery.appendChild(img);
+          });
+        } else {
+          gallery.innerHTML = '<p class="mono">No photos available</p>';
+        }
+      } catch (err) {
+        console.error('Error loading recipe:', err);
+        alert('Error loading recipe. Please try again later.');
+        return location.href = 'dashboard.html';
+      }
     });
 
     document.getElementById('logoutBtn').onclick = async () => {
-      await auth.signOut();
-      location.href = 'index.html';
+      try {
+        await auth.signOut();
+        location.href = 'index.html';
+      } catch (err) {
+        console.error('Error signing out:', err);
+        alert('Error signing out. Please try again.');
+      }
     };
 
     // Lightbox with slide and fade animations
@@ -383,6 +431,7 @@
       e.stopPropagation();
       changeImage((currentIndex - 1 + gallerySrcs.length) % gallerySrcs.length, 'prev');
     }
+    
     function showNext(e) {
       e.stopPropagation();
       changeImage((currentIndex + 1) % gallerySrcs.length, 'next');
@@ -429,11 +478,12 @@
         try {
           await navigator.share({
             title: title,
-            text: `Check out this recipe on Culinaera: "${title}"`,
+            text: `Check out this recipe on Culinera: "${title}"`,
             url: url
           });
         } catch (err) {
           // User cancelled or error, do nothing
+          console.log('Share cancelled or failed');
         }
       } else {
         // Fallback: copy to clipboard
@@ -441,6 +491,7 @@
           await navigator.clipboard.writeText(url);
           showShareToast('Link copied!');
         } catch (err) {
+          console.error('Failed to copy:', err);
           showShareToast('Could not copy link');
         }
       }
