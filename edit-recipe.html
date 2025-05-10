@@ -447,64 +447,91 @@
       }
     }
 
-    // --- Image preview & max 5, with delete ---
-    let imageBase64 = [];
-    let originalPhotos = [];
+    // --- Image preview & max 5, with delete and fade ---
+    let imageBase64 = []; // New images (base64)
+    let originalPhotos = []; // Existing image URLs
+
     photoUpload.addEventListener('change', function(e) {
       const files = Array.from(e.target.files);
-      files.slice(0, 5 - imageBase64.length).forEach(file => {
+      files.slice(0, 5 - (originalPhotos.length + imageBase64.length)).forEach(file => {
         const reader = new FileReader();
         reader.onload = function(ev) {
           imageBase64.push(ev.target.result);
-          renderImagePreview(imageBase64);
+          renderImagePreview();
         };
         reader.readAsDataURL(file);
       });
       photoUpload.value = '';
     });
 
-    function renderImagePreview(images) {
+    function renderImagePreview() {
       imagePreview.innerHTML = '';
-      images.forEach((src, idx) => {
+      // Show existing images first
+      originalPhotos.forEach((src, idx) => {
         const container = document.createElement('div');
         container.className = 'image-thumb-container';
         const img = document.createElement('img');
         img.src = src;
-
-        // Trash can icon (FontAwesome)
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
         delBtn.className = 'delete-image-btn';
         delBtn.title = 'Delete this image';
         delBtn.innerHTML = '<i class="fas fa-trash"></i>';
-
         delBtn.onclick = (e) => {
           e.stopPropagation();
           container.classList.add('fading');
           setTimeout(() => {
-            images.splice(idx, 1);
-            if (imageBase64.length) {
-              imageBase64 = images.slice();
-            } else {
-              originalPhotos = images.slice();
-            }
-            renderImagePreview(images);
+            originalPhotos.splice(idx, 1);
+            renderImagePreview();
           }, 600);
         };
-
+        container.appendChild(img);
+        container.appendChild(delBtn);
+        imagePreview.appendChild(container);
+      });
+      // Then new images
+      imageBase64.forEach((src, idx) => {
+        const container = document.createElement('div');
+        container.className = 'image-thumb-container';
+        const img = document.createElement('img');
+        img.src = src;
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'delete-image-btn';
+        delBtn.title = 'Delete this image';
+        delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+        delBtn.onclick = (e) => {
+          e.stopPropagation();
+          container.classList.add('fading');
+          setTimeout(() => {
+            imageBase64.splice(idx, 1);
+            renderImagePreview();
+          }, 600);
+        };
         container.appendChild(img);
         container.appendChild(delBtn);
         imagePreview.appendChild(container);
       });
     }
 
-    // --- Load recipe for edit (dummy implementation, replace with your logic) ---
-    function loadRecipeForEdit() {
-      // Example: setIngredientsFields(["Flour", "Eggs", "Milk"]);
-      setIngredientsFields([]);
-      // Example: renderImagePreview(["https://via.placeholder.com/80"]);
-      renderImagePreview([]);
-      // Set other fields as needed
+    // --- Load recipe for edit ---
+    async function loadRecipeForEdit() {
+      try {
+        const doc = await db.collection('recipes').doc(recipeId).get();
+        if (!doc.exists) {
+          editError.textContent = "Recipe not found.";
+          return;
+        }
+        const data = doc.data();
+        document.getElementById('title').value = data.title || '';
+        document.getElementById('steps').value = data.steps || '';
+        setIngredientsFields(data.ingredients || []);
+        originalPhotos = Array.isArray(data.photos) ? data.photos.slice(0, 5) : [];
+        imageBase64 = [];
+        renderImagePreview();
+      } catch (err) {
+        editError.textContent = "Error loading recipe: " + err.message;
+      }
     }
   </script>
 </body>
