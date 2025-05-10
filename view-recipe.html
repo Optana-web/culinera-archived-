@@ -96,8 +96,13 @@
     .page-title { font-size:2rem; font-weight:700 }
     .page-actions .btn { width:auto }
 
-    .recipe-meta { font-family:'Roboto Mono',monospace; color:#777; font-size:.9rem; display:flex; gap:1rem }
-    .photo-gallery { display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0 }
+    .recipe-meta {
+      font-family:'Roboto Mono',monospace;
+      color:#777; font-size:.9rem; display:flex; gap:1rem;
+    }
+    .photo-gallery {
+      display:flex; gap:.5rem; flex-wrap:wrap; margin:1rem 0;
+    }
     .photo-gallery img {
       width:120px; height:120px; object-fit:cover; border-radius:8px;
       cursor:pointer; transition:transform .2s;
@@ -115,8 +120,7 @@
       background: var(--dark-overlay);
       display:flex; align-items:center; justify-content:center;
       opacity:0; visibility:hidden; transition:opacity .3s ease;
-      z-index:1000;
-      cursor: zoom-out;
+      z-index:1000; cursor: zoom-out;
     }
     #lightboxOverlay.visible {
       opacity:1; visibility:visible;
@@ -128,11 +132,30 @@
     }
     .lightbox-btn {
       position:absolute; top:50%; transform:translateY(-50%);
-      background:none; border:none; color:#fff; font-size:2rem;
-      padding:0 1rem; cursor:pointer; user-select:none;
+      width:48px; height:48px; background:rgba(255,255,255,0.2);
+      border:none; border-radius:50%; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:background .2s;
     }
+    .lightbox-btn:hover { background:rgba(255,255,255,0.4) }
     #lightboxPrev { left:2% }
     #lightboxNext { right:2% }
+
+    /* triangle arrows */
+    #lightboxPrev::before,
+    #lightboxNext::before {
+      content: '';
+      display: block;
+      width: 0; height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+    }
+    #lightboxPrev::before {
+      border-right: 14px solid #fff;
+    }
+    #lightboxNext::before {
+      border-left: 14px solid #fff;
+    }
 
     @media (max-width:992px) {
       .sidebar { width:80px }
@@ -200,9 +223,9 @@
 
   <!-- Lightbox -->
   <div id="lightboxOverlay">
-    <button id="lightboxPrev" class="lightbox-btn">&#10094;</button>
+    <button id="lightboxPrev" class="lightbox-btn"></button>
     <img id="lightboxImage" src="" alt="Full preview">
-    <button id="lightboxNext" class="lightbox-btn">&#10095;</button>
+    <button id="lightboxNext" class="lightbox-btn"></button>
   </div>
 
   <script>
