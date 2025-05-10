@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Culinera – Dashboard</title>
-
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <meta name="description" content="Manage your culinary experiences and recipes">
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 
     <style>
         :root {
@@ -19,151 +21,621 @@
             --light: #FFFFFF;
             --gray-light: #F5F5F5;
             --gray: #E0E0E0;
+            --sidebar-width: 260px;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
         body {
             font-family: 'Playfair Display', serif;
             color: var(--dark);
             background: var(--gray-light);
             line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+        }
+        
+        .mono { 
+            font-family: 'Roboto Mono', monospace; 
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--dark);
+            color: var(--light);
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+            z-index: 100;
         }
-        .mono { font-family: 'Roboto Mono', monospace; }
-        .container { width: 90%; max-width: 1200px; margin: 0 auto; }
-
-        header { padding: 1.5rem 0; background: var(--light); border-bottom: 1px solid var(--gray); }
-        nav { display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 1.8rem; font-weight: 700; }
-        .logo span { color: var(--primary-color); }
-        .logo a { text-decoration: none; color: var(--dark); }
-        .nav-links { display: flex; gap: 2rem; }
-        .nav-links a { color: var(--dark); text-decoration: none; font-size: 1rem; transition: color .3s; }
-        .nav-links a:hover { color: var(--primary-color); }
-        .auth-buttons { display: flex; gap: 1rem; }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        
+        .logo span {
+            color: var(--primary-color);
+        }
+        
+        .logo a {
+            text-decoration: none;
+            color: var(--light);
+        }
+        
+        .user-profile {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            margin: 0 auto 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--light);
+        }
+        
+        .user-info h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .user-email {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .nav-menu {
+            padding: 1.5rem 0;
+            flex-grow: 1;
+        }
+        
+        .nav-item {
+            list-style: none;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1.5rem;
+            color: var(--gray);
+            text-decoration: none;
+            transition: all 0.3s;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.95rem;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+        
+        .nav-link.active {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        .nav-link i {
+            margin-right: 0.8rem;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
         .btn {
             font-family: 'Roboto Mono', monospace;
-            padding: .5rem 1.5rem;
+            padding: 0.5rem 1.5rem;
             border-radius: 8px;
             cursor: pointer;
-            font-size: .9rem;
+            font-size: 0.9rem;
             text-decoration: none;
             display: inline-block;
-            transition: all .3s;
+            transition: all 0.3s;
             text-align: center;
             border: none;
             outline: none;
+            width: 100%;
         }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid var(--primary-color);
-            color: var(--primary-color);
-        }
-        .btn-outline:hover { background: var(--primary-color); color: var(--light); }
-        .btn-primary { background: var(--primary-color); color: var(--light); }
-        .btn-primary:hover { background: var(--accent-light); }
-
-        main { padding: 4rem 0; text-align: center; flex-grow: 1; }
-        .welcome { font-size: 1.8rem; margin-bottom: 2rem; }
-        .dashboard-btn {
-            margin: 1rem auto;
-            display: inline-block;
-            font-family: 'Roboto Mono', monospace;
-            padding: 1rem 2rem;
-            border-radius: 8px;
+        
+        .btn-primary {
             background: var(--primary-color);
             color: var(--light);
-            font-size: 1rem;
-            cursor: pointer;
-            transition: background .3s;
-            text-decoration: none;
-            outline: none;
         }
-        .dashboard-btn:hover { background: var(--accent-light); }
-        .dashboard-btn:focus { outline: none; }
+        
+        .btn-primary:hover {
+            background: var(--accent-light);
+        }
 
-        .profile-info {
-            margin: 2rem auto;
-            display: inline-block;
-            text-align: left;
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            transition: all 0.3s ease;
+        }
+        
+        .content-wrapper {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--gray);
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .page-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .welcome-banner {
             background: var(--light);
             border-radius: 12px;
-            padding: 2rem 2.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,.08);
-            min-width: 320px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-        .profile-info h2 {
-            font-size: 1.2rem;
-            margin-bottom: 1.2rem;
+        
+        .welcome-title {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--light);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-title {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
             color: var(--primary-color);
         }
-        .profile-info .profile-row {
-            margin-bottom: 1rem;
-            font-family: 'Roboto Mono', monospace;
+        
+        .stat-desc {
+            font-size: 0.9rem;
+            color: #777;
+            margin-top: 0.5rem;
         }
-        .profile-info .profile-label {
-            font-weight: bold;
-            margin-right: 0.5em;
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
         }
-        .profile-info .profile-value {
-            color: var(--dark);
+        
+        .content-card {
+            background: var(--light);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
-
-        footer {
+        
+        .content-card-header {
             background: var(--gray-light);
-            padding: 2rem 0;
-            text-align: center;
-            margin-top: auto;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--gray);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; }
-        .footer-links a { color: var(--dark); text-decoration: none; font-size: .9rem; transition: color .3s; }
-        .footer-links a:hover { color: var(--primary-color); }
-        .copyright { font-family: 'Roboto Mono', monospace; font-size: .8rem; color: #888; }
+        
+        .content-card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .content-card-body {
+            padding: 1.5rem;
+        }
+        
+        .recipe-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .recipe-item:last-child {
+            border-bottom: none;
+        }
+        
+        .recipe-thumb {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            background: var(--gray-light);
+            margin-right: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+        
+        .recipe-info {
+            flex: 1;
+        }
+        
+        .recipe-title {
+            font-size: 1.1rem;
+            margin-bottom: 0.3rem;
+        }
+        
+        .recipe-meta {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.8rem;
+            color: #777;
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .recipe-meta span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .recipe-meta i {
+            margin-right: 0.3rem;
+        }
+        
+        .recipe-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: var(--gray-light);
+            color: var(--dark);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-icon:hover {
+            background: var(--primary-color);
+            color: var(--light);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+                overflow: visible;
+            }
+            
+            .logo span, .user-info, .nav-link span, .sidebar-footer {
+                display: none;
+            }
+            
+            .logo {
+                font-size: 1.4rem;
+            }
+            
+            .user-avatar {
+                width: 50px;
+                height: 50px;
+                font-size: 1.4rem;
+            }
+            
+            .nav-link {
+                justify-content: center;
+                padding: 1rem;
+            }
+            
+            .nav-link i {
+                margin-right: 0;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid, .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
-
-    <header>
-        <div class="container">
-            <nav>
-                <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
-                <div class="nav-links">
-                    <a href="browse.html">Browse Recipes</a>
-                    <a href="popular.html">Popular</a>
-                    <a href="categories.html">Categories</a>
-                    <a href="about.html">About</a>
-                </div>
-                <div class="auth-buttons">
-                    <a href="yourrecipes.html" class="btn btn-outline">Your Recipes</a>
-                    <button id="logoutBtn" type="button" class="btn btn-primary">Log Out</button>
-                </div>
-            </nav>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
         </div>
-    </header>
-
-    <main>
-        <div class="container">
-            <div id="welcomeText" class="welcome">Welcome back!</div>
-            <div id="profileInfo" class="profile-info" style="display:none;">
-                <h2>Your Profile</h2>
-                <div class="profile-row"><span class="profile-label">Username:</span> <span id="profileUsername" class="profile-value"></span></div>
-                <div class="profile-row"><span class="profile-label">Email:</span> <span id="profileEmail" class="profile-value"></span></div>
-                <div class="profile-row"><span class="profile-label">Provider:</span> <span id="profileProvider" class="profile-value"></span></div>
+        
+        <div class="user-profile">
+            <div class="user-avatar" id="userAvatar">
+                <i class="fas fa-user"></i>
             </div>
-            <a href="yourrecipes.html" class="dashboard-btn">View &amp; Manage Your Recipes</a>
+            <div class="user-info">
+                <h3 id="profileUsername">User</h3>
+                <div class="user-email" id="profileEmail">user@example.com</div>
+            </div>
+        </div>
+        
+        <nav class="nav-menu" aria-label="Main Navigation">
+            <ul>
+                <li class="nav-item">
+                    <a href="dashboard.html" class="nav-link active">
+                        <i class="fas fa-home"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="yourrecipes.html" class="nav-link">
+                        <i class="fas fa-utensils"></i>
+                        <span>Your Recipes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="browse.html" class="nav-link">
+                        <i class="fas fa-search"></i>
+                        <span>Browse Recipes</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="popular.html" class="nav-link">
+                        <i class="fas fa-fire"></i>
+                        <span>Popular</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="categories.html" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        <span>Categories</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="favorites.html" class="nav-link">
+                        <i class="fas fa-heart"></i>
+                        <span>Favorites</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="settings.html" class="nav-link">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="about.html" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        <span>About</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="sidebar-footer">
+            <button id="logoutBtn" type="button" class="btn btn-primary">
+                <i class="fas fa-sign-out-alt"></i> Log Out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <header class="page-header">
+                <h1 class="page-title">Dashboard</h1>
+                <div class="page-actions">
+                    <a href="create-recipe.html" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Recipe
+                    </a>
+                </div>
+            </header>
+            
+            <section class="welcome-banner">
+                <h2 class="welcome-title" id="welcomeText">Welcome back!</h2>
+                <p>Here's an overview of your culinary activities and recipes.</p>
+            </section>
+            
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3 class="stat-title">TOTAL RECIPES</h3>
+                    <div class="stat-value">12</div>
+                    <p class="stat-desc">You've created 12 delicious recipes so far</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="stat-title">FAVORITE COUNT</h3>
+                    <div class="stat-value">48</div>
+                    <p class="stat-desc">Your recipes have been favorited 48 times</p>
+                </div>
+                <div class="stat-card">
+                    <h3 class="stat-title">AVERAGE RATING</h3>
+                    <div class="stat-value">4.7</div>
+                    <p class="stat-desc">Your recipes have an average rating of 4.7 stars</p>
+                </div>
+            </section>
+            
+            <div class="content-grid">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">Recent Recipes</h3>
+                        <a href="yourrecipes.html" class="mono">View All</a>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="recipe-item">
+                            <div class="recipe-thumb">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="recipe-info">
+                                <h4 class="recipe-title">Spicy Thai Basil Chicken</h4>
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-calendar"></i> May 5, 2025</span>
+                                    <span><i class="fas fa-heart"></i> 12</span>
+                                </div>
+                            </div>
+                            <div class="recipe-actions">
+                                <button type="button" class="btn-icon" aria-label="Edit recipe">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn-icon" aria-label="Share recipe">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="recipe-item">
+                            <div class="recipe-thumb">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="recipe-info">
+                                <h4 class="recipe-title">Mushroom Risotto</h4>
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-calendar"></i> May 2, 2025</span>
+                                    <span><i class="fas fa-heart"></i> 8</span>
+                                </div>
+                            </div>
+                            <div class="recipe-actions">
+                                <button type="button" class="btn-icon" aria-label="Edit recipe">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn-icon" aria-label="Share recipe">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="recipe-item">
+                            <div class="recipe-thumb">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="recipe-info">
+                                <h4 class="recipe-title">Classic Apple Pie</h4>
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-calendar"></i> Apr 28, 2025</span>
+                                    <span><i class="fas fa-heart"></i> 15</span>
+                                </div>
+                            </div>
+                            <div class="recipe-actions">
+                                <button type="button" class="btn-icon" aria-label="Edit recipe">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button type="button" class="btn-icon" aria-label="Share recipe">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">Recent Activity</h3>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="recipe-item">
+                            <div class="recipe-thumb">
+                                <i class="fas fa-comment"></i>
+                            </div>
+                            <div class="recipe-info">
+                                <h4 class="recipe-title">New comment on Mushroom Risotto</h4>
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-clock"></i> 2 hours ago</span>
+                                    <span><i class="fas fa-user"></i> JaneDoe</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recipe-item">
+                            <div class="recipe-thumb">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="recipe-info">
+                                <h4 class="recipe-title">3 new favorites on your recipes</h4>
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-clock"></i> Yesterday</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recipe-item">
+                            <div class="recipe-thumb">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <div class="recipe-info">
+                                <h4 class="recipe-title">New 5-star rating on Classic Apple Pie</h4>
+                                <div class="recipe-meta">
+                                    <span><i class="fas fa-clock"></i> 3 days ago</span>
+                                    <span><i class="fas fa-user"></i> ChefMike</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
-
-    <footer>
-        <div class="footer-links">
-            <a href="about.html">About Us</a>
-            <a href="contact.html">Contact</a>
-            <a href="terms.html">Terms of Service</a>
-            <a href="privacy.html">Privacy Policy</a>
-        </div>
-        <p class="copyright">&copy; 2025 Culinera. All rights reserved.</p>
-    </footer>
 
     <script>
         // --- FIREBASE CONFIG ---
@@ -183,42 +655,41 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        const logoutBtn  = document.getElementById('logoutBtn');
-        const welcomeText= document.getElementById('welcomeText');
-        const profileInfo = document.getElementById('profileInfo');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const welcomeText = document.getElementById('welcomeText');
         const profileUsername = document.getElementById('profileUsername');
         const profileEmail = document.getElementById('profileEmail');
-        const profileProvider = document.getElementById('profileProvider');
+        const userAvatar = document.getElementById('userAvatar');
 
         // Listen for auth state and fetch Firestore profile
         auth.onAuthStateChanged(async user => {
             if (user) {
-                // User is logged in - no email verification check needed
+                // User is logged in
                 try {
                     // Try to get username and provider from Firestore
                     const userDoc = await db.collection('users').doc(user.uid).get();
                     let username = "";
-                    let providerDisplay = "";
                     
                     if (userDoc.exists) {
                         const data = userDoc.data();
                         username = data.username || (user.displayName || user.email.split('@')[0]);
-                        providerDisplay = data.provider || user.providerData[0]?.providerId || "unknown";
                     } else {
                         username = user.displayName || user.email.split('@')[0];
-                        providerDisplay = user.providerData[0]?.providerId || "unknown";
                     }
                     
                     welcomeText.textContent = `Welcome back, ${username}!`;
-
                     profileUsername.textContent = username;
                     profileEmail.textContent = user.email;
-                    profileProvider.textContent = providerDisplay.charAt(0).toUpperCase() + providerDisplay.slice(1);
-                    profileInfo.style.display = "block";
+                    
+                    // Set first letter of username as avatar text if no avatar image
+                    if (!user.photoURL) {
+                        userAvatar.innerHTML = `<span>${username.charAt(0).toUpperCase()}</span>`;
+                    } else {
+                        userAvatar.innerHTML = `<img src="${user.photoURL}" alt="User avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
+                    }
                 } catch (err) {
                     console.error('Error fetching user data:', err);
                     welcomeText.textContent = "Welcome back!";
-                    profileInfo.style.display = "none";
                 }
             } else {
                 // No user is signed in, redirect to index
