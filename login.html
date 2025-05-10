@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Culinera - Log In</title>
+  <title>Culinera – Log In</title>
 
-  <!-- Normalize & Fonts -->
+  <!-- normalize + fonts -->
   <link
     href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
     rel="stylesheet"
@@ -18,7 +18,6 @@
   <!-- Firebase compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-  <script src="firebase-config.js"></script>
 
   <style>
     :root {
@@ -33,59 +32,70 @@
       --info-border: #bee5eb;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Playfair Display', serif; color: var(--dark); line-height: 1.6; background: var(--gray-light); }
+    body { font-family: 'Playfair Display', serif; color: var(--dark); background: var(--gray-light); line-height: 1.6; }
     .mono { font-family: 'Roboto Mono', monospace; }
     .container { width: 90%; max-width: 1200px; margin: 0 auto; }
 
-    /* Header / Nav */
-    header { padding: 1.5rem 0; background-color: var(--light); border-bottom: 1px solid var(--gray); }
+    header { padding: 1.5rem 0; background: var(--light); border-bottom: 1px solid var(--gray); }
     nav { display: flex; justify-content: space-between; align-items: center; }
     .logo { font-size: 1.8rem; font-weight: 700; }
     .logo span { color: var(--primary-color); }
     .logo a { text-decoration: none; color: var(--dark); }
     .nav-links { display: flex; gap: 2rem; }
-    .nav-links a { text-decoration: none; color: var(--dark); font-size: 1rem; transition: color 0.3s; }
+    .nav-links a { color: var(--dark); text-decoration: none; transition: color .3s; }
     .nav-links a:hover { color: var(--primary-color); }
     .auth-buttons { display: flex; gap: 1rem; }
-    .btn { font-family: 'Roboto Mono', monospace; padding: 0.5rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: all 0.3s; text-decoration: none; display: inline-block; text-align: center; }
+    .btn { font-family: 'Roboto Mono', monospace; padding: .5rem 1.5rem; border-radius: 8px; cursor: pointer; font-size: .9rem; text-decoration: none; display: inline-block; transition: all .3s; text-align: center; }
     .btn-outline { background: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
     .btn-outline:hover { background: var(--primary-color); color: var(--light); }
     .btn-primary { background: var(--primary-color); color: var(--light); }
     .btn-primary:hover { background: var(--accent-light); }
 
-    /* Login container */
-    .login-container { max-width: 500px; margin: 4rem auto; padding: 2rem; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background-color: var(--light); }
+    .login-container { max-width: 500px; margin: 4rem auto; padding: 2rem; background: var(--light); border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,.1); }
     .page-title { text-align: center; margin-bottom: 2rem; font-size: 2rem; }
     .page-title span { color: var(--primary-color); }
 
-    .alert { padding: 0.75rem; margin-bottom: 1.5rem; border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; display: none; }
-    .alert-info { background-color: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-border); }
-    .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-    .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .alert { display: none; margin-bottom: 1.5rem; padding: .75rem; border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
+    .alert-info { background: var(--info-bg); color: var(--info-text); border: 1px solid var(--info-border); }
+    .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .alert-danger { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
     .form-group { margin-bottom: 1.5rem; }
-    .form-group label { display: block; margin-bottom: 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
-    .form-group input { width: 100%; padding: 0.75rem; border: 1px solid var(--gray); border-radius: 8px; font-family: 'Roboto Mono', monospace; font-size: 1rem; }
+    .form-group label { display: block; margin-bottom: .5rem; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
+    .form-group input { width: 100%; padding: .75rem; font-family: 'Roboto Mono', monospace; font-size: 1rem; border: 1px solid var(--gray); border-radius: 8px; }
     .form-group input:focus { outline: none; border-color: var(--primary-color); }
 
-    .form-footer { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
-    .form-footer .controls { display: flex; justify-content: space-between; align-items: center; }
-    .forgot-password { color: var(--primary-color); text-decoration: none; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
+    .form-footer { margin-top: 2rem; display: flex; flex-direction: column; gap: 1rem; }
+    .controls { display: flex; justify-content: space-between; align-items: center; }
+    .forgot-password { font-family: 'Roboto Mono', monospace; font-size: .9rem; color: var(--primary-color); text-decoration: none; }
     .forgot-password:hover { text-decoration: underline; }
 
-    .google-btn { width: 100%; padding: 0.75rem; border: 1px solid var(--primary-color); border-radius: 8px; background: transparent; font-family: 'Roboto Mono', monospace; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+    .google-btn {
+      width: 100%;
+      padding: .75rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 1rem;
+      border: 1px solid var(--primary-color);
+      border-radius: 8px;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: .5rem;
+      cursor: pointer;
+      transition: background .3s, color .3s;
+    }
     .google-btn:hover { background: var(--primary-color); color: var(--light); }
 
-    .alt-action { text-align: center; margin-top: 2rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
+    .alt-action { text-align: center; margin-top: 2rem; font-family: 'Roboto Mono', monospace; font-size: .9rem; }
     .alt-action a { color: var(--primary-color); text-decoration: none; }
     .alt-action a:hover { text-decoration: underline; }
 
-    /* Footer */
-    footer { background-color: var(--gray-light); padding: 2rem 0; text-align: center; margin-top: 4rem; }
+    footer { background: var(--gray-light); padding: 2rem 0; text-align: center; margin-top: 4rem; }
     .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; }
-    .footer-links a { text-decoration: none; color: var(--dark); font-size: 0.9rem; transition: color 0.3s; }
+    .footer-links a { color: var(--dark); text-decoration: none; font-size: .9rem; transition: color .3s; }
     .footer-links a:hover { color: var(--primary-color); }
-    .copyright { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: #888; }
+    .copyright { font-family: 'Roboto Mono', monospace; font-size: .8rem; color: #888; }
 
     @media (max-width: 768px) {
       .nav-links { display: none; }
@@ -95,6 +105,7 @@
   </style>
 </head>
 <body>
+
   <header>
     <div class="container">
       <nav>
@@ -135,7 +146,8 @@
               <button type="submit" class="btn btn-primary">Log In</button>
             </div>
             <button type="button" id="googleBtn" class="google-btn">
-              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" width="20" />
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                   alt="Google logo" width="20" height="20" />
               Sign in with Google
             </button>
           </div>
@@ -159,23 +171,32 @@
   </footer>
 
   <script>
-    // Initialize Firebase app if not already
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
+    // --- INLINE YOUR FIREBASE CONFIG HERE ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
+      authDomain: "culinera-recipes.firebaseapp.com",
+      projectId: "culinera-recipes",
+      storageBucket: "culinera-recipes.appspot.com",
+      messagingSenderId: "64221926914",
+      appId: "1:64221926914:web:f621b8581a4f0791694ae3",
+      measurementId: "G-LJTEX9XC99"
+    };
 
+    // initialize
+    firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
+
     const loginForm = document.getElementById('loginForm');
     const notification = document.getElementById('notification');
     const googleBtn = document.getElementById('googleBtn');
 
-    function showAlert(message, type = 'success') {
-      notification.textContent = message;
+    function showAlert(msg, type='success') {
+      notification.textContent = msg;
       notification.className = `alert alert-${type}`;
       notification.style.display = 'block';
     }
 
-    loginForm.addEventListener('submit', async (e) => {
+    loginForm.addEventListener('submit', async e => {
       e.preventDefault();
       showAlert('Logging in…', 'info');
 
@@ -183,15 +204,13 @@
       const password = loginForm.password.value;
 
       try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        if (user.emailVerified) {
-          showAlert('Login successful! Redirecting…', 'success');
-          setTimeout(() => window.location.href = 'index.html', 1500);
-        } else {
-          showAlert('Please verify your email before logging in.', 'danger');
+        const { user } = await auth.signInWithEmailAndPassword(email, password);
+        if (!user.emailVerified) {
           await auth.signOut();
+          return showAlert('Please verify your email before logging in.', 'danger');
         }
+        showAlert('Login successful! Redirecting…', 'success');
+        setTimeout(() => location.href = 'index.html', 1500);
       } catch (err) {
         showAlert(err.message, 'danger');
       }
@@ -199,19 +218,19 @@
 
     googleBtn.addEventListener('click', async () => {
       const provider = new firebase.auth.GoogleAuthProvider();
+      showAlert('Opening Google Sign-In…', 'info');
       try {
-        showAlert('Opening Google Sign-In…', 'info');
-        const result = await auth.signInWithPopup(provider);
+        await auth.signInWithPopup(provider);
         showAlert('Google login successful! Redirecting…', 'success');
-        setTimeout(() => window.location.href = 'index.html', 1500);
-      } catch (error) {
-        showAlert(error.message, 'danger');
+        setTimeout(() => location.href = 'index.html', 1500);
+      } catch (err) {
+        showAlert(err.message, 'danger');
       }
     });
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(user => {
       if (user && user.emailVerified) {
-        window.location.href = 'index.html';
+        location.href = 'index.html';
       }
     });
   </script>
