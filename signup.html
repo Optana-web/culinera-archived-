@@ -465,14 +465,14 @@
                     await user.updateProfile({ displayName: username });
                     
                     // Send verification email
-                    await user.sendEmailVerification();
+                    await user.sendEmailVerification({
+                        url: window.location.origin + '/login.html',
+                        handleCodeInApp: false
+                    });
 
                     // Show verification modal
                     verificationEmail.textContent = email;
                     verificationModal.style.display = 'flex';
-                    
-                    // Sign out after successful setup
-                    await auth.signOut();
                     
                     showAlert('Account created! Please check your email to verify your account.', 'success');
                 } catch (error) {
@@ -621,20 +621,31 @@
             try {
                 const user = auth.currentUser;
                 if (user) {
-                    await user.sendEmailVerification();
+                    await user.sendEmailVerification({
+                        url: window.location.origin + '/login.html',
+                        handleCodeInApp: false
+                    });
                     showAlert('Verification email resent!', 'success');
                 } else {
-                    // If user signed out, show info
-                    showAlert('Please sign in to resend verification email.', 'info');
+                    // User needs to re-enter credentials
+                    showAlert('Session expired. Please sign in again to resend the verification email.', 'info');
+                    setTimeout(() => window.location.href = 'login.html', 2000);
                 }
             } catch (error) {
+                console.error("Error sending verification email:", error);
                 showAlert('Error sending verification email. Please try again later.', 'danger');
             }
         });
             
         closeModalBtn.addEventListener('click', () => {
             verificationModal.style.display = 'none';
-            window.location.href = 'login.html';
+            // Sign out the user since we want them to verify first
+            auth.signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch(error => {
+                console.error("Error signing out:", error);
+                window.location.href = 'login.html';
+            });
         });
     </script>
 </body>
