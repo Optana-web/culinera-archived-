@@ -161,7 +161,7 @@
                             <button type="submit" class="btn btn-primary">Create Account</button>
                             <button type="button" id="googleSignupBtn" class="google-btn">
                                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                                     alt="Google logo" width="20" height="20" />
+                                    alt="Google logo" width="20" height="20" />
                                 Sign up with Google
                             </button>
                         </div>
@@ -317,13 +317,16 @@
             }
         });
 
-        auth.onAuthStateChanged(user => {
-           if (user && user.emailVerified) {
+       (user && user.emailVerified) {
                 location.href = 'dashboard.html'; // Redirect to dashboard if already signed in and verified
             } else if (user && !user.emailVerified && window.location.pathname.includes('signup.html')) {
                 // If signed in but not verified on signup page, show verification message
                 signupFormSection.style.display = 'none';
                 verificationSection.style.display = 'block';
+            } else {
+                // User is logged out, show the signup form
+                signupFormSection.style.display = 'block';
+                verificationSection.style.display = 'none';
             }
         });
     </script>
