@@ -36,6 +36,7 @@
     .btn-outline:hover { background: var(--primary-color); color: var(--light); }
     .btn-primary { background: var(--primary-color); color: var(--light); }
     .btn-primary:hover { background: var(--accent-light); }
+    .full-width { width: 100%; }
     .login-container { max-width: 500px; margin: 4rem auto; padding: 2rem; border-radius: 16px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); background-color: var(--light); }
     .page-title { text-align: center; margin-bottom: 2rem; font-size: 2rem; }
     .page-title span { color: var(--primary-color); }
@@ -103,6 +104,7 @@
             <a href="forgot-password.html" class="forgot-password">Forgot Password?</a>
             <button type="submit" class="btn btn-primary">Log In</button>
           </div>
+          <button type="button" id="googleSignIn" class="btn btn-outline full-width" style="margin-top:1rem;">Sign in with Google</button>
         </form>
         <div class="alt-action">Don't have an account? <a href="signup.html">Sign up</a></div>
       </div>
@@ -132,18 +134,16 @@
     document.addEventListener('DOMContentLoaded', () => {
       const loginForm = document.getElementById('loginForm');
       const authMessage = document.getElementById('authMessage');
+      const googleBtn = document.getElementById('googleSignIn');
 
       loginForm.addEventListener('submit', async e => {
         e.preventDefault();
         showMessage('Logging in…', 'info');
-
         const email = loginEmail.value.trim();
         const password = loginPassword.value;
-
         try {
           const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
           const user = userCredential.user;
-
           if (user.emailVerified) {
             showMessage('Login successful! Redirecting…', 'success');
             setTimeout(() => window.location.href = 'index.html', 1500);
@@ -151,6 +151,18 @@
             showMessage('Please verify your email before logging in.', 'error');
             await firebase.auth().signOut();
           }
+        } catch (error) {
+          handleAuthError(error);
+        }
+      });
+
+      googleBtn.addEventListener('click', async () => {
+        try {
+          const provider = new firebase.auth.GoogleAuthProvider();
+          provider.addScope('email');
+          await firebase.auth().signInWithPopup(provider);
+          showMessage('Google login successful! Redirecting…', 'success');
+          setTimeout(() => window.location.href = 'index.html', 1500);
         } catch (error) {
           handleAuthError(error);
         }
@@ -169,6 +181,7 @@
           case 'auth/user-not-found': msg = 'User not found. Please check your email or sign up.'; break;
           case 'auth/wrong-password': msg = 'Incorrect password. Please try again.'; break;
           case 'auth/network-request-failed': msg = 'Network error. Please check your connection.'; break;
+          case 'auth/popup-blocked': msg = 'Popup blocked. Please allow popups for this site.'; break;
           default: msg = error.message;
         }
         showMessage(msg, 'error');
