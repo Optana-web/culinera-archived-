@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Culinera – Edit Recipe</title>
+  <meta name="description" content="Edit your recipe">
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    /* ... Paste your CSS styles from create-recipe.html ... */
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <!-- ... Sidebar code unchanged ... -->
+  </aside>
+
+  <main class="main-content">
+    <div class="content-wrapper">
+      <header class="page-header">
+        <h1 class="page-title">Edit Recipe</h1>
+        <div class="page-actions">
+          <a href="yourrecipes.html" class="btn btn-primary mono"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+      </header>
+
+      <div class="content-card">
+        <div class="content-card-header">
+          <h2 class="content-card-title">Edit Recipe Details</h2>
+        </div>
+        <div class="content-card-body">
+          <form id="editRecipeForm">
+            <div class="form-group">
+              <label for="title">Title</label>
+              <input type="text" id="title" name="title" required>
+            </div>
+
+            <div class="form-group ingredients-list" id="ingredientsList">
+              <label>Ingredients</label>
+            </div>
+
+            <div class="form-group">
+              <label for="steps">Preparation Steps</label>
+              <textarea id="steps" name="steps" required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="photoUpload">Upload Photos (max 5)</label>
+              <input type="file" id="photoUpload" accept="image/*" multiple>
+              <div id="imagePreview"></div>
+            </div>
+
+            <button type="submit" class="btn btn-primary mono" disabled id="submitBtn">
+              <i class="fas fa-save"></i> Save Changes
+            </button>
+          </form>
+          <div id="editError" style="color:red; margin-top:1em;"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // --- FIREBASE INIT ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
+      authDomain: "culinera-recipes.firebaseapp.com",
+      projectId: "culinera-recipes",
+      storageBucket: "culinera-recipes.appspot.com",
+      messagingSenderId: "64221926914",
+      appId: "1:64221926914:web:f621b8581a4f0791694ae3",
+      measurementId: "G-LJTEX9XC99"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth(), db = firebase.firestore();
+
+    let currentUser = null;
+    const submitBtn = document.getElementById('submitBtn');
+    const photoUpload = document.getElementById('photoUpload');
+    const imagePreview = document.getElementById('imagePreview');
+    const editError = document.getElementById('editError');
+
+    // --- Get recipe ID from URL ---
+    function getRecipeIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+    const recipeId = getRecipeIdFromUrl();
+    if (!recipeId) {
+      document.body.innerHTML = '<h2 style="color:red;text-align:center;">No recipe ID provided.</h2>';
+      throw new Error('No recipe ID in URL');
+    }
+
+    // --- Auth state & sidebar profile ---
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        location.href = 'index.html';
+        return;
+      }
+      currentUser = user;
+      submitBtn.disabled = false;
+
+      // populate profile info
+      const udoc = await db.collection('users').doc(user.uid).get();
+      const name = udoc.exists && udoc.data().username
+        ? udoc.data().username
+        : (user.displayName || user.email.split('@')[0]);
+      document.getElementById('profileUsername').textContent = name;
+      document.getElementById('profileEmail').textContent = user.email;
+      const avatar = document.getElementById('userAvatar');
+      if (user.photoURL) {
+        avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+      } else {
+        avatar.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
+      }
+
+      // --- Load recipe data ---
+      loadRecipeForEdit();
+    });
+
+    document.getElementById('logoutBtn').onclick = async () => {
+      await auth.signOut();
+      location.href = 'index.html';
+    };
+
+    // --- Dynamic ingredients ---
+    const ingredientsList = document.getElementById('ingredientsList');
+    function addIngredientField(value = '') {
+      const row = document.createElement('div');
+      row.className = 'form-control';
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.name = 'ingredients';
+      input.value = value;
+      input.placeholder = 'Type ingredient and press Enter';
+      input.autocomplete = 'off';
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'remove-btn';
+      remove.innerHTML = '&times;';
+      remove.onclick = () => row.remove();
+      input.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const all = ingredientsList.querySelectorAll('input[name="ingredients"]');
+          if (all[all.length - 1] === input && input.value.trim()) {
+            addIngredientField();
+          }
+        }
+      };
+      row.append(input, remove);
+      ingredientsList.appendChild(row);
+      input.focus();
+    }
+    function setIngredientsFields(ingredients) {
+      ingredientsList.innerHTML = '<label>Ingredients</label>';
+      (ingredients && ingredients.length ? ingredients : ['']).forEach(val => addIngredientField(val));
+    }
+
+    // --- Image preview & max 5 ---
+    let imageBase64 = [];
+    let originalPhotos = [];
+    function renderImagePreview(images) {
+      imagePreview.innerHTML = '';
+      images.forEach(src => {
+        const img = document.createElement('img');
+        img.src = src;
+        imagePreview.appendChild(img);
+      });
+    }
+    photoUpload.onchange = () => {
+      const files = Array.from(photoUpload.files);
+      if (files.length > 5) {
+        alert('You can upload a maximum of 5 photos.');
+        photoUpload.value = '';
+        imagePreview.innerHTML = '';
+        imageBase64 = [];
+        renderImagePreview(originalPhotos);
+        return;
+      }
+      imageBase64 = [];
+      imagePreview.innerHTML = '';
+      files.forEach(f => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          imageBase64.push(reader.result);
+          renderImagePreview(imageBase64);
+        };
+        reader.readAsDataURL(f);
+      });
+    };
+
+    // --- Load recipe data for editing ---
+    async function loadRecipeForEdit() {
+      try {
+        const doc = await db.collection('recipes').doc(recipeId).get();
+        if (!doc.exists) {
+          editError.textContent = 'Recipe not found.';
+          submitBtn.disabled = true;
+          return;
+        }
+        const data = doc.data();
+        // Only allow edit if current user is author
+        if (data.authorId !== currentUser.uid) {
+          editError.textContent = 'You do not have permission to edit this recipe.';
+          submitBtn.disabled = true;
+          document.getElementById('editRecipeForm').querySelectorAll('input,textarea,button').forEach(el => el.disabled = true);
+          return;
+        }
+        // Pre-fill form
+        document.getElementById('title').value = data.title;
+        setIngredientsFields(data.ingredients);
+        document.getElementById('steps').value = Array.isArray(data.steps) ? data.steps.join('\n') : data.steps;
+        // Show images (if any)
+        originalPhotos = Array.isArray(data.photos) ? data.photos : [];
+        renderImagePreview(originalPhotos);
+      } catch (err) {
+        editError.textContent = 'Error loading recipe: ' + err.message;
+        submitBtn.disabled = true;
+      }
+    }
+
+    // --- Submit form (update recipe) ---
+    document.getElementById('editRecipeForm').onsubmit = async e => {
+      e.preventDefault();
+      if (!currentUser) return alert('Please log in first.');
+
+      const title = e.target.title.value.trim();
+      const ingredients = Array.from(e.target.elements['ingredients'])
+        .map(i => i.value.trim())
+        .filter(v => v);
+      const steps = e.target.steps.value.trim().split('\n').filter(l => l);
+
+      if (!title || !ingredients.length || !steps.length) {
+        return alert('Please fill in title, at least one ingredient, and steps.');
+      }
+
+      // Use new images if uploaded, otherwise keep original
+      const photos = imageBase64.length ? imageBase64 : originalPhotos;
+
+      if (photos.length > 5) {
+        alert('You can upload a maximum of 5 photos.');
+        return;
+      }
+
+      const recipe = {
+        title,
+        ingredients,
+        steps,
+        photos,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        await db.collection('recipes').doc(recipeId).update(recipe);
+        location.href = 'yourrecipes.html';
+      } catch (err) {
+        console.error('UPDATE ERROR:', err);
+        alert('Error updating recipe: ' + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
