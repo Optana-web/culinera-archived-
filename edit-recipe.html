@@ -173,8 +173,8 @@
       color: #888;
     }
     .ingredients-list .remove-btn:hover,
-    .steps-list .remove-btn:hover { 
-      color: var(--primary-color); 
+    .steps-list .remove-btn:hover {
+      color: var(--primary-color);
     }
     #imagePreview {
       display: flex;
@@ -231,11 +231,9 @@
       transition: background .2s;
     }
     .add-ingredient-btn:hover,
-    .add-step-btn:hover { 
-      background: var(--accent-light); 
+    .add-step-btn:hover {
+      background: var(--accent-light);
     }
-
-    /* Toggle Switch Styles */
     .switch {
       position: relative;
       display: inline-block;
@@ -266,8 +264,6 @@
     input:checked + .slider:before {
       transform: translateX(20px);
     }
-
-    /* Delete Recipe Button */
     #deleteRecipeBtn {
       background: #fff; border: 2px solid #FF8C42; color: #FF8C42;
       border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
@@ -337,18 +333,13 @@
       <div class="content-card">
         <div class="content-card-header">
           <h2 class="content-card-title">Edit Recipe Details</h2>
-          <!-- Toggle and Delete Buttons -->
           <div style="position:absolute; top:18px; right:24px; display:flex; gap:16px; align-items:center;">
-            <!-- Toggle Switch -->
             <label class="switch" title="Toggle public/private">
-              <input type="checkbox" id="publicToggle" disabled>
+              <input type="checkbox" id="publicToggle" disabled>  
               <span class="slider round"></span>
             </label>
-            <span id="publicStatusLabel" style="font-size:0.95rem; font-family:'Roboto Mono',monospace;"></span>
-            <!-- Delete Button -->
-            <button id="deleteRecipeBtn" title="Delete Recipe" disabled>
-              <i class="fas fa-trash"></i>
-            </button>
+            <span id="publicStatusLabel" class="mono"></span>
+            <button id="deleteRecipeBtn" title="Delete Recipe" disabled><i class="fas fa-trash"></i></button>
           </div>
         </div>
         <div class="content-card-body">
@@ -361,13 +352,11 @@
             <div class="form-group ingredients-list" id="ingredientsList">
               <label>Ingredients</label>
             </div>
-
             <div id="addIngredientWrapper"></div>
 
             <div class="form-group steps-list" id="stepsList">
               <label>Preparation Steps</label>
             </div>
-
             <div id="addStepWrapper"></div>
 
             <div class="form-group">
@@ -387,7 +376,6 @@
   </main>
 
   <script>
-    // --- FIREBASE INIT ---
     const firebaseConfig = {
       apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
       authDomain: "culinera-recipes.firebaseapp.com",
@@ -401,85 +389,69 @@
     const auth = firebase.auth(), db = firebase.firestore();
 
     let currentUser = null;
-    const submitBtn = document.getElementById('submitBtn');
-    const photoUpload = document.getElementById('photoUpload');
-    const imagePreview = document.getElementById('imagePreview');
-    const editError = document.getElementById('editError');
-    const addIngredientWrapper = document.getElementById('addIngredientWrapper');
-    const addStepWrapper = document.getElementById('addStepWrapper');
-    const publicToggle = document.getElementById('publicToggle');
-    const publicStatusLabel = document.getElementById('publicStatusLabel');
-    const deleteRecipeBtn = document.getElementById('deleteRecipeBtn');
-
-    // --- Get recipe ID from URL ---
-    function getRecipeIdFromUrl() {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('id');
-    }
-    const recipeId = getRecipeIdFromUrl();
+    const recipeId = new URLSearchParams(window.location.search).get('id');
     if (!recipeId) {
-      document.body.innerHTML = '<h2 style="color:red;text-align:center;">No recipe ID provided.</h2>';
-      throw new Error('No recipe ID in URL');
+      document.body.innerHTML = '<h2 style="text-align:center;color:red;">No recipe ID provided.</h2>';
+      throw new Error('No recipe ID');
     }
 
-    // --- Auth state & sidebar profile ---
-    auth.onAuthStateChanged(async user => {
-      if (!user) {
-        location.href = 'index.html';
-        return;
-      }
+    const submitBtn        = document.getElementById('submitBtn');
+    const photoUpload      = document.getElementById('photoUpload');
+    const imagePreview     = document.getElementById('imagePreview');
+    const editError        = document.getElementById('editError');
+    const publicToggle     = document.getElementById('publicToggle');
+    const publicStatusLabel= document.getElementById('publicStatusLabel');
+    const deleteRecipeBtn  = document.getElementById('deleteRecipeBtn');
+    const ingredientsList  = document.getElementById('ingredientsList');
+    const stepsList        = document.getElementById('stepsList');
+    const addIngredientWrapper = document.getElementById('addIngredientWrapper');
+    const addStepWrapper   = document.getElementById('addStepWrapper');
+
+    let originalPhotos = [], newPhotos = [];
+
+    auth.onAuthStateChanged(user => {
+      if (!user) return location.href = 'index.html';
       currentUser = user;
       submitBtn.disabled = false;
-
-      // populate profile info
-      const udoc = await db.collection('users').doc(user.uid).get();
-      const name = udoc.exists && udoc.data().username
-        ? udoc.data().username
-        : (user.displayName || user.email.split('@')[0]);
-      document.getElementById('profileUsername').textContent = name;
-      document.getElementById('profileEmail').textContent = user.email;
-      const avatar = document.getElementById('userAvatar');
-      if (user.photoURL) {
-        avatar.innerHTML = `<img src="${user.photoURL}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
-      } else {
-        avatar.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
-      }
-
-      // --- Load recipe data ---
-      loadRecipeForEdit();
+      loadSidebarProfile();
+      loadRecipe();
     });
+
+    function loadSidebarProfile() {
+      db.collection('users').doc(currentUser.uid).get().then(doc => {
+        const name = (doc.exists && doc.data().username) 
+          ? doc.data().username 
+          : (currentUser.displayName || currentUser.email.split('@')[0]);
+        document.getElementById('profileUsername').textContent = name;
+        document.getElementById('profileEmail').textContent = currentUser.email;
+        const avatar = document.getElementById('userAvatar');
+        if (currentUser.photoURL) {
+          avatar.innerHTML = `<img src="${currentUser.photoURL}" alt="avatar" 
+            style="width:100%;height:100%;border-radius:50%;object-fit:cover">`;
+        } else {
+          avatar.innerHTML = `<span>${name.charAt(0).toUpperCase()}</span>`;
+        }
+      });
+    }
 
     document.getElementById('logoutBtn').onclick = async () => {
       await auth.signOut();
       location.href = 'index.html';
     };
 
-    // --- Dynamic ingredients ---
-    const ingredientsList = document.getElementById('ingredientsList');
-    function addIngredientField(value = '') {
-      const row = document.createElement('div');
-      row.className = 'form-control';
+    function addIngredientField(v = '') {
+      const row = document.createElement('div'); row.className = 'form-control';
       const input = document.createElement('input');
-      input.type = 'text';
-      input.name = 'ingredients';
-      input.value = value;
-      input.placeholder = 'Type ingredient and press Enter';
-      input.autocomplete = 'off';
+      input.type = 'text'; input.name = 'ingredients'; input.value = v;
+      input.placeholder = 'Type ingredient and press Enter'; input.autocomplete = 'off';
       const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'remove-btn';
-      remove.innerHTML = '&times;';
-      remove.onclick = () => {
-        row.remove();
-        updateIngredientUI();
-      };
+      remove.type = 'button'; remove.className = 'remove-btn'; remove.innerHTML = '&times;';
+      remove.onclick = () => { row.remove(); updateIngredientUI(); };
       input.onkeydown = e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           const all = ingredientsList.querySelectorAll('input[name="ingredients"]');
-          if (all[all.length - 1] === input && input.value.trim()) {
-            addIngredientField();
-          }
+          if (all[all.length-1]===input && input.value.trim()) addIngredientField();
         }
       };
       row.append(input, remove);
@@ -487,264 +459,175 @@
       input.focus();
       updateIngredientUI();
     }
-    function setIngredientsFields(ingredients) {
+    function setIngredientsFields(arr) {
       ingredientsList.innerHTML = '<label>Ingredients</label>';
-      (ingredients && ingredients.length ? ingredients : ['']).forEach(val => addIngredientField(val));
+      (arr.length?arr:['']).forEach(v => addIngredientField(v));
       updateIngredientUI();
     }
     function updateIngredientUI() {
       const fields = ingredientsList.querySelectorAll('input[name="ingredients"]');
-      if (fields.length === 0) {
-        // Show "Create Ingredient" button
+      if (!fields.length) {
         if (!addIngredientWrapper.querySelector('.add-ingredient-btn')) {
           const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'add-ingredient-btn';
-          btn.textContent = 'Create Ingredient';
-          btn.onclick = () => {
-            addIngredientField();
-            btn.remove();
-          };
-          addIngredientWrapper.innerHTML = '';
-          addIngredientWrapper.appendChild(btn);
+          btn.type='button'; btn.className='add-ingredient-btn';
+          btn.textContent='Add Ingredient';
+          btn.onclick = ()=>{ addIngredientField(); btn.remove(); };
+          addIngredientWrapper.innerHTML=''; addIngredientWrapper.appendChild(btn);
         }
-      } else {
-        addIngredientWrapper.innerHTML = '';
-      }
+      } else addIngredientWrapper.innerHTML='';
     }
-
-    // --- Dynamic steps ---
-    const stepsList = document.getElementById('stepsList');
-    function addStepField(value = '') {
-      const row = document.createElement('div');
-      row.className = 'form-control';
+    function addStepField(v='') {
+      const row = document.createElement('div'); row.className='form-control';
       const input = document.createElement('input');
-      input.type = 'text';
-      input.name = 'steps';
-      input.value = value;
-      input.placeholder = 'Type step and press Enter';
-      input.autocomplete = 'off';
-      const remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'remove-btn';
-      remove.innerHTML = '&times;';
-      remove.onclick = () => {
-        row.remove();
-        updateStepUI();
-      };
-      input.onkeydown = e => {
-        if (e.key === 'Enter') {
+      input.type='text'; input.name='steps'; input.value=v;
+      input.placeholder='Type step and press Enter'; input.autocomplete='off';
+      const remove=document.createElement('button');
+      remove.type='button'; remove.className='remove-btn'; remove.innerHTML='&times;';
+      remove.onclick=()=>{ row.remove(); updateStepUI(); };
+      input.onkeydown=e=>{
+        if(e.key==='Enter'){
           e.preventDefault();
-          const all = stepsList.querySelectorAll('input[name="steps"]');
-          if (all[all.length - 1] === input && input.value.trim()) {
-            addStepField();
-          }
+          const all=stepsList.querySelectorAll('input[name="steps"]');
+          if(all[all.length-1]===input&&input.value.trim()) addStepField();
         }
       };
-      row.append(input, remove);
+      row.append(input,remove);
       stepsList.appendChild(row);
       input.focus();
       updateStepUI();
     }
-    function setStepsFields(steps) {
-      stepsList.innerHTML = '<label>Preparation Steps</label>';
-      // Parse steps if it's a string, or use as array if already in array format
-      let stepsArray = steps;
-      if (typeof steps === 'string') {
-        stepsArray = steps.split(/\r?\n/).filter(step => step.trim());
-      }
-      (stepsArray && stepsArray.length ? stepsArray : ['']).forEach(val => addStepField(val));
+    function setStepsFields(arr){
+      stepsList.innerHTML='<label>Preparation Steps</label>';
+      const data = (typeof arr==='string')?arr.split(/\r?\n/).filter(s=>s.trim()):(arr.length?arr:['']);
+      data.forEach(v=>addStepField(v));
       updateStepUI();
     }
     function updateStepUI() {
-      const fields = stepsList.querySelectorAll('input[name="steps"]');
-      if (fields.length === 0) {
-        // Show "Create Step" button
-        if (!addStepWrapper.querySelector('.add-step-btn')) {
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = 'add-step-btn';
-          btn.textContent = 'Create Step';
-          btn.onclick = () => {
-            addStepField();
-            btn.remove();
-          };
-          addStepWrapper.innerHTML = '';
-          addStepWrapper.appendChild(btn);
+      const fields=stepsList.querySelectorAll('input[name="steps"]');
+      if(!fields.length){
+        if(!addStepWrapper.querySelector('.add-step-btn')){
+          const btn=document.createElement('button');
+          btn.type='button'; btn.className='add-step-btn'; btn.textContent='Add Step';
+          btn.onclick=()=>{ addStepField(); btn.remove(); };
+          addStepWrapper.innerHTML=''; addStepWrapper.appendChild(btn);
         }
-      } else {
-        addStepWrapper.innerHTML = '';
-      }
+      } else addStepWrapper.innerHTML='';
     }
 
-    // --- Image preview & max 5, with delete ---
-    let imageBase64 = [];
-    let originalPhotos = [];
-    function renderImagePreview(images) {
-      imagePreview.innerHTML = '';
-      images.forEach((src, idx) => {
-        const container = document.createElement('div');
-        container.className = 'image-thumb-container';
-        const img = document.createElement('img');
-        img.src = src;
-        // Delete button
-        const delBtn = document.createElement('button');
-        delBtn.type = 'button';
-        delBtn.className = 'delete-image-btn';
-        delBtn.title = 'Delete this image';
-        delBtn.innerHTML = '&times;';
-        delBtn.onclick = () => {
-          images.splice(idx, 1);
-          if (imageBase64.length) {
-            imageBase64 = images.slice();
-          } else {
-            originalPhotos = images.slice();
-          }
-          renderImagePreview(images);
+    function renderImagePreview(arr){
+      imagePreview.innerHTML='';
+      arr.forEach((src,i)=>{
+        const c=document.createElement('div'); c.className='image-thumb-container';
+        const img=document.createElement('img'); img.src=src;
+        const btn=document.createElement('button');
+        btn.type='button'; btn.className='delete-image-btn'; btn.innerHTML='&times;';
+        btn.onclick=()=>{
+          arr.splice(i,1);
+          if(newPhotos.length) newPhotos=arr.slice();
+          else originalPhotos=arr.slice();
+          renderImagePreview(arr);
         };
-        container.appendChild(img);
-        container.appendChild(delBtn);
-        imagePreview.appendChild(container);
+        c.append(img,btn);
+        imagePreview.appendChild(c);
       });
     }
 
-    photoUpload.addEventListener('change', function() {
-      const files = Array.from(photoUpload.files);
-      if (files.length + originalPhotos.length > 5) {
-        editError.textContent = 'You can upload up to 5 photos total.';
-        photoUpload.value = '';
-        return;
+    photoUpload.addEventListener('change',()=>{
+      const files=Array.from(photoUpload.files);
+      if(files.length+originalPhotos.length>5){
+        editError.textContent='Up to 5 photos allowed.';
+        photoUpload.value=''; return;
       }
-      editError.textContent = '';
-      imageBase64 = [];
-      let processed = 0;
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          imageBase64.push(e.target.result);
-          processed++;
-          if (processed === files.length) {
-            renderImagePreview(originalPhotos.concat(imageBase64));
-          }
+      editError.textContent='';
+      newPhotos=[];
+      let count=0;
+      files.forEach(file=>{
+        const reader=new FileReader();
+        const img=new Image();
+        reader.onload=e=>img.src=e.target.result;
+        img.onload=()=>{
+          const canvas=document.createElement('canvas');
+          canvas.width=1024; canvas.height=768;
+          canvas.getContext('2d').drawImage(img,0,0,1024,768);
+          newPhotos.push(canvas.toDataURL('image/jpeg',0.8));
+          if(++count===files.length) renderImagePreview(originalPhotos.concat(newPhotos));
         };
         reader.readAsDataURL(file);
       });
     });
 
-    // --- Public/Private Toggle & Delete Logic ---
-    function setPublicToggleUI(isPublic) {
-      publicToggle.checked = !!isPublic;
-      publicStatusLabel.textContent = isPublic ? "Public" : "Private";
-      publicStatusLabel.style.color = isPublic ? "#FF8C42" : "#888";
-    }
-
-    // Load recipe and set toggle
-    async function loadRecipeForEdit() {
+    async function loadRecipe(){
       try {
-        const doc = await db.collection('recipes').doc(recipeId).get();
-        if (!doc.exists) throw new Error("Recipe not found.");
-        const data = doc.data();
-
-        // Only allow owner to edit/delete (rules also enforce this)
-        if (data.authorId !== currentUser.uid) {
-          document.body.innerHTML = '<h2 style="color:red;text-align:center;">You do not have permission to edit this recipe.</h2>';
-          throw new Error('Not owner');
+        const snap=await db.collection('recipes').doc(recipeId).get();
+        if(!snap.exists) throw new Error('Recipe not found.');
+        const d=snap.data();
+        if(d.authorId!==currentUser.uid){
+          document.body.innerHTML='<h2 style="text-align:center;color:red;">Access denied.</h2>';
+          return;
         }
-
-        // Populate form fields
-        document.getElementById('title').value = data.title || '';
-        setIngredientsFields(data.ingredients || []);
-        setStepsFields(data.steps || '');
-        originalPhotos = Array.isArray(data.photos) ? data.photos.slice() : [];
+        document.getElementById('title').value=d.title||'';
+        setIngredientsFields(d.ingredients||[]);
+        setStepsFields(d.steps||[]);
+        originalPhotos=Array.isArray(d.photos)?d.photos.slice():[];
         renderImagePreview(originalPhotos);
-
-        // Set public/private toggle
-        setPublicToggleUI(data.public);
-
-        // Enable toggle and delete
-        publicToggle.disabled = false;
-        deleteRecipeBtn.disabled = false;
-      } catch (err) {
-        editError.textContent = err.message;
-        submitBtn.disabled = true;
-        publicToggle.disabled = true;
-        deleteRecipeBtn.disabled = true;
+        setPublicUI(d.public);
+        publicToggle.disabled=false;
+        deleteRecipeBtn.disabled=false;
+      } catch(e){
+        editError.textContent=e.message||e;
+        submitBtn.disabled=true;
       }
     }
+    function setPublicUI(pub){
+      publicToggle.checked=!!pub;
+      publicStatusLabel.textContent=pub?'Public':'Private';
+      publicStatusLabel.style.color=pub?'#FF8C42':'#888';
+    }
 
-    // Toggle handler
-    publicToggle.addEventListener('change', async function() {
-      try {
-        submitBtn.disabled = true;
-        publicToggle.disabled = true;
-        const isPublic = publicToggle.checked;
-        await db.collection('recipes').doc(recipeId).update({ public: isPublic });
-        setPublicToggleUI(isPublic);
-        editError.textContent = '';
-      } catch (err) {
-        editError.textContent = "Failed to update public/private: " + err.message;
-        publicToggle.checked = !publicToggle.checked;
-      } finally {
-        submitBtn.disabled = false;
-        publicToggle.disabled = false;
+    publicToggle.addEventListener('change',async()=>{
+      publicToggle.disabled=true;
+      try{
+        await db.collection('recipes').doc(recipeId).update({public:publicToggle.checked});
+        setPublicUI(publicToggle.checked);
+      }catch{
+        editError.textContent='Visibility update failed.';
+        publicToggle.checked=!publicToggle.checked;
       }
+      publicToggle.disabled=false;
     });
 
-    // Delete handler
-    deleteRecipeBtn.addEventListener('click', async function() {
-      if (!confirm("Are you sure you want to delete this recipe? This cannot be undone.")) return;
-      try {
-        deleteRecipeBtn.disabled = true;
+    deleteRecipeBtn.addEventListener('click',async()=>{
+      if(!confirm('Delete?'))return;
+      deleteRecipeBtn.disabled=true;
+      try{
         await db.collection('recipes').doc(recipeId).delete();
-        alert("Recipe deleted.");
-        window.location.href = "yourrecipes.html";
-      } catch (err) {
-        editError.textContent = "Failed to delete recipe: " + err.message;
-        deleteRecipeBtn.disabled = false;
+        alert('Deleted.');
+        location.href='yourrecipes.html';
+      }catch{
+        editError.textContent='Delete failed.'; deleteRecipeBtn.disabled=false;
       }
     });
 
-    // --- Form submission (update recipe) ---
-    document.getElementById('editRecipeForm').onsubmit = async function(e) {
+    document.getElementById('editRecipeForm').onsubmit=async e=>{
       e.preventDefault();
-      submitBtn.disabled = true;
-      editError.textContent = '';
-      try {
-        const title = document.getElementById('title').value.trim();
-        const ingredients = Array.from(
-          ingredientsList.querySelectorAll('input[name="ingredients"]')
-        ).map(el => el.value.trim()).filter(Boolean);
-        const steps = Array.from(
-          stepsList.querySelectorAll('input[name="steps"]')
-        ).map(el => el.value.trim()).filter(Boolean);
-
-        // Validate
-        if (!title) throw new Error("Title is required.");
-        if (!ingredients.length) throw new Error("At least one ingredient is required.");
-        if (!steps.length) throw new Error("At least one preparation step is required.");
-
-        // Handle photos
-        let photos = originalPhotos.slice();
-        if (imageBase64.length) {
-          // For demo: just append new base64s (in real app, upload to storage and get URLs)
-          photos = photos.concat(imageBase64);
-          if (photos.length > 5) photos = photos.slice(0, 5);
-        }
-
-        await db.collection('recipes').doc(recipeId).update({
-          title,
-          ingredients,
-          steps,
-          photos
-        });
-
-        alert("Recipe updated!");
-        window.location.href = "yourrecipes.html";
-      } catch (err) {
-        editError.textContent = err.message;
-      } finally {
-        submitBtn.disabled = false;
+      submitBtn.disabled=true;
+      editError.textContent='';
+      try{
+        const title=document.getElementById('title').value.trim();
+        const ingredients=Array.from(ingredientsList.querySelectorAll('input[name="ingredients"]')).map(i=>i.value.trim()).filter(Boolean);
+        const steps=Array.from(stepsList.querySelectorAll('input[name="steps"]')).map(i=>i.value.trim()).filter(Boolean);
+        if(!title)throw new Error('Title required.');
+        if(!ingredients.length)throw new Error('At least one ingredient.');
+        if(!steps.length)throw new Error('At least one step.');
+        let photos=originalPhotos.slice();
+        if(newPhotos.length)photos=photos.concat(newPhotos).slice(0,5);
+        await db.collection('recipes').doc(recipeId).update({title,ingredients,steps,photos});
+        alert('Updated!');
+        location.href='yourrecipes.html';
+      }catch(err){
+        editError.textContent=err.message||err;
       }
+      submitBtn.disabled=false;
     };
   </script>
 </body>
