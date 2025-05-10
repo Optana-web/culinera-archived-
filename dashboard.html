@@ -5,14 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Culinera – Dashboard</title>
 
-    <link
-        href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-        rel="stylesheet"
-    />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap"
-        rel="stylesheet"
-    />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -31,7 +29,7 @@
             line-height: 1.6;
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Ensure the body takes at least the full viewport height */
+            min-height: 100vh;
         }
         .mono { font-family: 'Roboto Mono', monospace; }
         .container { width: 90%; max-width: 1200px; margin: 0 auto; }
@@ -67,7 +65,7 @@
         .btn-primary { background: var(--primary-color); color: var(--light); }
         .btn-primary:hover { background: var(--accent-light); }
 
-        main { padding: 4rem 0; text-align: center; flex-grow: 1; /* Allow main to grow and push footer down */ }
+        main { padding: 4rem 0; text-align: center; flex-grow: 1; }
         .welcome { font-size: 1.8rem; margin-bottom: 2rem; }
         .dashboard-btn {
             margin: 1rem auto;
@@ -86,11 +84,38 @@
         .dashboard-btn:hover { background: var(--accent-light); }
         .dashboard-btn:focus { outline: none; }
 
+        .profile-info {
+            margin: 2rem auto;
+            display: inline-block;
+            text-align: left;
+            background: var(--light);
+            border-radius: 12px;
+            padding: 2rem 2.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,.08);
+            min-width: 320px;
+        }
+        .profile-info h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1.2rem;
+            color: var(--primary-color);
+        }
+        .profile-info .profile-row {
+            margin-bottom: 1rem;
+            font-family: 'Roboto Mono', monospace;
+        }
+        .profile-info .profile-label {
+            font-weight: bold;
+            margin-right: 0.5em;
+        }
+        .profile-info .profile-value {
+            color: var(--dark);
+        }
+
         footer {
             background: var(--gray-light);
             padding: 2rem 0;
             text-align: center;
-            margin-top: auto; /* Push footer to the bottom */
+            margin-top: auto;
         }
         .footer-links { display: flex; gap: 1.5rem; justify-content: center; margin-bottom: 1rem; }
         .footer-links a { color: var(--dark); text-decoration: none; font-size: .9rem; transition: color .3s; }
@@ -121,6 +146,12 @@
     <main>
         <div class="container">
             <div id="welcomeText" class="welcome">Welcome back!</div>
+            <div id="profileInfo" class="profile-info" style="display:none;">
+                <h2>Your Profile</h2>
+                <div class="profile-row"><span class="profile-label">Username:</span> <span id="profileUsername" class="profile-value"></span></div>
+                <div class="profile-row"><span class="profile-label">Email:</span> <span id="profileEmail" class="profile-value"></span></div>
+                <div class="profile-row"><span class="profile-label">Provider:</span> <span id="profileProvider" class="profile-value"></span></div>
+            </div>
             <a href="yourrecipes.html" class="dashboard-btn">View &amp; Manage Your Recipes</a>
         </div>
     </main>
@@ -135,30 +166,56 @@
         <p class="copyright">&copy; 2025 Culinera. All rights reserved.</p>
     </footer>
 
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script>
-        // --- INLINE YOUR FIREBASE CONFIG HERE ---
+        // --- FIREBASE CONFIG ---
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.appspot.com",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID",
-            measurementId: "YOUR_MEASUREMENT_ID"
+            apiKey: "AIzaSyCMi4S-JrwqT8DLMYjUvPMUgOZ_f02EDeI",
+            authDomain: "culinera-recipes.firebaseapp.com",
+            projectId: "culinera-recipes",
+            storageBucket: "culinera-recipes.appspot.com",
+            messagingSenderId: "64221926914",
+            appId: "1:64221926914:web:f621b8581a4f0791694ae3",
+            measurementId: "G-LJTEX9XC99"
         };
 
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
+        const db = firebase.firestore();
 
         const logoutBtn  = document.getElementById('logoutBtn');
         const welcomeText= document.getElementById('welcomeText');
+        const profileInfo = document.getElementById('profileInfo');
+        const profileUsername = document.getElementById('profileUsername');
+        const profileEmail = document.getElementById('profileEmail');
+        const profileProvider = document.getElementById('profileProvider');
 
-        auth.onAuthStateChanged(user => {
+        // Listen for auth state and fetch Firestore profile
+        auth.onAuthStateChanged(async user => {
             if (user && user.emailVerified) {
-                const name = user.displayName || user.email.split('@')[0];
-                welcomeText.textContent = `Welcome back, ${name}!`;
+                // Try to get username from Firestore (preferred), fallback to displayName/email
+                try {
+                    const userDoc = await db.collection('users').doc(user.uid).get();
+                    let username = "";
+                    let provider = "";
+                    if (userDoc.exists) {
+                        const data = userDoc.data();
+                        username = data.username || (user.displayName || user.email.split('@')[0]);
+                        provider = data.provider || user.providerData[0]?.providerId || "unknown";
+                    } else {
+                        // fallback if user doc missing
+                        username = user.displayName || user.email.split('@')[0];
+                        provider = user.providerData[0]?.providerId || "unknown";
+                    }
+                    welcomeText.textContent = `Welcome back, ${username}!`;
+
+                    profileUsername.textContent = username;
+                    profileEmail.textContent = user.email;
+                    profileProvider.textContent = provider.charAt(0).toUpperCase() + provider.slice(1);
+                    profileInfo.style.display = "block";
+                } catch (err) {
+                    welcomeText.textContent = "Welcome back!";
+                    profileInfo.style.display = "none";
+                }
             } else {
                 location.href = 'index.html';
             }
