@@ -1,17 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Culinera - Log In</title>
-  <link
-    href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"
-    rel="stylesheet"
-  />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary-color: #FF8C42;
@@ -25,7 +19,7 @@
       --info-border: #bee5eb;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Playfair Display', serif; color: var(--dark); line-height: 1.6; }
+    body { font-family: 'Playfair Display', serif; color: var(--dark); line-height: 1.6; background-color: var(--gray-light); }
     .mono { font-family: 'Roboto Mono', monospace; }
     .container { width: 90%; max-width: 1200px; margin: 0 auto; }
     header { padding: 1.5rem 0; border-bottom: 1px solid var(--gray); }
@@ -93,17 +87,17 @@
 
   <main>
     <div class="container">
+      <h1 class="page-title">Log in to <span>Culinera</span></h1>
+      <div id="authMessage" class="alert" aria-live="assertive"></div>
       <div class="login-container">
-        <h1 class="page-title">Log in to <span>Culinera</span></h1>
-        <div id="notification" class="alert" aria-live="assertive"></div>
         <form id="loginForm">
           <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" required />
+            <label for="loginEmail">Email Address</label>
+            <input type="email" id="loginEmail" name="email" required autocomplete="username">
           </div>
           <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required />
+            <label for="loginPassword">Password</label>
+            <input type="password" id="loginPassword" name="password" required autocomplete="current-password">
           </div>
           <div class="form-footer">
             <a href="forgot-password.html" class="forgot-password">Forgot Password?</a>
@@ -130,51 +124,59 @@
     </div>
   </footer>
 
-  <!-- Firebase SDKs & Logic -->
-  <script type="module">
-    import { auth } from './firebase-config.js';
-    import {
-      signInWithEmailAndPassword,
-      onAuthStateChanged
-    } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+  <!-- Firebase Compat SDKs & Logic -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginForm = document.getElementById('loginForm');
+      const authMessage = document.getElementById('authMessage');
 
-    const loginForm = document.getElementById('loginForm');
-    const notification = document.getElementById('notification');
+      loginForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        showMessage('Logging in…', 'info');
 
-    function showAlert(message, type = 'success') {
-      notification.textContent = message;
-      notification.className = `alert alert-${type}`;
-      notification.style.display = 'block';
-    }
+        const email = loginEmail.value.trim();
+        const password = loginPassword.value;
 
-    loginForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      // Show loading/info alert
-      showAlert('Logging in…', 'info');
+        try {
+          const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+          const user = userCredential.user;
 
-      const email = loginForm.email.value.trim();
-      const password = loginForm.password.value;
-
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        if (user.emailVerified) {
-          showAlert('Login successful! Redirecting…', 'success');
-          setTimeout(() => (window.location.href = 'index.html'), 1500);
-        } else {
-          showAlert('Please verify your email before logging in.', 'danger');
-          await auth.signOut();
+          if (user.emailVerified) {
+            showMessage('Login successful! Redirecting…', 'success');
+            setTimeout(() => window.location.href = 'index.html', 1500);
+          } else {
+            showMessage('Please verify your email before logging in.', 'error');
+            await firebase.auth().signOut();
+          }
+        } catch (error) {
+          handleAuthError(error);
         }
-      } catch (err) {
-        showAlert(err.message, 'danger');
-      }
-    });
+      });
 
-    onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) {
-        window.location.href = 'index.html';
+      function showMessage(message, type) {
+        authMessage.textContent = message;
+        authMessage.className = `alert alert-${type}`;
+        authMessage.style.display = 'block';
       }
+
+      function handleAuthError(error) {
+        console.error('Login error:', error);
+        let msg;
+        switch (error.code) {
+          case 'auth/user-not-found': msg = 'User not found. Please check your email or sign up.'; break;
+          case 'auth/wrong-password': msg = 'Incorrect password. Please try again.'; break;
+          case 'auth/network-request-failed': msg = 'Network error. Please check your connection.'; break;
+          default: msg = error.message;
+        }
+        showMessage(msg, 'error');
+      }
+
+      firebase.auth().onAuthStateChanged(user => {
+        if (user && user.emailVerified) window.location.href = 'index.html';
+      });
     });
   </script>
 </body>
