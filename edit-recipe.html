@@ -231,6 +231,45 @@
       transition: background .2s;
     }
     .add-ingredient-btn:hover { background: var(--accent-light); }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 46px;
+      height: 26px;
+      vertical-align: middle;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 26px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px; width: 20px;
+      left: 3px; bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: #FF8C42; }
+    input:checked + .slider:before { transform: translateX(20px); }
+    .btn-danger {
+      background: #d00;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: .5rem 1.5rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: .9rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .btn-danger:hover { background: #a00; }
     @media (max-width: 992px) {
       .sidebar { width: 80px; }
       .sidebar .logo span,
@@ -297,6 +336,21 @@
               <input type="text" id="title" name="title" required>
             </div>
 
+            <!-- Privacy toggle and Delete button -->
+            <div class="form-group" style="display: flex; align-items: center; gap: 1.5em;">
+              <label for="privacyToggle" style="margin-bottom:0;">
+                <i class="fas fa-lock"></i>
+                <span id="privacyLabel">Private</span>
+              </label>
+              <label class="switch" style="margin-bottom:0;">
+                <input type="checkbox" id="privacyToggle">
+                <span class="slider"></span>
+              </label>
+              <button type="button" id="deleteRecipeBtn" class="btn btn-danger mono" style="margin-left:auto;">
+                <i class="fas fa-trash"></i> Delete Recipe
+              </button>
+            </div>
+
             <div class="form-group ingredients-list" id="ingredientsList">
               <label>Ingredients</label>
             </div>
@@ -344,6 +398,9 @@
     const imagePreview = document.getElementById('imagePreview');
     const editError = document.getElementById('editError');
     const addIngredientWrapper = document.getElementById('addIngredientWrapper');
+    const privacyToggle = document.getElementById('privacyToggle');
+    const privacyLabel = document.getElementById('privacyLabel');
+    const deleteRecipeBtn = document.getElementById('deleteRecipeBtn');
 
     // --- Get recipe ID from URL ---
     function getRecipeIdFromUrl() {
@@ -387,6 +444,25 @@
       await auth.signOut();
       location.href = 'index.html';
     };
+
+    // --- Privacy toggle handler ---
+    privacyToggle.addEventListener('change', () => {
+      const isPublic = privacyToggle.checked;
+      privacyLabel.textContent = isPublic ? "Public" : "Private";
+      privacyLabel.previousElementSibling.className = isPublic ? "fas fa-globe" : "fas fa-lock";
+    });
+
+    // --- Delete recipe handler ---
+    deleteRecipeBtn.addEventListener('click', async () => {
+      if (!confirm("Are you sure you want to delete this recipe? This cannot be undone.")) return;
+      try {
+        await db.collection('recipes').doc(recipeId).delete();
+        alert("Recipe deleted.");
+        window.location.href = "yourrecipes.html";
+      } catch (err) {
+        alert("Error deleting recipe: " + err.message);
+      }
+    });
 
     // --- Dynamic ingredients ---
     const ingredientsList = document.getElementById('ingredientsList');
@@ -447,7 +523,7 @@
       }
     }
 
-    // --- Image preview & max 5, with delete and fade ---
+    // --- Image preview & max 5, with delete ---
     let imageBase64 = []; // New images (base64)
     let originalPhotos = []; // Existing image URLs
 
@@ -526,6 +602,13 @@
         document.getElementById('title').value = data.title || '';
         document.getElementById('steps').value = data.steps || '';
         setIngredientsFields(data.ingredients || []);
+        
+        // Set privacy toggle
+        const isPublic = !!data.public;
+        privacyToggle.checked = isPublic;
+        privacyLabel.textContent = isPublic ? "Public" : "Private";
+        privacyLabel.previousElementSibling.className = isPublic ? "fas fa-globe" : "fas fa-lock";
+        
         originalPhotos = Array.isArray(data.photos) ? data.photos.slice(0, 5) : [];
         imageBase64 = [];
         renderImagePreview();
