@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Culinera – Home</title>
+    <title>Optana – Home</title>
 
     <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet" />
@@ -68,11 +68,11 @@
     <header>
         <div class="container">
             <nav>
-                <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
+                <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
                 <div class="nav-links">
-                    <a href="browse.html">Browse Recipes</a>
+                    <a href="wishlists.html">Wishlists</a>
+                    <a href="groups.html">Groups</a>
                     <a href="popular.html">Popular</a>
-                    <a href="categories.html">Categories</a>
                     <a href="about.html">About</a>
                 </div>
                 <div class="auth-buttons" id="authButtons">
@@ -90,28 +90,28 @@
     <main>
         <div class="container">
             <div class="hero-title">
-                Welcome to <span>Culinera</span>
+                Welcome to <span>Optana</span>
             </div>
             <div class="hero-desc">
-                Discover, share, and manage your favorite recipes.<br>
-                Join our community of passionate home cooks and food lovers!
+                Create, manage, and share your wishlists with friends and family.<br>
+                Organize your wants and needs in one convenient place!
             </div>
             <div class="hero-btns">
-                <a href="browse.html" class="btn btn-primary">Browse Recipes</a>
+                <a href="wishlists.html" class="btn btn-primary">Browse Wishlists</a>
                 <a href="signup.html" class="btn btn-outline" id="getStartedBtn">Get Started</a>
             </div>
             <div class="feature-list">
                 <div class="feature">
-                    <h3>🍲 Explore</h3>
-                    <p>Find recipes for every taste and occasion, curated by our community.</p>
+                    <h3>✨ Create Wishlists</h3>
+                    <p>Add your wishes with details like title, description, and price in your preferred currency.</p>
                 </div>
                 <div class="feature">
-                    <h3>📖 Save &amp; Organize</h3>
-                    <p>Save your favorite recipes and organize them in your personal cookbook.</p>
+                    <h3>👥 Friend Groups</h3>
+                    <p>Create groups where everyone can see and track each other's wishlists and progress.</p>
                 </div>
                 <div class="feature">
-                    <h3>👩‍🍳 Share</h3>
-                    <p>Upload your own recipes and inspire others with your culinary creations.</p>
+                    <h3>👪 Family Groups</h3>
+                    <p>Create private groups where you control who sees your wishlist and share your wants and needs.</p>
                 </div>
             </div>
         </div>
@@ -124,20 +124,20 @@
             <a href="terms.html">Terms of Service</a>
             <a href="privacy.html">Privacy Policy</a>
         </div>
-        <p class="copyright">&copy; 2025 Culinera. All rights reserved.</p>
+        <p class="copyright">&copy; 2025 Optana. All rights reserved.</p>
     </footer>
 
     <script>
         // Firebase config
-       const firebaseConfig = {
-  apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
-  authDomain: "optanav1.firebaseapp.com",
-  projectId: "optanav1",
-  storageBucket: "optanav1.firebasestorage.app",
-  messagingSenderId: "16298669202",
-  appId: "1:16298669202:web:ac2a1cd399993b1883624b",
-  measurementId: "G-RR7D4MB5FY"
-};
+        const firebaseConfig = {
+          apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+          authDomain: "optanav1.firebaseapp.com",
+          projectId: "optanav1",
+          storageBucket: "optanav1.firebasestorage.app",
+          messagingSenderId: "16298669202",
+          appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+          measurementId: "G-RR7D4MB5FY"
+        };
 
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
