@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Optana – View Wishlist</title>
+  <meta name="description" content="View a specific wishlist"/>
+
+  <!-- Normalize & Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <!-- Firebase & FontAwesome -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #FF8C42;
+      --accent-light: #FFBC80;
+      --dark: #333;
+      --light: #fff;
+      --gray-light: #F5F5F5;
+      --gray: #E0E0E0;
+      --sidebar-width: 260px;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body { font-family:'Playfair Display',serif; color:var(--dark); background:var(--gray-light); display:flex; min-height:100vh; }
+    .mono { font-family:'Roboto Mono', monospace; }
+
+    /* Sidebar */
+    .sidebar {
+      width:var(--sidebar-width); background:var(--dark); color:var(--light);
+      position:fixed; top:0; left:0; height:100vh; display:flex; flex-direction:column;
+    }
+    .sidebar-header { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .logo { font-size:1.8rem; text-align:center; font-weight:700; }
+    .logo span { color:var(--primary-color); }
+    .nav-menu { flex-grow:1; overflow-y:auto; }
+    .nav-menu ul { list-style:none; }
+    .nav-link {
+      display:flex; align-items:center; padding:0.8rem 1.5rem;
+      color:var(--gray); text-decoration:none; transition:0.3s;
+    }
+    .nav-link:hover { background:rgba(255,255,255,0.1); color:var(--light); }
+    .nav-link.active { background:var(--primary-color); color:var(--light); }
+    .sidebar-footer { padding:1rem; border-top:1px solid rgba(255,255,255,0.1); }
+    .btn { font-family:'Roboto Mono', monospace; cursor:pointer; border:none; border-radius:8px; padding:0.5rem 1rem; }
+    .btn-primary { background:var(--primary-color); color:var(--light); }
+    .btn-primary:hover { background:var(--accent-light); }
+
+    /* Main */
+    .main-content { margin-left:var(--sidebar-width); flex:1; padding:2rem; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
+    .page-title { font-size:2rem; }
+    .wishlist-details { margin-bottom:2rem; }
+    .wishlist-title { font-size:1.8rem; margin-bottom:0.5rem; }
+    .wishlist-meta { font-family:'Roboto Mono', monospace; color:#777; margin-bottom:1rem; }
+    .items-list { border:1px solid var(--gray); border-radius:8px; overflow:hidden; }
+    .item-header, .item-row {
+      display:grid; grid-template-columns:2fr 1fr 1fr 1fr; gap:1rem;
+      padding:1rem; align-items:center;
+    }
+    .item-header { background:var(--gray-light); font-family:'Roboto Mono', monospace; font-size:0.9rem; }
+    .item-row { border-top:1px solid var(--gray-light); }
+    .badge { padding:0.25rem 0.5rem; border-radius:4px; font-family:'Roboto Mono', monospace; font-size:0.75rem; }
+    .badge-want { background:#e3f2fd; color:#0d47a1; }
+    .badge-need { background:#ffebee; color:#b71c1c; }
+
+    .alert { padding:1rem; border-radius:8px; margin-bottom:1.5rem; display:none; }
+    .alert-danger { background:#f8d7da; color:#721c24; }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><a href="index.html" style="color:inherit;text-decoration:none;">Opt<span>ana</span></a></div>
+    </div>
+    <nav class="nav-menu">
+      <ul>
+        <li><a class="nav-link" href="dashboard.html"><i class="fas fa-home"></i>&nbsp;Dashboard</a></li>
+        <li><a class="nav-link" href="my-wishlists.html"><i class="fas fa-gift"></i>&nbsp;My Wishlists</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i>&nbsp;Log Out</button>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <main class="main-content">
+    <div class="page-header">
+      <h1 class="page-title">View Wishlist</h1>
+      <a id="editBtn" href="#" class="btn btn-primary mono"><i class="fas fa-edit"></i>&nbsp;Edit</a>
+    </div>
+
+    <div id="errorAlert" class="alert alert-danger"></div>
+
+    <div class="wishlist-details">
+      <h2 id="wishlistTitle" class="wishlist-title">Loading…</h2>
+      <div id="wishlistMeta" class="wishlist-meta"></div>
+      <p id="wishlistDescription"></p>
+    </div>
+
+    <div class="items-list">
+      <div class="item-header">
+        <div>Item</div><div>Price</div><div>Type</div><div>Description</div>
+      </div>
+      <div id="itemsContainer">
+        <div class="item-row" style="text-align:center;color:#777;">Loading items…</div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Firebase config & init (same as create-wishlist)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+      authDomain: "optanav1.firebaseapp.com",
+      projectId: "optanav1",
+      storageBucket: "optanav1.firebasestorage.app",
+      messagingSenderId: "16298669202",
+      appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+      measurementId: "G-RR7D4MB5FY"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // DOM refs
+    const logoutBtn       = document.getElementById('logoutBtn');
+    const errorAlert      = document.getElementById('errorAlert');
+    const titleEl         = document.getElementById('wishlistTitle');
+    const metaEl          = document.getElementById('wishlistMeta');
+    const descEl          = document.getElementById('wishlistDescription');
+    const itemsContainer  = document.getElementById('itemsContainer');
+    const editBtn         = document.getElementById('editBtn');
+
+    // Extract wishlist ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const wishlistId = params.get('id');
+
+    auth.onAuthStateChanged(user => {
+      if (!user) return location.href = 'index.html';
+      loadWishlist(user.uid);
+    });
+
+    logoutBtn.addEventListener('click', async () => {
+      await auth.signOut();
+      location.href = 'index.html';
+    });
+
+    async function loadWishlist(uid) {
+      if (!wishlistId) {
+        errorAlert.textContent = 'No wishlist specified.';
+        errorAlert.style.display = 'block';
+        return;
+      }
+      try {
+        // Fetch wishlist doc
+        const doc = await db.collection('wishlists').doc(wishlistId).get();
+        if (!doc.exists || doc.data().userId !== uid) {
+          throw new Error('Wishlist not found or access denied.');
+        }
+        const wl = doc.data();
+        titleEl.textContent = wl.title;
+        metaEl.textContent = `Created on ${wl.createdAt.toDate().toLocaleDateString()} • Privacy: ${wl.privacy}`;
+        descEl.textContent = wl.description || '';
+
+        // Link to edit page
+        editBtn.href = `create-wishlist.html?edit=${wishlistId}`;
+
+        // Fetch items subcollection
+        const itemsSnap = await db
+          .collection('wishlists')
+          .doc(wishlistId)
+          .collection('items')
+          .get();
+
+        if (itemsSnap.empty) {
+          itemsContainer.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items in this wishlist.</div>';
+        } else {
+          itemsContainer.innerHTML = '';
+          itemsSnap.forEach(itemDoc => {
+            const item = itemDoc.data();
+            itemsContainer.innerHTML += `
+              <div class="item-row">
+                <div>${item.title}</div>
+                <div>${item.price!=null?`$${item.price.toFixed(2)}`:'-'}</div>
+                <div><span class="badge badge-${item.type}">${item.type.toUpperCase()}</span></div>
+                <div>${item.description||'-'}</div>
+              </div>`;
+          });
+        }
+      } catch (err) {
+        console.error(err);
+        errorAlert.textContent = err.message;
+        errorAlert.style.display = 'block';
+      }
+    }
+  </script>
+</body>
+</html>
