@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optana – Create Family Group</title>
+  <meta name="description" content="Create a new family group">
+  <!-- (Same styles and scripts as above, omitted for brevity) -->
+  <!-- ...Copy the <style> and <head> content from the previous file... -->
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
+    </div>
+    <div class="user-profile">
+      <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
+      <div class="user-info">
+        <h3 id="profileUsername">User</h3>
+        <div class="user-email" id="profileEmail">user@example.com</div>
+      </div>
+    </div>
+    <nav class="nav-menu" aria-label="Main Navigation">
+      <ul>
+        <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+        <li class="nav-item"><a href="my-wishlists.html" class="nav-link"><i class="fas fa-gift"></i><span>My Wishlists</span></a></li>
+        <li class="nav-item"><a href="friend-groups.html" class="nav-link"><i class="fas fa-users"></i><span>Friend Groups</span></a></li>
+        <li class="nav-item"><a href="family-groups.html" class="nav-link active"><i class="fas fa-house-user"></i><span>Family Groups</span></a></li>
+        <li class="nav-item"><a href="browse.html" class="nav-link"><i class="fas fa-search"></i><span>Browse</span></a></li>
+        <li class="nav-item"><a href="favorites.html" class="nav-link"><i class="fas fa-heart"></i><span>Favorites</span></a></li>
+        <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="frame">
+      <header class="page-header">
+        <h1 class="page-title">Create Family Group</h1>
+        <a href="family-groups.html" class="btn btn-secondary mono"><i class="fas fa-arrow-left"></i> Back to Family Groups</a>
+      </header>
+      <div class="alert alert-success" id="successAlert" style="display:none;">
+        Family group created successfully!
+      </div>
+      <div class="alert alert-danger" id="errorAlert" style="display:none;">
+        There was an error creating your group. Please try again.
+      </div>
+
+      <div class="form-card">
+        <form id="groupForm">
+          <!-- Group Details Section -->
+          <div class="form-section">
+            <h2 class="form-section-title">Group Details</h2>
+            <div class="form-group">
+              <label for="groupName" class="form-label">Group Name*</label>
+              <input type="text" id="groupName" class="form-control" placeholder="e.g., The Smith Family" required>
+            </div>
+            <div class="form-group">
+              <label for="groupDescription" class="form-label">Description</label>
+              <textarea id="groupDescription" class="form-control" placeholder="Add a description of your family group..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="privacy" class="form-label">Privacy Setting</label>
+              <select id="privacy" class="form-control">
+                <option value="family">Family Only – Only group members</option>
+                <option value="private">Private – Only you</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Members Section -->
+          <div class="form-section">
+            <h2 class="form-section-title">Add Members</h2>
+            <div style="display:flex; gap:1rem;">
+              <input type="email" id="memberEmail" class="form-control" placeholder="Enter family member's email">
+              <button type="button" id="addMemberBtn" class="btn btn-primary">Add</button>
+            </div>
+            <div class="members-list" id="membersList">
+              <div class="member-row" style="text-align:center;color:#777;">No members added yet</div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <a href="family-groups.html" class="btn btn-secondary mono">Cancel</a>
+            <button type="submit" class="btn btn-primary mono">Create Group</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase & Page Scripts -->
+  <script>
+    // Firebase config & initialization (same as your other pages)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+      authDomain: "optanav1.firebaseapp.com",
+      projectId: "optanav1",
+      storageBucket: "optanav1.appspot.com",
+      messagingSenderId: "16298669202",
+      appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+      measurementId: "G-RR7D4MB5FY"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Member management logic (basic, for demo)
+    const membersList = document.getElementById('membersList');
+    const addMemberBtn = document.getElementById('addMemberBtn');
+    const memberEmailInput = document.getElementById('memberEmail');
+    let members = [];
+
+    addMemberBtn.onclick = () => {
+      const email = memberEmailInput.value.trim();
+      if(email && !members.includes(email)) {
+        members.push(email);
+        renderMembers();
+        memberEmailInput.value = '';
+      }
+    };
+
+    function renderMembers() {
+      membersList.innerHTML = '';
+      if(members.length === 0) {
+        membersList.innerHTML = '<div class="member-row" style="text-align:center;color:#777;">No members added yet</div>';
+        return;
+      }
+      members.forEach((email, idx) => {
+        const row = document.createElement('div');
+        row.className = 'member-row';
+        row.innerHTML = `<div class="member-email">${email}</div>
+          <button type="button" class="btn-icon" onclick="removeMember(${idx})"><i class="fas fa-trash"></i></button>`;
+        membersList.appendChild(row);
+      });
+    }
+
+    window.removeMember = function(idx) {
+      members.splice(idx, 1);
+      renderMembers();
+    };
+
+    // TODO: Add Firebase group creation logic on form submit
+
+    // Logout logic (reuse from your other pages)
+    document.getElementById('logoutBtn').onclick = function() {
+      auth.signOut().then(() => window.location.href = 'index.html');
+    };
+  </script>
+</body>
+</html>
