@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optana – My Groups</title>
+  <meta name="description" content="Manage all your groups">
+  <!-- External Styles and Scripts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #FF8C42;
+      --accent-light: #FFBC80;
+      --dark: #333333;
+      --light: #FFFFFF;
+      --gray-light: #F5F5F5;
+      --gray: #E0E0E0;
+      --sidebar-width: 260px;
+      --danger: #dc3545;
+      --success: #28a745;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Playfair Display', serif;
+      color: var(--dark);
+      background: var(--gray-light);
+      min-height: 100vh;
+      display: flex;
+    }
+    .mono { font-family: 'Roboto Mono', monospace; }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--dark);
+      color: var(--light);
+      height: 100vh;
+      position: fixed;
+      left: 0; top: 0;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+      z-index: 100;
+    }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .logo { font-size: 1.8rem; font-weight: 700; text-align: center; }
+    .logo span { color: var(--primary-color); }
+    .logo a { text-decoration: none; color: var(--light); }
+    .user-profile { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .user-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%; background: var(--primary-color);
+      margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: var(--light);
+    }
+    .user-info h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .user-email { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+    .nav-menu { padding: 1.5rem 0; flex-grow: 1; }
+    .nav-item { list-style: none; }
+    .nav-link {
+      display: flex; align-items: center;
+      padding: 0.8rem 1.5rem;
+      color: var(--gray);
+      text-decoration: none;
+      transition: all 0.3s;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95rem;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.1); color: var(--light); }
+    .nav-link.active { background: var(--primary-color); color: var(--light); }
+    .nav-link i { margin-right: 1.5rem; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .btn {
+      font-family: 'Roboto Mono', monospace;
+      padding: 0.5rem 1.5rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+      border: none;
+    }
+    .btn-primary { background: var(--primary-color); color: var(--light); }
+    .btn-primary:hover { background: var(--accent-light); }
+    .btn-secondary { background: var(--gray); color: var(--dark); }
+    .btn-secondary:hover { background: #d0d0d0; }
+    .btn-sm {
+      padding: 0.25rem 0.75rem;
+      font-size: 0.8rem;
+    }
+    .main-content { flex: 1; margin-left: var(--sidebar-width); }
+    
+    /* Top navigation bar */
+    .top-bar {
+      background: var(--light);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .top-bar-title {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+    .top-bar-actions {
+      display: flex;
+      gap: 1rem;
+    }
+    
+    /* Content area */
+    .content-area {
+      padding: 2rem;
+    }
+    
+    .alert { border-radius:8px; padding:1rem; margin-bottom:1rem; }
+    .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
+    .alert-danger { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+    .alert-info { background:#e3f2fd; color:#0d47a1; border:1px solid #b3d7ff; }
+    
+    /* Tabs */
+    .tabs {
+      display: flex;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--gray);
+    }
+    .tab {
+      padding: 1rem 2rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-family: 'Roboto Mono', monospace;
+      font-weight: 500;
+      color: #777;
+      border-bottom: 3px solid transparent;
+    }
+    .tab:hover {
+      color: var(--primary-color);
+    }
+    .tab.active {
+      color: var(--primary-color);
+      border-bottom-color: var(--primary-color);
+    }
+
+    /* Groups grid */
+    .groups-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+    .group-card {
+      background: var(--light);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .group-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .group-type-badge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 0.25rem 0.75rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--light);
+      background: var(--primary-color);
+      border-bottom-left-radius: 8px;
+    }
+    .host-badge {
+      background: #6c757d;
+      position: absolute;
+      top: 0;
+      right: 80px;
+      padding: 0.25rem 0.75rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--light);
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+    .group-card h3 {
+      margin-top: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 1.5rem;
+    }
+    .group-info {
+      margin-bottom: 1rem;
+      color: #666;
+    }
+    .group-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+      padding-top: 1rem;
+      border-top: 1px solid var(--gray-light);
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.85rem;
+      color: #777;
+    }
+    .group-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    
+    /* Modal Styles */
+    .modal-bg {
+      display: none;
+      position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.22);
+      z-index: 9999;
+      align-items: center; justify-content: center;
+      transition: opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .modal-bg.active {
+      display: flex;
+      opacity: 1;
+      pointer-events: auto;
+      animation: modal-bg-fadein 0.32s;
+    }
+    @keyframes modal-bg-fadein {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+    .modal-fade {
+      opacity: 0;
+      transform: translateY(32px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.32s cubic-bezier(.4,0,.2,1), transform 0.32s cubic-bezier(.4,0,.2,1);
+    }
+    .modal-fade.in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .modal-fade.out {
+      opacity: 0;
+      transform: translateY(32px) scale(0.98);
+      pointer-events: none;
+    }
+    .modal {
+      background: var(--light);
+      border-radius: 18px;
+      min-width: 0;
+      max-width: 360px;
+      width: 96vw;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+      padding: 2rem 1.3rem 1.3rem 1.3rem;
+      position: relative;
+      font-family: 'Playfair Display', serif;
+    }
+    .modal-close {
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none; font-size: 1.3rem; color: #888; cursor: pointer;
+    }
+    .modal-title {
+      font-size: 1.18rem;
+      font-weight: bold;
+      margin-bottom: 1.1rem;
+      font-family: 'Playfair Display', serif;
+    }
+    .modal-form-group { margin-bottom: 1.15rem; }
+    .modal-label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--dark);
+    }
+    .modal-input {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border-radius: 12px;
+      border: 1.5px solid var(--gray);
+      font-size: 1rem;
+      font-family: 'Roboto Mono', monospace;
+      outline: none;
+      background: var(--gray-light);
+      color: var(--dark);
+      box-sizing: border-box;
+      transition: border-color 0.25s;
+    }
+    .modal-input:focus {
+      border-color: var(--primary-color);
+      background: #fff;
+    }
+    .modal-actions { display: flex; gap: 1rem; justify-content: flex-end; }
+    .modal-error {
+      color: var(--danger);
+      font-size: 0.98rem;
+      margin-bottom: 0.5rem;
+      font-family: 'Roboto Mono', monospace;
+      text-align: left;
+    }
+    
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+    }
+    .empty-state-icon {
+      font-size: 3rem;
+      color: var(--gray);
+      margin-bottom: 1rem;
+    }
+    .empty-state-title {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .empty-state-description {
+      color: #777;
+      margin-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 992px) {
+      .main-content { margin-left: 80px; }
+      .groups-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .top-bar { padding: 1rem; }
+      .top-bar-actions { flex-wrap: wrap; }
+    }
+    @media (max-width: 600px) {
+      .sidebar { width: 100vw; position: static; height: auto; }
+      .main-content { margin-left: 0; }
+      .content-area { padding: 1rem; }
+      .tab { padding: 0.75rem 1rem; font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
+    </div>
+    <div class="user-profile">
+      <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
+      <div class="user-info">
+        <h3 id="profileUsername">User</h3>
+        <div class="user-email" id="profileEmail">user@example.com</div>
+      </div>
+    </div>
+    <nav class="nav-menu" aria-label="Main Navigation">
+      <ul>
+        <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+        <li class="nav-item"><a href="my-wishlists.html" class="nav-link"><i class="fas fa-gift"></i><span>My Wishlists</span></a></li>
+        <li class="nav-item"><a href="groups.html" class="nav-link active"><i class="fas fa-users"></i><span>My Groups</span></a></li>
+        <li class="nav-item"><a href="browse.html" class="nav-link"><i class="fas fa-search"></i><span>Browse</span></a></li>
+        <li class="nav-item"><a href="favorites.html" class="nav-link"><i class="fas fa-heart"></i><span>Favorites</span></a></li>
+        <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Navigation Bar -->
+    <div class="top-bar">
+      <div class="top-bar-title">My Groups</div>
+      <div class="top-bar-actions">
+        <a href="create-group.html" class="btn btn-primary mono"><i class="fas fa-plus"></i> Create New Group</a>
+        <button class="btn btn-secondary mono" onclick="showModal('code')"><i class="fas fa-ticket"></i> Join by Code</button>
+        <button class="btn btn-secondary mono" onclick="showModal('link')"><i class="fas fa-link"></i> Join by Link</button>
+      </div>
+    </div>
+    
+    <div class="content-area">
+      <div id="successAlert" class="alert alert-success" style="display:none;"></div>
+      <div id="errorAlert" class="alert alert-danger" style="display:none;"></div>
+      <div id="infoAlert" class="alert alert-info" style="display:none;">Loading your groups...</div>
+      
+      <!-- Tabs -->
+      <div class="tabs">
+        <div class="tab active" data-filter="all" onclick="filterGroups('all')">All Groups</div>
+        <div class="tab" data-filter="friend" onclick="filterGroups('friend')">Friend Groups</div>
+        <div class="tab" data-filter="family" onclick="filterGroups('family')">Family Groups</div>
+        <div class="tab" data-filter="host" onclick="filterGroups('host')">Hosted by Me</div>
+      </div>
+      
+      <!-- Groups Grid -->
+      <div id="groupsGrid" class="groups-grid">
+        <!-- Groups will be loaded here by JavaScript -->
+      </div>
+      
+      <!-- Empty State (shown when no groups) -->
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <div class="empty-state-icon"><i class="fas fa-users-slash"></i></div>
+        <h2 class="empty-state-title">No Groups Found</h2>
+        <p class="empty-state-description">You aren't part of any groups yet. Create a new group or join an existing one.</p>
+        <a href="create-group.html" class="btn btn-primary mono"><i class="fas fa-plus"></i> Create New Group</a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal for join by code/link -->
+  <div class="modal-bg" id="joinModalBg">
+    <div class="modal modal-fade" id="joinModal">
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+      <div class="modal-title" id="modalTitle">Join Group</div>
+      <form id="joinForm" onsubmit="return false;">
+        <div class="modal-form-group">
+          <label class="modal-label" id="modalLabel" for="modalInput">Group Code</label>
+          <input class="modal-input" id="modalInput" type="text" autocomplete="off" required>
+        </div>
+        <div class="modal-error" id="modalError" style="display:none;"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Join</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase & Page Scripts -->
+  <script>
+    // Firebase config & initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+      authDomain: "optanav1.firebaseapp.com",
+      projectId: "optanav1",
+      storageBucket: "optanav1.appspot.com",
+      messagingSenderId: "16298669202",
+      appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+      measurementId: "G-RR7D4MB5FY"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    
+    // DOM elements
+    const groupsGrid = document.getElementById('groupsGrid');
+    const emptyState = document.getElementById('emptyState');
+    const successAlert = document.getElementById('successAlert');
+    const errorAlert = document.getElementById('errorAlert');
+    const infoAlert = document.getElementById('infoAlert');
+    const tabs = document.querySelectorAll('.tab');
+    
+    // User and groups data
+    let currentUser = null;
+    let allGroups = [];
+    let currentFilter = 'all';
+    
+    // Modal references
+    const joinModalBg = document.getElementById('joinModalBg');
+    const joinModal = document.getElementById('joinModal');
+    const joinForm = document.getElementById('joinForm');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalLabel = document.getElementById('modalLabel');
+    const modalInput = document.getElementById('modalInput');
+    const modalError = document.getElementById('modalError');
+    let joinMode = "code"; // or "link"
+    
+    // Auth state change
+    auth.onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      currentUser = user;
+      document.getElementById('profileUsername').textContent = user.displayName || "User";
+      document.getElementById('profileEmail').textContent = user.email;
+      if (user.photoURL) {
+        document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
+      }
+      loadAllGroups();
+    });
+    
+    // Tab filtering
+    function filterGroups(filter) {
+      // Update active tab
+      tabs.forEach(tab => {
+        if (tab.dataset.filter === filter) {
+          tab.classList.add('active');
+        } else {
+          tab.classList.remove('active');
+        }
+      });
+      
+      currentFilter = filter;
+      renderGroups();
+    }
+    
+    // Load all groups
+    async function loadAllGroups() {
+      errorAlert.style.display = 'none';
+      infoAlert.style.display = 'block';
+      groupsGrid.innerHTML = '';
+      allGroups = [];
+      
+      try {
+        // Load friend groups
+        const friendGroupsSnap = await db.collection('friendGroups')
+          .where('members', 'array-contains', currentUser.uid)
+          .get();
+        
+        friendGroupsSnap.forEach(doc => {
+          const group = doc.data();
+          allGroups.push({
+            id: doc.id,
+            ...group,
+            collectionName: 'friendGroups',
+            isHost: group.createdBy === currentUser.uid
+          });
+        });
+        
+        // Load family groups
+        const familyGroupsSnap = await db.collection('familyGroups')
+          .where('members', 'array-contains', currentUser.uid)
+          .get();
+        
+        familyGroupsSnap.forEach(doc => {
+          const group = doc.data();
+          allGroups.push({
+            id: doc.id,
+            ...group,
+            collectionName: 'familyGroups',
+            isHost: group.createdBy === currentUser.uid
+          });
+        });
+        
+        infoAlert.style.display = 'none';
+        renderGroups();
+        
+      } catch (error) {
+        console.error("Error loading groups:", error);
+        infoAlert.style.display = 'none';
+        errorAlert.textContent = "Failed to load your groups. Please try again.";
+        errorAlert.style.display = 'block';
+      }
+    }
+    
+    // Render groups based on current filter
+    function renderGroups() {
+      groupsGrid.innerHTML = '';
+      
+      let filteredGroups = allGroups;
+      
+      // Apply filter
+      if (currentFilter === 'friend') {
+        filteredGroups = allGroups.filter(group => group.type === 'friend');
+      } else if (currentFilter === 'family') {
+        filteredGroups = allGroups.filter(group => group.type === 'family');
+      } else if (currentFilter === 'host') {
+        filteredGroups = allGroups.filter(group => group.isHost);
+      }
+      
+      // Show empty state if no groups
+      if (filteredGroups.length === 0) {
+        if (allGroups.length === 0) {
+          emptyState.style.display = 'block';
+        } else {
+          groupsGrid.innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #777;">
+              No ${currentFilter === 'all' ? '' : currentFilter} groups found.
+            </div>
+          `;
+        }
+        return;
+      }
+      
+      emptyState.style.display = 'none';
+      
+      // Create group cards
+      filteredGroups.forEach(group => {
+        const typeName = group.type === 'friend' ? 'Friend Group' : 'Family Group';
+        const typeIcon = group.type === 'friend' ? 'fas fa-users' : 'fas fa-house-user';
+        
+        const card = document.createElement('div');
+        card.className = 'group-card';
+        card.innerHTML = `
+          <div class="group-type-badge">${typeName}</div>
+          ${group.isHost ? '<div class="host-badge">Host</div>' : ''}
+          <h3>${escapeHtml(group.name || 'Unnamed Group')}</h3>
+          <div class="group-info">${escapeHtml(group.description || 'No description provided.')}</div>
+          <div class="group-meta">
+            <div><i class="${typeIcon}"></i> ${group.members ? group.members.length : 0} members</div>
+            <div>Created: ${formatDate(group.createdAt)}</div>
+          </div>
+          <div class="group-actions">
+            <a href="view-group.html?id=${group.id}&type=${group.type}" class="btn btn-secondary btn-sm mono">
+              <i class="fas fa-eye"></i> View
+            </a>
+            ${group.isHost ? `
+              <a href="edit-group.html?id=${group.id}&type=${group.type}" class="btn btn-primary btn-sm mono">
+                <i class="fas fa-edit"></i> Edit
+              </a>
+            ` : ''}
+          </div>
+        `;
+        
+        groupsGrid.appendChild(card);
+      });
+    }
+    
+    // Utility functions
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+    
+    function formatDate(timestamp) {
+      if (!timestamp || !timestamp.toDate) {
+        return 'Recently';
+      }
+      
+      const date = timestamp.toDate();
+      return date.toLocaleDateString();
+    }
+    
+    // Modal logic with fade-in/fade-out
+    function showModal(mode) {
+      joinMode = mode;
+      modalError.style.display = "none";
+      modalInput.value = "";
+      
+      if (mode === "code") {
+        modalTitle.textContent = "Join Group by Code";
+        modalLabel.textContent = "Group Code";
+        modalInput.placeholder = "Paste group code here";
+      } else {
+        modalTitle.textContent = "Join Group by Invite Link";
+        modalLabel.textContent = "Invite Link";
+        modalInput.placeholder = "Paste invite link here";
+      }
+      
+      joinModalBg.style.display = "flex";
+      setTimeout(() => {
+        joinModalBg.classList.add('active');
+        joinModal.classList.add('in');
+        modalInput.focus();
+      }, 10);
+    }
+    
+    function closeModal() {
+      joinModal.classList.remove('in');
+      joinModal.classList.add('out');
+      joinModalBg.classList.remove('active');
+      setTimeout(() => {
+        joinModalBg.style.display = "none";
+        joinModal.classList.remove('out');
+      }, 320);
+    }
+    
+    joinModalBg.addEventListener('click', function(e) {
+      if (e.target === joinModalBg) closeModal();
+    });
+    
+    document.addEventListener('keydown', function(e) {
+      if (e.key === "Escape") closeModal();
+    });
+    
+    // Join group form submission
+    joinForm.onsubmit = async function(e) {
+      e.preventDefault();
+      modalError.style.display = "none";
+      const value = modalInput.value.trim();
+      
+      if (!value) {
+        modalError.textContent = "Please enter a value.";
+        modalError.style.display = "block";
+        return;
+      }
+      
+      let groupId;
+      let groupType;
+      
+      if (joinMode === "code") {
+        // Format should be: type-id (e.g., friend-abc123 or family-xyz789)
+        const parts = value.split('-');
+        if (parts.length !== 2 || (parts[0] !== 'friend' && parts[0] !== 'family')) {
+          modalError.textContent = "Invalid group code format. Should be 'type-id'.";
+          modalError.style.display = "block";
+          return;
+        }
+        
+        groupType = parts[0];
+        groupId = parts[1];
+      } else {
+        // Link format should be: domain.com/invite?type=friend&id=abc123
+        try {
+          const url = new URL(value);
+          const params = new URLSearchParams(url.search);
+          groupType = params.get('type');
+          groupId = params.get('id');
+          
+          if (!groupType || !groupId || (groupType !== 'friend' && groupType !== 'family')) {
+            throw new Error("Invalid invite link");
+          }
+        } catch (error) {
+          modalError.textContent = "Invalid invite link format.";
+          modalError.style.display = "block";
+          return;
+        }
+      }
+      
+      // Determine collection name
+      const collectionName = groupType === 'friend' ? 'friendGroups' : 'familyGroups';
+      
+      try {
+        // Check if group exists
+        const groupDoc = await db.collection(collectionName).doc(groupId).get();
+        
+        if (!groupDoc.exists) {
+          modalError.textContent = "Group not found.";
+          modalError.style.display = "block";
+          return;
+        }
+        
+        const groupData = groupDoc.data();
+        
+        // Check if user is already a member
+        if (groupData.members && groupData.members.includes(currentUser.uid)) {
+          modalError.textContent = "You are already a member of this group.";
+          modalError.style.display = "block";
+          return;
+        }
+        
+        // Add user to group
+        await db.collection(collectionName).doc(groupId).update({
+          members: firebase.firestore.FieldValue.arrayUnion(currentUser.uid)
+        });
+        
+        // Close modal
+        closeModal();
+        
+        // Show success message
+        successAlert.textContent = `Successfully joined the ${groupType} group: ${groupData.name}`;
+        successAlert.style.display = 'block';
+        
+        // Reload groups
+        loadAllGroups();
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          successAlert.style.display = 'none';
+        }, 3000);
+        
+      } catch (error) {
+        console.error("Error joining group:", error);
+        modalError.textContent = "Failed to join group. Please try again.";
+        modalError.style.display = "block";
+      }
+    };
+    
+    // Logout functionality
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      auth.signOut().then(() => {
+        window.location.href = "login.html";
+      }).catch(error => {
+        console.error("Error signing out:", error);
+        errorAlert.textContent = "Failed to log out. Please try again.";
+        errorAlert.style.display = 'block';
+      });
+    });
+    
+    // Initialize group loading
+    document.addEventListener('DOMContentLoaded', () => {
+      if (auth.currentUser) {
+        loadAllGroups();
+      }
+      
+      // Check URL params for success messages
+      const urlParams = new URLSearchParams(window.location.search);
+      const success = urlParams.get('success');
+      
+      if (success === 'created') {
+        successAlert.textContent = "Group created successfully!";
+        successAlert.style.display = 'block';
+        
+        // Remove query parameters from URL
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        // Hide success message after 3 seconds
+        setTimeout(() => {
+          successAlert.style.display = 'none';
+        }, 3000);
+      }
+    });
+  </script>
+</body>
+</html>
