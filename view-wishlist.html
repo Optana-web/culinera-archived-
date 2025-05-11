@@ -151,6 +151,31 @@
     .alert { border-radius:8px; padding:1rem; margin-bottom:1rem; }
     .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
     .alert-danger { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
+    .alert-info { background:#cce5ff; color:#004085; border:1px solid #b8daff; }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .loader {
+      border: 6px solid var(--gray-light);
+      border-top: 6px solid var(--primary-color);
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1.5s linear infinite;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     @media (max-width: 992px) {
       .main-content { margin-left: 80px; }
     }
@@ -163,6 +188,11 @@
   </style>
 </head>
 <body>
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loader"></div>
+  </div>
+  
   <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
@@ -237,7 +267,16 @@
       appId: "1:16298669202:web:ac2a1cd399993b1883624b",
       measurementId: "G-RR7D4MB5FY"
     };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    
+    if (!firebase.apps.length) {
+      try {
+        firebase.initializeApp(firebaseConfig);
+      } catch (err) {
+        console.error("Firebase initialization error", err);
+        showAlert('danger', 'Failed to initialize Firebase. Please refresh the page or try again later.');
+      }
+    }
+    
     const auth = firebase.auth();
     const db = firebase.firestore();
 
@@ -250,11 +289,40 @@
     function showAlert(type, message) {
       document.getElementById('alertContainer').innerHTML = 
         `<div class="alert alert-${type}">${message}</div>`;
+      
+      // Auto hide success alerts after 5 seconds
+      if (type === 'success') {
+        setTimeout(() => {
+          const alertEl = document.querySelector('.alert-success');
+          if (alertEl) alertEl.remove();
+        }, 5000);
+      }
+    }
+
+    function showLoading(show = true) {
+      document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+    }
+
+    function sanitizeHTML(str) {
+      if (!str) return '';
+      return str.toString()
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
     }
 
     // Sidebar logout
     document.getElementById('logoutBtn').onclick = function() {
-      auth.signOut().then(() => window.location.href = 'index.html');
+      showLoading();
+      auth.signOut()
+        .then(() => window.location.href = 'index.html')
+        .catch(error => {
+          showLoading(false);
+          showAlert('danger', 'Logout failed. Please try again.');
+          console.error("Logout error", error);
+        });
     };
 
     // Share button
@@ -276,67 +344,113 @@
     let currentUser = null;
     let userGroups = [];
     let wishlist = null;
+    let wishlistId = null;
 
     async function fetchUserGroups(uid) {
-      // Get all group IDs where user is a member
-      const groups = [];
-      const friendGroups = await db.collection('friendGroups').where('members', 'array-contains', uid).get();
-      friendGroups.forEach(doc => groups.push(doc.id));
-      const familyGroups = await db.collection('familyGroups').where('members', 'array-contains', uid).get();
-      familyGroups.forEach(doc => groups.push(doc.id));
-      return groups;
+      try {
+        // Get all group IDs where user is a member
+        const groups = [];
+        
+        // Batch both queries together
+        const [friendGroups, familyGroups] = await Promise.all([
+          db.collection('friendGroups').where('members', 'array-contains', uid).get(),
+          db.collection('familyGroups').where('members', 'array-contains', uid).get()
+        ]);
+        
+        friendGroups.forEach(doc => groups.push({id: doc.id, type: 'friend', data: doc.data()}));
+        familyGroups.forEach(doc => groups.push({id: doc.id, type: 'family', data: doc.data()}));
+        
+        return groups;
+      } catch (error) {
+        console.error("Error fetching user groups:", error);
+        showAlert('danger', 'Failed to load your groups. Some wishlists may not be accessible.');
+        return [];
+      }
     }
 
     async function renderWishlist() {
       if (!wishlist) return;
-      document.getElementById('wishlistTitle').textContent = wishlist.title || 'Wishlist';
-      document.getElementById('wishlistDescription').textContent = wishlist.description || '';
-      document.getElementById('wishlistOwner').textContent = wishlist.ownerDisplayName || 'Unknown Owner';
-      document.getElementById('wishlistOccasion').textContent = wishlist.occasion ? wishlist.occasion.charAt(0).toUpperCase() + wishlist.occasion.slice(1) : '';
+      
+      // Set basic wishlist info
+      document.getElementById('wishlistTitle').textContent = sanitizeHTML(wishlist.title || 'Wishlist');
+      document.getElementById('wishlistDescription').textContent = sanitizeHTML(wishlist.description || '');
+      document.getElementById('wishlistOwner').textContent = sanitizeHTML(wishlist.ownerDisplayName || 'Unknown Owner');
+      
+      // Set occasion
+      const occasionElement = document.getElementById('wishlistOccasion');
+      if (wishlist.occasion) {
+        const formattedOccasion = wishlist.occasion.charAt(0).toUpperCase() + wishlist.occasion.slice(1);
+        occasionElement.textContent = sanitizeHTML(formattedOccasion);
+      } else {
+        occasionElement.textContent = 'General';
+      }
+      
+      // Set privacy badge
       let privacyBadge = '';
-      if (wishlist.privacy === 'public') privacyBadge = '<span class="badge badge-public">Public</span>';
-      else if (wishlist.privacy === 'friends') privacyBadge = '<span class="badge badge-friends">Groups Only</span>';
-      else privacyBadge = '<span class="badge badge-private">Private</span>';
+      if (wishlist.privacy === 'public') {
+        privacyBadge = '<span class="badge badge-public">Public</span>';
+      } else if (wishlist.privacy === 'friends') {
+        privacyBadge = '<span class="badge badge-friends">Groups Only</span>';
+      } else {
+        privacyBadge = '<span class="badge badge-private">Private</span>';
+      }
       document.getElementById('wishlistPrivacy').innerHTML = privacyBadge;
 
       // Show linked groups if any
+      const groupsElement = document.getElementById('wishlistGroups');
       if (wishlist.linkedGroups && wishlist.linkedGroups.length > 0) {
-        document.getElementById('wishlistGroups').innerHTML = 
-          '<b>Linked Groups:</b> ' + wishlist.linkedGroups.map(g => `<span class="badge badge-friends">${g.name || g.id}</span>`).join(' ');
+        const groupNames = wishlist.linkedGroups
+          .map(g => `<span class="badge badge-friends">${sanitizeHTML(g.name || g.id)}</span>`)
+          .join(' ');
+          
+        groupsElement.innerHTML = '<b>Linked Groups:</b> ' + groupNames;
       } else {
-        document.getElementById('wishlistGroups').innerHTML = '';
+        groupsElement.innerHTML = '';
       }
 
-      // Items
+      // Render items list
       const itemsList = document.getElementById('itemsList');
       itemsList.innerHTML = '';
       let total = 0;
+      
       if (wishlist.items && wishlist.items.length > 0) {
         wishlist.items.forEach(item => {
           const row = document.createElement('div');
           row.className = 'item-row';
+          
+          // Handle price formatting
           let priceStr = '';
+          let priceNum = null;
+          
           if (item.price !== undefined && item.price !== null && item.price !== '') {
-            const price = Number(item.price);
-            if (!isNaN(price)) {
-              priceStr = '$' + price.toFixed(2);
-              total += price;
+            // Handle both string and number formats
+            priceNum = typeof item.price === 'string' ? 
+              Number(item.price.replace(/[^0-9.-]+/g, '')) : 
+              Number(item.price);
+              
+            if (!isNaN(priceNum)) {
+              priceStr = '$' + priceNum.toFixed(2);
+              total += priceNum;
             }
           }
+          
+          // Create item row with proper sanitization
           row.innerHTML = `
             <div>
-              <span class="item-title">${item.title || ''}</span>
-              ${item.url ? `<a href="${item.url}" target="_blank" class="item-link"><i class="fas fa-link"></i></a>` : ''}
-              <div style="font-size:0.9em;color:#666;">${item.description || ''}</div>
+              <span class="item-title">${sanitizeHTML(item.title || '')}</span>
+              ${item.url ? `<a href="${sanitizeHTML(item.url)}" target="_blank" class="item-link"><i class="fas fa-link"></i></a>` : ''}
+              <div style="font-size:0.9em;color:#666;">${sanitizeHTML(item.description || '')}</div>
             </div>
             <div>${priceStr}</div>
             <div><span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type === 'need' ? 'Need' : 'Want'}</span></div>
           `;
+          
           itemsList.appendChild(row);
         });
       } else {
         itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
       }
+      
       // Show total price if there are items with prices
       const totalRow = document.getElementById('totalRow');
       if (total > 0) {
@@ -345,119 +459,178 @@
       } else {
         totalRow.style.display = 'none';
       }
+      
+      // Display the content
       document.getElementById('wishlistContent').style.display = '';
     }
 
     async function checkAccess(wishlist, user) {
       // Public: always allowed
       if (wishlist.privacy === 'public') return true;
-      // Private: only owner
+      
+      // If not public, must have a user
+      if (!user) return false;
+      
+      // Owner always has access
+      if (user.uid === wishlist.owner) return true;
+      
+      // Private: only owner (already checked above)
       if (wishlist.privacy === 'private') {
-        if (!user) return false;
-        return user.uid === wishlist.owner;
-      }
-      // Friends/Groups Only: must be in at least one linked group
-      if (wishlist.privacy === 'friends') {
-        if (!user) return false;
-        if (!wishlist.linkedGroups || wishlist.linkedGroups.length === 0) return false;
-        // User must be in at least one linked group
-        const userGroupsSet = new Set(userGroups);
-        for (const group of wishlist.linkedGroups) {
-          if (userGroupsSet.has(group.id)) return true;
-        }
-        // Also allow owner
-        if (user.uid === wishlist.owner) return true;
         return false;
       }
+      
+      // Friends/Groups Only: must be in at least one linked group
+      if (wishlist.privacy === 'friends') {
+        if (!wishlist.linkedGroups || wishlist.linkedGroups.length === 0) return false;
+        
+        // User must be in at least one linked group
+        const userGroupIds = userGroups.map(g => g.id);
+        const linkedGroupIds = wishlist.linkedGroups.map(g => g.id);
+        
+        // Check for intersection
+        return userGroupIds.some(id => linkedGroupIds.includes(id));
+      }
+      
       return false;
     }
 
     async function loadWishlist() {
-      const wishlistId = getQueryParam('id');
-      if (!wishlistId) {
-        showAlert('danger', 'No wishlist ID specified.');
-        return;
-      }
-      // Get wishlist document
-      const doc = await db.collection('wishlists').doc(wishlistId).get();
-      if (!doc.exists) {
-        showAlert('danger', 'Wishlist not found.');
-        return;
-      }
-      wishlist = doc.data();
-      wishlist.id = doc.id;
+      showLoading(true);
+      
+      try {
+        wishlistId = getQueryParam('id');
+        if (!wishlistId) {
+          showAlert('danger', 'No wishlist ID specified.');
+          showLoading(false);
+          return;
+        }
+        
+        // Get wishlist document
+        const doc = await db.collection('wishlists').doc(wishlistId).get();
+        if (!doc.exists) {
+          showAlert('danger', 'Wishlist not found.');
+          showLoading(false);
+          return;
+        }
+        
+        wishlist = doc.data();
+        wishlist.id = doc.id;
 
-      // Fetch group names for display
-      if (wishlist.linkedGroups && wishlist.linkedGroups.length > 0) {
-        let groupRefs = wishlist.linkedGroups.map(gid => db.collection('friendGroups').doc(gid).get()
-          .then(doc => ({id: gid, name: doc.exists ? doc.data().name : gid})));
-        groupRefs = groupRefs.concat(wishlist.linkedGroups.map(gid => db.collection('familyGroups').doc(gid).get()
-          .then(doc => ({id: gid, name: doc.exists ? doc.data().name : gid}))));
-        // Remove duplicates by group ID
-        const groups = await Promise.all(groupRefs);
-        const uniqueGroups = [];
-        const seen = new Set();
-        for (const g of groups) {
-          if (!seen.has(g.id)) {
-            seen.add(g.id);
-            uniqueGroups.push(g);
+        // Process linked groups
+        if (wishlist.linkedGroups && Array.isArray(wishlist.linkedGroups) && wishlist.linkedGroups.length > 0) {
+          // Convert string IDs to objects if needed
+          wishlist.linkedGroups = wishlist.linkedGroups.map(group => {
+            return typeof group === 'string' ? { id: group } : group;
+          });
+          
+          // Fetch group information in parallel
+          const groupPromises = wishlist.linkedGroups.map(async (group) => {
+            try {
+              // Try friend groups collection first
+              let doc = await db.collection('friendGroups').doc(group.id).get();
+              
+              // If not found, try family groups
+              if (!doc.exists) {
+                doc = await db.collection('familyGroups').doc(group.id).get();
+              }
+              
+              // Return group with name if found
+              if (doc.exists) {
+                return {
+                  id: group.id,
+                  name: doc.data().name || group.id
+                };
+              }
+              
+              // Fallback to just the ID
+              return { id: group.id, name: group.id };
+            } catch (error) {
+              console.error(`Error fetching group ${group.id}:`, error);
+              return { id: group.id, name: group.id };
+            }
+          });
+          
+          wishlist.linkedGroups = await Promise.all(groupPromises);
+        } else {
+          wishlist.linkedGroups = [];
+        }
+
+        // Fetch owner display name
+        if (wishlist.owner) {
+          try {
+            const userDoc = await db.collection('users').doc(wishlist.owner).get();
+            wishlist.ownerDisplayName = userDoc.exists ? 
+              (userDoc.data().displayName || userDoc.data().email) : 
+              'Unknown User';
+          } catch (error) {
+            console.error("Error fetching owner information:", error);
+            wishlist.ownerDisplayName = 'Unknown User';
           }
         }
-        wishlist.linkedGroups = uniqueGroups;
-      }
 
-      // Fetch owner display name
-      if (wishlist.owner) {
-        const userDoc = await db.collection('users').doc(wishlist.owner).get();
-        wishlist.ownerDisplayName = userDoc.exists ? userDoc.data().displayName || userDoc.data().email : 'Unknown';
-      }
-
-      // Check access
-      if (wishlist.privacy === 'public') {
-        renderWishlist();
-        showEditIfOwner();
-      } else {
+        // Check auth state and handle access control
         auth.onAuthStateChanged(async user => {
-          currentUser = user;
-          if (user) {
-            userGroups = await fetchUserGroups(user.uid);
-          }
-          const allowed = await checkAccess(wishlist, user);
-          if (allowed) {
-            renderWishlist();
-            showEditIfOwner();
-          } else {
-            showAlert('danger', 'You do not have permission to view this wishlist.');
+          try {
+            currentUser = user;
+            
+            if (user) {
+              // Update profile info in sidebar
+              document.getElementById('profileUsername').textContent = user.displayName || 'User';
+              document.getElementById('profileEmail').textContent = user.email || '';
+              if (user.photoURL) {
+                document.getElementById('userAvatar').innerHTML = `<img src="${sanitizeHTML(user.photoURL)}" style="width:100%;height:100%;border-radius:50%;">`;
+              }
+              
+              // Fetch user groups for access control
+              userGroups = await fetchUserGroups(user.uid);
+            }
+            
+            // Handle wishlist access
+            const allowed = await checkAccess(wishlist, user);
+            
+            if (allowed) {
+              // Render wishlist
+              await renderWishlist();
+              
+              // Show edit button if current user is the owner
+              if (user && wishlist && user.uid === wishlist.owner) {
+                document.getElementById('editBtn').style.display = '';
+                document.getElementById('editBtn').href = 'edit-wishlist.html?id=' + wishlist.id;
+              } else {
+                document.getElementById('editBtn').style.display = 'none';
+              }
+            } else {
+              if (user) {
+                showAlert('danger', 'You do not have permission to view this wishlist.');
+              } else {
+                showAlert('info', 'Please log in to view this wishlist.');
+              }
+            }
+            
+            showLoading(false);
+          } catch (error) {
+            console.error("Authentication check error:", error);
+            showAlert('danger', 'Error checking access. Please refresh the page.');
+            showLoading(false);
           }
         });
+      } catch (error) {
+        console.error("Error loading wishlist:", error);
+        showAlert('danger', 'Failed to load wishlist. Please try again later.');
+        showLoading(false);
       }
     }
 
-    function showEditIfOwner() {
-      // Show edit button if current user is the owner
-      auth.onAuthStateChanged(user => {
-        if (user && wishlist && user.uid === wishlist.owner) {
-          document.getElementById('editBtn').style.display = '';
-          document.getElementById('editBtn').href = 'edit-wishlist.html?id=' + wishlist.id;
-        } else {
-          document.getElementById('editBtn').style.display = 'none';
-        }
-      });
-    }
-
-    // Show user info in sidebar
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('profileUsername').textContent = user.displayName || 'User';
-        document.getElementById('profileEmail').textContent = user.email || '';
-        if (user.photoURL) {
-          document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
-        }
+    // Start loading process
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        loadWishlist();
+      } catch (error) {
+        console.error("Initial load error:", error);
+        showAlert('danger', 'An error occurred while loading the page. Please refresh.');
+        showLoading(false);
       }
     });
-
-    // Load wishlist on page load
-    loadWishlist();
   </script>
 </body>
 </html>
