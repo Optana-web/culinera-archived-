@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optana – Edit Wishlist</title>
+  <meta name="description" content="Edit your wishlist">
+
+  <!-- External Styles and Scripts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    :root {
+      --primary-color: #FF8C42;
+      --accent-light: #FFBC80;
+      --dark: #333333;
+      --light: #FFFFFF;
+      --gray-light: #F5F5F5;
+      --gray: #E0E0E0;
+      --sidebar-width: 260px;
+      --danger: #dc3545;
+      --success: #28a745;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Playfair Display', serif;
+      color: var(--dark);
+      background: var(--gray-light);
+      min-height: 100vh;
+      display: flex;
+    }
+    .mono { font-family: 'Roboto Mono', monospace; }
+    .sidebar {
+      width: var(--sidebar-width);
+      background: var(--dark);
+      color: var(--light);
+      height: 100vh;
+      position: fixed;
+      left: 0; top: 0;
+      display: flex; flex-direction: column;
+      overflow-y: auto;
+    }
+    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .logo { font-size: 1.8rem; font-weight: 700; text-align: center; }
+    .logo span { color: var(--primary-color); }
+    .logo a { text-decoration: none; color: var(--light); }
+    .user-profile { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .user-avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%; background: var(--primary-color);
+      margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; color: var(--light);
+    }
+    .user-info h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+    .user-email { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: rgba(255,255,255,0.7); }
+    .nav-menu { padding: 1.5rem 0; flex-grow: 1; }
+    .nav-item { list-style: none; }
+    .nav-link {
+      display: flex; align-items: center;
+      padding: 0.8rem 1.5rem;
+      color: var(--gray);
+      text-decoration: none;
+      transition: all 0.3s;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.95rem;
+    }
+    .nav-link:hover { background: rgba(255,255,255,0.1); color: var(--light); }
+    .nav-link.active { background: var(--primary-color); color: var(--light); }
+    .nav-link i { margin-right: 1.5rem; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .btn {
+      font-family: 'Roboto Mono', monospace;
+      padding: 0.5rem 1.5rem;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+      border: none;
+    }
+    .btn-primary { background: var(--primary-color); color: var(--light); }
+    .btn-primary:hover { background: var(--accent-light); }
+    .btn-secondary { background: var(--gray); color: var(--dark); }
+    .btn-secondary:hover { background: #d0d0d0; }
+    .main-content { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+    .frame {
+      background: var(--light);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+      margin: 0 auto;
+      max-width: 1000px;
+    }
+    .page-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--gray);
+      padding-bottom: 1rem;
+    }
+    .page-title { font-size: 2rem; }
+    .form-card {
+      background: var(--light);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+      border: 1px solid var(--gray);
+    }
+    .form-section-title {
+      font-size: 1.6rem;
+      margin-bottom: 1rem;
+      border-bottom: 2px solid var(--primary-color);
+      padding-bottom: 0.5rem;
+    }
+    .form-group { margin-bottom: 1.5rem; }
+    .form-label { display: block; margin-bottom: 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; }
+    .form-control {
+      width: 100%; padding: 0.75rem 1rem;
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+    .form-control:focus { outline: none; border-color: var(--primary-color); }
+    .toggle-switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--gray);
+      transition: .4s;
+      border-radius: 34px;
+    }
+    .toggle-slider:before {
+      position: absolute; content: "";
+      height: 22px; width: 22px;
+      left: 4px; bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .toggle-slider { background-color: var(--primary-color); }
+    input:checked + .toggle-slider:before { transform: translateX(30px); }
+    .toggle-labels { display: flex; justify-content: space-between; margin-top: 0.5rem; font-family: 'Roboto Mono', monospace; font-size: 0.8rem; }
+    .items-list { margin-top: 1.5rem; border: 1px solid var(--gray); border-radius: 8px; }
+    .item-header {
+      background: var(--gray-light);
+      padding: 0.8rem 1rem;
+      font-family: 'Roboto Mono', monospace;
+      font-size: 0.9rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 80px;
+      gap: 1rem;
+      border-bottom: 1px solid var(--gray);
+    }
+    .item-row {
+      padding: 1rem;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 80px;
+      gap: 1rem;
+      align-items: center;
+      border-bottom: 1px solid var(--gray-light);
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-actions { display: flex; gap: 0.5rem; }
+    .btn-icon {
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 4px;
+      background: var(--gray-light);
+      color: var(--dark);
+      border: none; cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-icon:hover { background: var(--primary-color); color: var(--light); }
+    .btn-icon.delete:hover { background: var(--danger); }
+    .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'Roboto Mono', monospace; font-size: 0.75rem; }
+    .badge-want { background-color: #e3f2fd; color: #0d47a1; }
+    .badge-need { background-color: #ffebee; color: #b71c1c; }
+    .form-actions { display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem; }
+    @media (max-width: 992px) {
+      .main-content { margin-left: 80px; }
+    }
+    .col-full { grid-column: 1 / -1; }
+    .item-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .item-form-left, .item-form-right { display: flex; flex-direction: column; gap: 1.5rem; }
+    .item-buttons { display: flex; gap: 1rem; }
+    .form-text { color: #888; font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
+    </div>
+    <div class="user-profile">
+      <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
+      <div class="user-info">
+        <h3 id="profileUsername">User</h3>
+        <div class="user-email" id="profileEmail">user@example.com</div>
+      </div>
+    </div>
+    <nav class="nav-menu" aria-label="Main Navigation">
+      <ul>
+        <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+        <li class="nav-item"><a href="my-wishlists.html" class="nav-link"><i class="fas fa-gift"></i><span>My Wishlists</span></a></li>
+        <li class="nav-item"><a href="friend-groups.html" class="nav-link"><i class="fas fa-users"></i><span>Friend Groups</span></a></li>
+        <li class="nav-item"><a href="family-groups.html" class="nav-link"><i class="fas fa-house-user"></i><span>Family Groups</span></a></li>
+        <li class="nav-item"><a href="browse.html" class="nav-link"><i class="fas fa-search"></i><span>Browse</span></a></li>
+        <li class="nav-item"><a href="favorites.html" class="nav-link"><i class="fas fa-heart"></i><span>Favorites</span></a></li>
+        <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i><span>Settings</span></a></li>
+        <li class="nav-item"><a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i><span>About</span></a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <div class="frame">
+      <header class="page-header">
+        <h1 class="page-title">Edit Wishlist</h1>
+        <a href="dashboard.html" class="btn btn-secondary mono"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+      </header>
+      <div class="alert alert-success" id="successAlert" style="display:none; border-radius:8px; padding:1rem; margin-bottom:1rem; background:#d4edda; color:#155724; border:1px solid #c3e6cb;">
+        Wishlist updated successfully!
+      </div>
+      <div class="alert alert-danger" id="errorAlert" style="display:none; border-radius:8px; padding:1rem; margin-bottom:1rem; background:#f8d7da; color:#721c24; border:1px solid #f5c6cb;">
+        There was an error updating your wishlist. Please try again.
+      </div>
+      <div class="form-card">
+        <form id="wishlistForm">
+          <!-- Wishlist Details Section -->
+          <div class="form-section">
+            <h2 class="form-section-title">Wishlist Details</h2>
+            <div class="form-group">
+              <label for="wishlistTitle" class="form-label">Wishlist Title*</label>
+              <input type="text" id="wishlistTitle" class="form-control" placeholder="e.g., Birthday Wishlist" required>
+            </div>
+            <div class="form-group">
+              <label for="wishlistDescription" class="form-label">Description</label>
+              <textarea id="wishlistDescription" class="form-control" placeholder="Add a description of your wishlist..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="occasion" class="form-label">Occasion</label>
+              <select id="occasion" class="form-control">
+                <option value="">Select an occasion</option>
+                <option value="birthday">Birthday</option>
+                <option value="christmas">Christmas</option>
+                <option value="wedding">Wedding</option>
+                <option value="baby">Baby Shower</option>
+                <option value="graduation">Graduation</option>
+                <option value="housewarming">Housewarming</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="privacy" class="form-label">Privacy Setting</label>
+              <select id="privacy" class="form-control">
+                <option value="public">Public – Anyone can see</option>
+                <option value="friends">Friends Only – Only your groups</option>
+                <option value="private">Private – Only you</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Linked Groups</label>
+              <div id="groupCheckboxes"><div class="form-text">Loading your groups...</div></div>
+            </div>
+          </div>
+          <!-- Items Section -->
+          <div class="form-section">
+            <h2 class="form-section-title">Edit Items</h2>
+            <div class="item-form">
+              <div class="item-form-left">
+                <div class="form-group">
+                  <label for="itemTitle" class="form-label">Item Title*</label>
+                  <input type="text" id="itemTitle" class="form-control" placeholder="e.g., Wireless Headphones">
+                </div>
+                <div class="form-group">
+                  <label for="itemUrl" class="form-label">Item URL</label>
+                  <input type="url" id="itemUrl" class="form-control" placeholder="https://...">
+                </div>
+              </div>
+              <div class="item-form-right">
+                <div class="form-group">
+                  <label for="itemPrice" class="form-label">Price (Optional)</label>
+                  <input type="number" id="itemPrice" class="form-control" placeholder="0.00" min="0" step="0.01">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Type</label>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="itemTypeToggle">
+                    <span class="toggle-slider"></span>
+                  </label>
+                  <div class="toggle-labels"><span>Want</span><span>Need</span></div>
+                </div>
+              </div>
+              <div class="form-group col-full">
+                <label for="itemDescription" class="form-label">Item Description</label>
+                <textarea id="itemDescription" class="form-control" placeholder="Add details about this item..."></textarea>
+              </div>
+              <div class="item-buttons col-full">
+                <button type="button" id="clearItemBtn" class="btn btn-secondary">Clear</button>
+                <button type="button" id="addItemBtn" class="btn btn-primary">Add Item</button>
+              </div>
+            </div>
+            <div class="items-list">
+              <div class="item-header"><div>Item</div><div>Price</div><div>Type</div><div>Actions</div></div>
+              <div id="itemsList">
+                <div class="item-row" style="text-align:center;color:#777;">No items added yet</div>
+              </div>
+            </div>
+          </div>
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <a href="dashboard.html" class="btn btn-secondary mono">Cancel</a>
+            <button type="submit" class="btn btn-primary mono">Save Changes</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- Firebase & Page Scripts -->
+  <script>
+  // Firebase config & initialization
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+    authDomain: "optanav1.firebaseapp.com",
+    projectId: "optanav1",
+    storageBucket: "optanav1.firebasestorage.app",
+    messagingSenderId: "16298669202",
+    appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+    measurementId: "G-RR7D4MB5FY"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  // DOM references
+  const logoutBtn       = document.getElementById('logoutBtn');
+  const profileUsername = document.getElementById('profileUsername');
+  const profileEmail    = document.getElementById('profileEmail');
+  const userAvatar      = document.getElementById('userAvatar');
+  const groupCheckboxes = document.getElementById('groupCheckboxes');
+  const successAlert    = document.getElementById('successAlert');
+  const errorAlert      = document.getElementById('errorAlert');
+  const wishlistForm    = document.getElementById('wishlistForm');
+  const wishlistTitle   = document.getElementById('wishlistTitle');
+  const wishlistDescription = document.getElementById('wishlistDescription');
+  const occasion        = document.getElementById('occasion');
+  const privacy         = document.getElementById('privacy');
+  const itemTitle       = document.getElementById('itemTitle');
+  const itemUrl         = document.getElementById('itemUrl');
+  const itemPrice       = document.getElementById('itemPrice');
+  const itemDescription = document.getElementById('itemDescription');
+  const itemTypeToggle  = document.getElementById('itemTypeToggle');
+  const addItemBtn      = document.getElementById('addItemBtn');
+  const clearItemBtn    = document.getElementById('clearItemBtn');
+  const itemsList       = document.getElementById('itemsList');
+
+  let items = [];
+  let editingItemIndex = null;
+  let userGroups = [];
+  let linkedGroups = [];
+
+  // Get wishlist ID from URL
+  function getWishlistId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('id');
+  }
+
+  // Load user profile info
+  function loadUserProfile(user) {
+    profileUsername.textContent = user.displayName || user.email.split('@')[0];
+    profileEmail.textContent = user.email;
+    if (user.photoURL) {
+      userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;">`;
+    } else {
+      userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
+    }
+  }
+
+  // Load user's groups for checkboxes
+  async function loadUserGroups(user) {
+    // Fetch both friend and family groups where user is a member
+    const friendGroupsSnap = await db.collection('friendGroups').where('members', 'array-contains', user.uid).get();
+    const familyGroupsSnap = await db.collection('familyGroups').where('members', 'array-contains', user.uid).get();
+    userGroups = [];
+    friendGroupsSnap.forEach(doc => userGroups.push({ id: doc.id, ...doc.data(), type: 'friend' }));
+    familyGroupsSnap.forEach(doc => userGroups.push({ id: doc.id, ...doc.data(), type: 'family' }));
+
+    if (userGroups.length === 0) {
+      groupCheckboxes.innerHTML = `<div class="form-text">You have no groups yet.</div>`;
+      return;
+    }
+
+    // Render checkboxes
+    groupCheckboxes.innerHTML = '';
+    userGroups.forEach(group => {
+      const checkbox = document.createElement('label');
+      checkbox.style.display = 'block';
+      checkbox.style.marginBottom = '0.5rem';
+      checkbox.innerHTML = `
+        <input type="checkbox" class="group-checkbox" value="${group.id}">
+        ${group.name} <span class="badge" style="background:#eee;color:#555;">${group.type === 'friend' ? 'Friend' : 'Family'}</span>
+      `;
+      groupCheckboxes.appendChild(checkbox);
+    });
+  }
+
+  // Set checked state for linked groups
+  function setLinkedGroupsCheckboxes(linkedGroupsArr) {
+    document.querySelectorAll('.group-checkbox').forEach(cb => {
+      cb.checked = linkedGroupsArr && linkedGroupsArr.includes(cb.value);
+    });
+  }
+
+  // Collect checked group IDs
+  function getCheckedGroups() {
+    return Array.from(document.querySelectorAll('.group-checkbox'))
+      .filter(cb => cb.checked)
+      .map(cb => cb.value);
+  }
+
+  // Load existing wishlist data
+  async function loadWishlist(user) {
+    const wishlistId = getWishlistId();
+    if (!wishlistId) {
+      errorAlert.textContent = 'No wishlist ID provided.';
+      errorAlert.style.display = 'block';
+      return;
+    }
+    try {
+      const doc = await db.collection('wishlists').doc(wishlistId).get();
+      if (!doc.exists) throw new Error('Wishlist not found');
+      const data = doc.data();
+
+      // Only allow editing if owner
+      if (data.owner !== user.uid) {
+        errorAlert.textContent = 'You do not have permission to edit this wishlist.';
+        errorAlert.style.display = 'block';
+        wishlistForm.style.display = 'none';
+        return;
+      }
+
+      // Fill form fields
+      wishlistTitle.value = data.title || '';
+      wishlistDescription.value = data.description || '';
+      occasion.value = data.occasion || '';
+      privacy.value = data.privacy || 'public';
+      linkedGroups = Array.isArray(data.linkedGroups) ? data.linkedGroups : [];
+
+      // Wait for groups to load, then check the right ones
+      setTimeout(() => setLinkedGroupsCheckboxes(linkedGroups), 500);
+
+      // Load items
+      items = Array.isArray(data.items) ? data.items : [];
+      renderItemsList();
+    } catch (e) {
+      errorAlert.textContent = 'Error loading wishlist: ' + e.message;
+      errorAlert.style.display = 'block';
+    }
+  }
+
+  // Render items list
+  function renderItemsList() {
+    itemsList.innerHTML = '';
+    if (items.length === 0) {
+      itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
+      return;
+    }
+    items.forEach((item, idx) => {
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.innerHTML = `
+        <div>${item.title ? `<a href="${item.url||'#'}" target="_blank" style="color:inherit;text-decoration:${item.url?'underline':'none'};">${item.title}</a>` : ''}</div>
+        <div>${item.price ? '$' + Number(item.price).toFixed(2) : '-'}</div>
+        <div><span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type === 'need' ? 'Need' : 'Want'}</span></div>
+        <div class="item-actions">
+          <button type="button" class="btn-icon" title="Edit" onclick="editItem(${idx})"><i class="fas fa-edit"></i></button>
+          <button type="button" class="btn-icon delete" title="Delete" onclick="deleteItem(${idx})"><i class="fas fa-trash"></i></button>
+        </div>
+      `;
+      itemsList.appendChild(row);
+    });
+  }
+
+  // Add/edit/delete item logic
+  window.editItem = function(idx) {
+    const item = items[idx];
+    itemTitle.value = item.title || '';
+    itemUrl.value = item.url || '';
+    itemPrice.value = item.price || '';
+    itemDescription.value = item.description || '';
+    itemTypeToggle.checked = item.type === 'need';
+    editingItemIndex = idx;
+    addItemBtn.textContent = 'Update Item';
+  };
+
+  window.deleteItem = function(idx) {
+    items.splice(idx, 1);
+    renderItemsList();
+    if (editingItemIndex === idx) {
+      clearItemForm();
+    }
+  };
+
+  function clearItemForm() {
+    itemTitle.value = '';
+    itemUrl.value = '';
+    itemPrice.value = '';
+    itemDescription.value = '';
+    itemTypeToggle.checked = false;
+    editingItemIndex = null;
+    addItemBtn.textContent = 'Add Item';
+  }
+  clearItemBtn.onclick = clearItemForm;
+
+  addItemBtn.onclick = function() {
+    const title = itemTitle.value.trim();
+    if (!title) return;
+    const item = {
+      title,
+      url: itemUrl.value.trim(),
+      price: itemPrice.value.trim(),
+      description: itemDescription.value.trim(),
+      type: itemTypeToggle.checked ? 'need' : 'want'
+    };
+    if (editingItemIndex !== null) {
+      items[editingItemIndex] = item;
+    } else {
+      items.push(item);
+    }
+    renderItemsList();
+    clearItemForm();
+  };
+
+  // Form submission: update wishlist in Firestore
+  wishlistForm.onsubmit = async function(e) {
+    e.preventDefault();
+    const wishlistId = getWishlistId();
+    if (!wishlistId) return;
+    // Gather form data
+    const title = wishlistTitle.value.trim();
+    const description = wishlistDescription.value.trim();
+    const occ = occasion.value;
+    const priv = privacy.value;
+    const linkedGroupsArr = getCheckedGroups();
+
+    // Validate
+    if (!title) {
+      errorAlert.textContent = 'Title is required.';
+      errorAlert.style.display = 'block';
+      return;
+    }
+    try {
+      await db.collection('wishlists').doc(wishlistId).update({
+        title, description, occasion: occ, privacy: priv, linkedGroups: linkedGroupsArr, items
+      });
+      successAlert.style.display = 'block';
+      errorAlert.style.display = 'none';
+      setTimeout(()=>{successAlert.style.display='none'}, 2000);
+    } catch (e) {
+      errorAlert.textContent = 'Error updating wishlist: ' + e.message;
+      errorAlert.style.display = 'block';
+    }
+  };
+
+  // Auth and page load
+  auth.onAuthStateChanged(async user => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    loadUserProfile(user);
+    await loadUserGroups(user);
+    await loadWishlist(user);
+  });
+
+  // Logout
+  logoutBtn.onclick = () => auth.signOut();
+
+  </script>
+</body>
+</html>
