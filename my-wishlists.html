@@ -202,7 +202,7 @@
     </div>
   </main>
 
-  <script>
+ <script>
     // Firebase config & initialization
     const firebaseConfig = {
       apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
@@ -258,13 +258,11 @@
         return;
       }
       wishlists.forEach(wl => {
-        // Privacy badge
         let privacyBadge = '';
         if (wl.privacy === 'public') privacyBadge = '<span class="badge badge-public">Public</span>';
         else if (wl.privacy === 'friends') privacyBadge = '<span class="badge badge-friends">Groups Only</span>';
         else privacyBadge = '<span class="badge badge-private">Private</span>';
 
-        // Groups
         let groupsHtml = '';
         if (Array.isArray(wl.linkedGroups) && wl.linkedGroups.length > 0) {
           groupsHtml = wl.linkedGroups.map(gid => {
@@ -273,12 +271,10 @@
           }).join('');
         }
 
-        // Actions
         const actions = `
           <div class="wishlist-actions">
             <a href="view-wishlist.html?id=${wl.id}" class="btn btn-secondary mono" title="View"><i class="fas fa-eye"></i></a>
             <a href="edit-wishlist.html?id=${wl.id}" class="btn btn-primary mono" title="Edit"><i class="fas fa-edit"></i></a>
-            <button class="btn btn-danger mono" title="Delete" onclick="deleteWishlist('${wl.id}')"><i class="fas fa-trash"></i></button>
           </div>
         `;
 
@@ -294,20 +290,10 @@
       });
     }
 
-    // Delete wishlist
-    window.deleteWishlist = function(wishlistId) {
-      if (!confirm('Delete this wishlist? This cannot be undone.')) return;
-      db.collection('wishlists').doc(wishlistId).delete()
-        .then(() => showSuccess('Wishlist deleted.'))
-        .catch(() => showError('Could not delete wishlist.'));
-    };
-
     // Fetch group names for mapping
     async function fetchGroupNames(groupIds) {
       const groupMap = {};
-      const friendPromises = groupIds.map(gid => db.collection('friendGroups').doc(gid).get());
-      const familyPromises = groupIds.map(gid => db.collection('familyGroups').doc(gid).get());
-      const docs = await Promise.all([...friendPromises, ...familyPromises]);
+      const docs = await Promise.all(groupIds.map(gid => db.collection('friendGroups').doc(gid).get()));
       docs.forEach(doc => {
         if (doc.exists) groupMap[doc.id] = doc.data().name;
       });
