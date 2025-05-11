@@ -13,7 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
   <style>
-    :root {
+:root {
   --primary-color: #FF8C42;
   --accent-light: #FFBC80;
   --dark: #333333;
@@ -115,12 +115,13 @@ body {
 }
 
 .nav-menu ul {
+  list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.nav-item {
-  list-style: none;
+.nav-item + .nav-item {
+  margin-top: 0.5rem;
 }
 
 .nav-link {
@@ -147,6 +148,17 @@ body {
 .nav-link i {
   margin-right: 1.5rem;
   width: 20px;
+  text-align: center;
+}
+
+.nav-link-counter {
+  margin-left: auto;
+  background: var(--primary-color);
+  color: var(--light);
+  border-radius: 12px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  min-width: 20px;
   text-align: center;
 }
 
@@ -337,7 +349,7 @@ body {
   margin-top: 1rem;
 }
 
-/* Modal Styles */
+/* Modal */
 
 .modal-bg {
   display: none;
@@ -359,13 +371,143 @@ body {
   display: flex;
   opacity: 1;
   pointer-events: auto;
-  animation: modal-bg-fadein 0.32s;
 }
 
 @keyframes modal-bg-fadein {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+
+.modal-fade {
+  opacity: 0;
+  transform: translateY(32px) scale(0.98);
+  transition: opacity 0.32s cubic-bezier(.4,0,.2,1), transform 0.32s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
+}
+
+.modal-fade.in {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.modal {
+  background: var(--light);
+  border-radius: 18px;
+  max-width: 360px;
+  width: 96vw;
+  padding: 2rem 1.3rem 1.3rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  cursor: pointer;
+}
+
+.modal-title {
+  font-size: 1.18rem;
+  font-weight: bold;
+  margin-bottom: 1.1rem;
+  font-family: 'Playfair Display', serif;
+}
+
+.modal-form-group {
+  margin-bottom: 1.15rem;
+}
+
+.modal-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 0.95rem;
+  color: var(--dark);
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: 1.5px solid var(--gray);
+  border-radius: 12px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 1rem;
+  background: var(--gray-light);
+  outline: none;
+  transition: border-color 0.25s;
+}
+
+.modal-input:focus {
+  border-color: var(--primary-color);
+  background: #fff;
+}
+
+.modal-error {
+  color: var(--danger);
+  font-size: 0.98rem;
+  margin-bottom: 0.5rem;
+  font-family: 'Roboto Mono', monospace;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+
+/* Empty state */
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  color: var(--gray);
+  margin-bottom: 1rem;
+}
+
+.empty-state-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state-description {
+  color: #777;
+  margin-bottom: 1.5rem;
+}
+
+/* Media Queries */
+
+@media (max-width: 992px) {
+  .main-content { margin-left: 80px; }
+  .groups-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .top-bar { padding: 1rem; }
+  .top-bar-actions { flex-wrap: wrap; gap: 0.5rem; }
+}
+
+@media (max-width: 600px) {
+  .sidebar {
+    width: 100vw;
+    position: static;
+    height: auto;
+  }
+  .main-content { margin-left: 0; padding: 1rem; }
+  .content-area { padding: 1rem; }
+  .tabs { flex-wrap: wrap; }
+  .tab { padding: 0.75rem 1rem; font-size: 0.9rem; }
+}
+
   </style>
 </head>
 <body>
