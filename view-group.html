@@ -2,20 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Optana – View Group</title>
   <meta name="description" content="View group details and wishlists">
-  <!-- normalize, fonts & icons -->
+  <!-- External Styles and Scripts -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-  <!-- Firebase compat SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-</head>
-<body>
-<style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
     :root {
       --primary-color: #FF8C42;
       --accent-light: #FFBC80;
@@ -28,778 +25,185 @@
       --success: #28a745;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Playfair Display', serif;
-      color: var(--dark);
-      background: var(--gray-light);
-      min-height: 100vh;
-      display: flex;
-    }
+    body { font-family: 'Playfair Display', serif; color: var(--dark); background: var(--gray-light); min-height: 100vh; display: flex; }
     .mono { font-family: 'Roboto Mono', monospace; }
-    .sidebar {
-      width: var(--sidebar-width);
-      background: var(--dark);
-      color: var(--light);
-      height: 100vh;
-      position: fixed;
-      left: 0; top: 0;
-      display: flex; flex-direction: column;
-      overflow-y: auto;
-      z-index: 100;
-    }
-    .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .logo { font-size: 1.8rem; font-weight: 700; text-align: center; }
+    .sidebar { width: var(--sidebar-width); background: var(--dark); color: var(--light); height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; overflow-y: auto; }
+    .sidebar-header { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .logo { font-size:1.8rem; font-weight:700; text-align:center; }
     .logo span { color: var(--primary-color); }
-    .logo a { text-decoration: none; color: var(--light); }
-    .user-profile { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
-    .user-avatar {
-      width: 80px; height: 80px;
-      border-radius: 50%; background: var(--primary-color);
-      margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; color: var(--light);
-    }
-    .user-info h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-    .user-email { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: rgba(255,255,255,0.7); }
-    .nav-menu { padding: 1.5rem 0; flex-grow: 1; }
-    .nav-item { list-style: none; }
-    .nav-link {
-      display: flex; align-items: center;
-      padding: 0.8rem 1.5rem;
-      color: var(--gray);
-      text-decoration: none;
-      transition: all 0.3s;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.95rem;
-    }
-    .nav-link:hover { background: rgba(255,255,255,0.1); color: var(--light); }
-    .nav-link.active { background: var(--primary-color); color: var(--light); }
-    .nav-link i { margin-right: 1.5rem; width: 20px; text-align: center; }
-    .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
-    .btn {
-      font-family: 'Roboto Mono', monospace;
-      padding: 0.5rem 1.5rem;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      text-decoration: none;
-      display: inline-block;
-      transition: all 0.3s;
-      border: none;
-    }
-    .btn-primary { background: var(--primary-color); color: var(--light); }
-    .btn-primary:hover { background: var(--accent-light); }
-    .btn-secondary { background: var(--gray); color: var(--dark); }
-    .btn-secondary:hover { background: #d0d0d0; }
-    .main-content { flex: 1; margin-left: var(--sidebar-width); }
-    
-    /* Top navigation bar */
-    .top-bar {
-      background: var(--light);
-      padding: 1rem 2rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    .top-bar-title {
-      font-size: 1.8rem;
-      font-weight: 700;
-    }
-    .top-bar-actions {
-      display: flex;
-      gap: 1rem;
-    }
-    
-    /* Content area */
-    .content-area {
-      padding: 2rem;
-    }
-    
-    .alert { border-radius:8px; padding:1rem; margin-bottom:1rem; }
-    .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
-    .alert-danger { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
-    
-    /* Group header card */
-    .group-header-card {
-      background: var(--light);
-      border-radius: 16px;
-      padding: 2rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-      margin-bottom: 2rem;
-      position: relative;
-    }
-    .group-header-type {
-      position: absolute;
-      top: 2rem;
-      right: 2rem;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.8rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 50px;
-      background: var(--accent-light);
-      color: var(--dark);
-    }
-    .group-title {
-      font-size: 2.2rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      color: var(--dark);
-    }
-    .group-description {
-      color: #666;
-      margin-bottom: 1.5rem;
-      font-size: 1.1rem;
-    }
-    .group-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2rem;
-      margin-bottom: 1rem;
-    }
-    .group-meta-item {
-      display: flex;
-      align-items: center;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.9rem;
-      color: #666;
-    }
-    .group-meta-item i {
-      margin-right: 0.5rem;
-      color: var(--primary-color);
-    }
-    .group-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-top: 1.5rem;
-    }
-    
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      border-bottom: 2px solid var(--gray);
-      padding-bottom: 0.5rem;
-    }
-    .tab {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 1rem;
-      padding: 0.5rem 1.5rem;
-      cursor: pointer;
-      border-radius: 8px 8px 0 0;
-      transition: all 0.3s;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -0.5rem;
-    }
-    .tab:hover {
-      background: var(--gray-light);
-    }
-    .tab.active {
-      border-bottom: 3px solid var(--primary-color);
-      font-weight: 500;
-    }
-    
-    /* Wishlist cards */
-    .wishlist-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-    .wishlist-card {
-      background: var(--light);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-      transition: all 0.3s;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-    .wishlist-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    }
-    .wishlist-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--gray);
-      background: rgba(255, 140, 66, 0.1);
-    }
-    .wishlist-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .wishlist-owner {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.85rem;
-      color: #666;
-      display: flex;
-      align-items: center;
-    }
-    .wishlist-owner i {
-      margin-right: 0.5rem;
-      color: var(--primary-color);
-    }
-    .wishlist-meta {
-      display: flex;
-      justify-content: space-between;
-      padding: 1rem 1.5rem;
-      background: var(--gray-light);
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.85rem;
-      color: #666;
-    }
-    .wishlist-body {
-      padding: 1.5rem;
-      flex-grow: 1;
-    }
-    .wishlist-description {
-      color: #666;
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-    }
-    .wishlist-items {
-      margin-top: 1rem;
-    }
-    .wishlist-item {
-      display: flex;
-      align-items: center;
-      padding: 0.5rem 0;
-      border-bottom: 1px solid var(--gray-light);
-    }
-    .wishlist-item:last-child {
-      border-bottom: none;
-    }
-    .wishlist-item-name {
-      flex: 1;
-      font-size: 0.95rem;
-    }
-    .wishlist-item-status {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.75rem;
-      padding: 0.1rem 0.5rem;
-      border-radius: 50px;
-      background: var(--gray-light);
-    }
-    .status-available {
-      background: #d4edda;
-      color: #155724;
-    }
-    .status-reserved {
-      background: #cce5ff;
-      color: #004085;
-    }
-    .status-purchased {
-      background: #d8d8d8;
-      color: #555;
-    }
-    .wishlist-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid var(--gray);
-      display: flex;
-      justify-content: space-between;
-    }
-    
-    /* Members section */
-    .section-title {
-      font-size: 1.6rem;
-      margin-bottom: 1.5rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 2px solid var(--primary-color);
-    }
-    .members-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .member-card {
-      background: var(--light);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-      text-align: center;
-      transition: all 0.3s;
-    }
-    .member-card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    }
-    .member-avatar {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
-      background: var(--primary-color);
-      margin: 0 auto 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      color: var(--light);
-    }
-    .member-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .member-email {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.8rem;
-      color: #666;
-      margin-bottom: 1rem;
-    }
-    .member-role {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.75rem;
-      padding: 0.2rem 0.75rem;
-      border-radius: 50px;
-      background: var(--gray-light);
-      display: inline-block;
-    }
-    .role-host {
-      background: rgba(255, 140, 66, 0.2);
-      color: var(--primary-color);
-    }
-    
-    /* Empty states */
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      background: var(--light);
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-    }
-    .empty-icon {
-      font-size: 3rem;
-      color: var(--gray);
-      margin-bottom: 1.5rem;
-    }
-    .empty-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-    }
-    .empty-description {
-      color: #666;
-      margin-bottom: 1.5rem;
-      max-width: 500px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    
-    .tab-content {
-      display: none;
-    }
-    .tab-content.active {
-      display: block;
-    }
-    
-    /* Pending invites section */
-    .pending-invites {
-      margin-top: 2rem;
-    }
-    .invite-card {
-      background: var(--light);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .invite-email {
-      font-family: 'Roboto Mono', monospace;
-    }
-    .invite-status {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.8rem;
-      padding: 0.25rem 0.75rem;
-      border-radius: 50px;
-      background: #fff3cd;
-      color: #856404;
-    }
-    
-    /* Create wishlist card */
-    .create-card {
-      background: var(--light);
-      border-radius: 16px;
-      padding: 2rem;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.05);
-      text-align: center;
-      border: 2px dashed var(--gray);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-    .create-card:hover {
-      border-color: var(--primary-color);
-      background: rgba(255, 140, 66, 0.05);
-    }
-    .create-icon {
-      font-size: 2.5rem;
-      color: var(--gray);
-      margin-bottom: 1rem;
-    }
-    .create-card:hover .create-icon {
-      color: var(--primary-color);
-    }
-    .create-title {
-      font-size: 1.3rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-    }
-    .create-description {
-      color: #666;
-      max-width: 200px;
-    }
-    
-    @media (max-width: 992px) {
-      .main-content { margin-left: 80px; }
-      .group-meta { flex-direction: column; gap: 0.5rem; }
-    }
-    @media (max-width: 768px) {
-      .top-bar { padding: 1rem; }
-      .top-bar-actions { flex-wrap: wrap; }
-      .content-area { padding: 1rem; }
-      .tabs { flex-wrap: wrap; }
-    }
-    @media (max-width: 600px) {
-      .sidebar { width: 100vw; position: static; height: auto; }
-      .main-content { margin-left: 0; }
-      .group-header-type { position: static; display: inline-block; margin-bottom: 1rem; }
-      .wishlist-grid { grid-template-columns: 1fr; }
-    }
+    .logo a { color: var(--light); text-decoration:none; }
+    .user-profile { padding:1.5rem; text-align:center; border-bottom:1px solid rgba(255,255,255,0.1); }
+    .user-avatar { width:80px; height:80px; border-radius:50%; background:var(--primary-color); margin:0 auto 1rem; display:flex; align-items:center; justify-content:center; font-size:2rem; color:var(--light); }
+    .user-info h3 { font-size:1.2rem; margin-bottom:0.5rem; }
+    .user-email { font-family:'Roboto Mono'; font-size:0.8rem; color:rgba(255,255,255,0.7); }
+    .nav-menu { padding:1.5rem 0; flex-grow:1; }
+    .nav-item { list-style:none; }
+    .nav-link { display:flex; align-items:center; padding:0.8rem 1.5rem; color:var(--gray); text-decoration:none; transition:0.3s; font-family:'Roboto Mono'; font-size:0.95rem; }
+    .nav-link:hover { background:rgba(255,255,255,0.1); color:var(--light); }
+    .nav-link.active { background:var(--primary-color); color:var(--light); }
+    .nav-link i { margin-right:1.5rem; width:20px; text-align:center; }
+    .sidebar-footer { padding:1rem 1.5rem; border-top:1px solid rgba(255,255,255,0.1); }
+    .btn { font-family:'Roboto Mono'; padding:0.5rem 1.5rem; border:none; border-radius:12px; cursor:pointer; font-size:0.9rem; text-decoration:none; display:inline-block; transition:0.3s; }
+    .btn-primary { background:var(--primary-color); color:var(--light); }
+    .btn-primary:hover { background:var(--accent-light); }
+    .btn-secondary { background:var(--gray); color:var(--dark); }
+    .btn-secondary:hover { background:#d0d0d0; }
+    .main-content { flex:1; margin-left:var(--sidebar-width); padding:2rem; }
+    .frame { background:var(--light); border-radius:16px; padding:2rem; box-shadow:0 8px 24px rgba(0,0,0,0.1); margin:0 auto; max-width:1000px; }
+    .page-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; border-bottom:1px solid var(--gray); padding-bottom:1rem; flex-wrap:wrap; gap:1rem; }
+    .page-title { font-size:2rem; }
+    .section { margin-bottom:2rem; }
+    .section h2 { font-size:1.5rem; margin-bottom:1rem; border-bottom:2px solid var(--primary-color); padding-bottom:0.5rem; }
+    .group-info p { margin-bottom:0.5rem; }
+    .members-list, .wishlists-list { list-style:none; padding:0; }
+    .members-list li, .wishlists-list li { padding:0.75rem 1rem; background:var(--gray-light); border-radius:8px; margin-bottom:0.5rem; display:flex; justify-content:space-between; align-items:center; }
+    .wishlists-list li a { text-decoration:none; color:var(--primary-color); }
+    @media (max-width:992px) { .main-content { margin-left:80px; } }
+    @media (max-width:600px) { .sidebar { width:100vw; position:static; height:auto; } .main-content { margin-left:0; padding:1rem; } .frame { padding:1rem; } }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
-    </div>
+    <div class="sidebar-header"><div class="logo"><a href="index.html">Opt<span>ana</span></a></div></div>
     <div class="user-profile">
       <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
-      <div class="user-info">
-        <h3 id="profileUsername">User</h3>
-        <div class="user-email" id="profileEmail">user@example.com</div>
-      </div>
+      <div class="user-info"><h3 id="profileUsername">User</h3><div class="user-email" id="profileEmail">user@example.com</div></div>
     </div>
     <nav class="nav-menu" aria-label="Main Navigation">
       <ul>
         <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
         <li class="nav-item"><a href="my-wishlists.html" class="nav-link"><i class="fas fa-gift"></i><span>My Wishlists</span></a></li>
-        <li class="nav-item"><a href="friend-groups.html" class="nav-link active"><i class="fas fa-users"></i><span>Friend Groups</span></a></li>
-        <li class="nav-item"><a href="family-groups.html" class="nav-link"><i class="fas fa-house-user"></i><span>Family Groups</span></a></li>
+        <li class="nav-item"><a href="groups.html" class="nav-link active"><i class="fas fa-users"></i><span>My Groups</span></a></li>
         <li class="nav-item"><a href="browse.html" class="nav-link"><i class="fas fa-search"></i><span>Browse</span></a></li>
         <li class="nav-item"><a href="favorites.html" class="nav-link"><i class="fas fa-heart"></i><span>Favorites</span></a></li>
         <li class="nav-item"><a href="settings.html" class="nav-link"><i class="fas fa-cog"></i><span>Settings</span></a></li>
         <li class="nav-item"><a href="about.html" class="nav-link"><i class="fas fa-info-circle"></i><span>About</span></a></li>
       </ul>
     </nav>
-    <div class="sidebar-footer">
-      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
-    </div>
+    <div class="sidebar-footer"><button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button></div>
   </aside>
 
-  <!-- Main Content -->
-  <div class="main-content">
-    <div class="top-bar"> … </div>
-    <div class="content-area">
-
-      <div class="alert alert-success" id="successAlert" style="display:none;"></div>
-      <div class="alert alert-danger"  id="errorAlert"   style="display:none;"></div>
-
-      <div class="group-header-card">
-        <div class="group-header-type" id="groupType">Friend Group</div>
-        <h1 class="group-title"      id="groupName">Group Name</h1>
-        <p class="group-description" id="groupDescription">…</p>
-        <div class="group-meta">
-          <div class="group-meta-item"><i class="fas fa-user"></i> Created by <span id="groupCreator">User</span></div>
-          <div class="group-meta-item"><i class="fas fa-calendar"></i> Created on <span id="groupCreatedDate">Date</span></div>
-          <div class="group-meta-item"><i class="fas fa-users"></i> <span id="memberCount">0</span> Members</div>
-          <div class="group-meta-item"><i class="fas fa-lock"></i> Privacy: <span id="groupPrivacy">Open</span></div>
+  <main class="main-content">
+    <div class="frame">
+      <header class="page-header">
+        <h1 class="page-title" id="groupTitle">Group Name</h1>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          <a href="groups.html" class="btn btn-secondary mono"><i class="fas fa-arrow-left"></i> Back to Groups</a>
+          <button id="copyCodeBtn" class="btn btn-secondary mono" title="Copy join code"><i class="fas fa-code"></i> Copy Code</button>
+          <button id="copyLinkBtn" class="btn btn-secondary mono" title="Copy invite link"><i class="fas fa-link"></i> Copy Link</button>
+          <a href="#" id="editGroupBtn" class="btn btn-primary mono" style="display:none;"><i class="fas fa-edit"></i> Edit Group</a>
         </div>
-        <div class="group-actions" id="groupActions"></div>
-      </div>
+      </header>
 
-      <div class="tabs">
-        <div class="tab active" data-tab="group-wishlists">Group Wishlists</div>
-        <div class="tab"        data-tab="member-wishlists">Member Wishlists</div>
-        <div class="tab"        data-tab="members">Members</div>
-      </div>
+      <section class="section group-info">
+        <h2>Details</h2>
+        <p id="groupDescription">Loading description...</p>
+        <p><strong>Type:</strong> <span id="groupType">-</span></p>
+        <p><strong>Privacy:</strong> <span id="groupPrivacy">-</span></p>
+      </section>
 
-      <div class="tab-content active" id="group-wishlists">
-        <div class="wishlist-grid" id="groupWishlistsGrid">
-          <div class="create-card" id="createGroupWishlist">
-            <div class="create-icon"><i class="fas fa-plus-circle"></i></div>
-            <div class="create-title">Create Group Wishlist</div>
-            <div class="create-description">Add a new wishlist for this group</div>
-          </div>
-        </div>
-      </div>
-      <div class="tab-content" id="member-wishlists">
-        <div class="wishlist-grid" id="memberWishlistsGrid"></div>
-      </div>
-      <div class="tab-content" id="members">
-        <h2 class="section-title">Group Members</h2>
-        <div class="members-grid" id="membersGrid"></div>
-        <div class="pending-invites" id="pendingInvitesSection" style="display:none;">
-          <h2 class="section-title">Pending Invites</h2>
-          <div id="pendingInvitesList"></div>
-        </div>
-      </div>
+      <section class="section">
+        <h2>Members (<span id="memberCount">0</span>)</h2>
+        <ul class="members-list" id="membersList">
+          <li style="text-align:center;color:#777;">Loading members...</li>
+        </ul>
+      </section>
 
+      <section class="section">
+        <h2>Wishlists</h2>
+        <ul class="wishlists-list" id="wishlistsList">
+          <li style="text-align:center;color:#777;">Loading wishlists...</li>
+        </ul>
+      </section>
     </div>
-  </div>
+  </main>
 
-  <!-- Firebase & Data‐Loading Script -->
   <script>
-    // Firebase Config & Init
-    const firebaseConfig = { /* your config */ };
+    // Firebase config & init
+    const firebaseConfig = { apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc", authDomain: "optanav1.firebaseapp.com", projectId: "optanav1", storageBucket: "optanav1.appspot.com", messagingSenderId: "16298669202", appId: "1:16298669202:web:ac2a1cd399993b1883624b", measurementId: "G-RR7D4MB5FY" };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db   = firebase.firestore();
+    const db = firebase.firestore();
 
-    // DOM References
-    const ids = ['groupName','groupDescription','groupType','groupCreator',
-      'groupCreatedDate','memberCount','groupPrivacy','groupActions'];
-    const [groupName, groupDescription, groupType, groupCreator,
-           groupCreatedDate, memberCount, groupPrivacy, groupActions] =
-      ids.map(id => document.getElementById(id));
-    const successAlert = document.getElementById('successAlert');
-    const errorAlert   = document.getElementById('errorAlert');
-    const gridRefs = {
-      groupWishlists: document.getElementById('groupWishlistsGrid'),
-      memberWishlists: document.getElementById('memberWishlistsGrid'),
-      members: document.getElementById('membersGrid'),
-      pendingInvitesSection: document.getElementById('pendingInvitesSection'),
-      pendingInvitesList: document.getElementById('pendingInvitesList'),
-      createGroupWishlist: document.getElementById('createGroupWishlist')
+    // Utils
+    function getParam(name) { return new URLSearchParams(window.location.search).get(name); }
+    function showEditIfHost(group) {
+      auth.onAuthStateChanged(user => {
+        if (user && group.createdBy === user.uid) {
+          document.getElementById('editGroupBtn').style.display = '';
+          document.getElementById('editGroupBtn').href = `edit-group.html?id=${group.id}&type=${group.type}`;
+        }
+      });
+    }
+    // Copy helpers
+    document.getElementById('copyCodeBtn').onclick = () => {
+      const code = `${group.type}-${group.id}`;
+      navigator.clipboard.writeText(code);
+    };
+    document.getElementById('copyLinkBtn').onclick = () => {
+      const link = window.location.origin + window.location.pathname + `?id=${group.id}&type=${group.type}`;
+      navigator.clipboard.writeText(link);
     };
 
-    let currentUser, currentGroup, isHost=false, groupTypeKey;
-
-    function showError(msg) {
-      errorAlert.textContent = msg; errorAlert.style.display='block';
+    // Load group
+    let group = null;
+    async function loadGroup() {
+      const id = getParam('id');
+      const type = getParam('type');
+      if (!id || !type) return;
+      const col = type === 'friend' ? 'friendGroups' : 'familyGroups';
+      const doc = await db.collection(col).doc(id).get();
+      if (!doc.exists) return;
+      group = { id, type, ...doc.data() };
+      document.getElementById('groupTitle').textContent = group.name;
+      document.getElementById('groupDescription').textContent = group.description || '-';
+      document.getElementById('groupType').textContent = type === 'friend' ? 'Friend Group' : 'Family Group';
+      document.getElementById('groupPrivacy').textContent = group.privacy.replace('-', ' ');
+      showEditIfHost(group);
+      renderMembers();
+      renderWishlists();
     }
-    function showSuccess(msg) {
-      successAlert.textContent = msg; successAlert.style.display='block';
-      setTimeout(()=> successAlert.style.display='none',3000);
-    }
-
-    const groupId = new URLSearchParams(window.location.search).get('id');
-    if (!groupId) {
-      showError('No group specified.');
-      setTimeout(()=> window.location.href='friend-groups.html',2000);
-    }
-
-    auth.onAuthStateChanged(async user => {
-      if (!user) return window.location.href='login.html';
-      currentUser = user;
-
-      try {
-        let docSnap = await db.collection('friendGroups').doc(groupId).get();
-        groupTypeKey = 'friend';
-        if (!docSnap.exists) {
-          docSnap = await db.collection('familyGroups').doc(groupId).get();
-          groupTypeKey = 'family';
-        }
-        if (!docSnap.exists) throw new Error('Group not found.');
-
-        currentGroup = { id: docSnap.id, ...docSnap.data() };
-        if (!currentGroup.members.includes(currentUser.uid)) {
-          showError("Access denied.");
-          return setTimeout(()=> window.location.href = groupTypeKey==='friend'?'friend-groups.html':'family-groups.html',2000);
-        }
-        isHost = currentGroup.createdBy === currentUser.uid;
-
-        renderHeader();
-        setupActionButtons();
-
-        await Promise.all([
-          loadWishlists(true),
-          loadWishlists(false),
-          loadMembers(),
-          isHost && loadPendingInvites()
-        ]);
+    // Members
+    async function renderMembers() {
+      const list = document.getElementById('membersList');
+      list.innerHTML = '';
+      const members = group.members || [];
+      document.getElementById('memberCount').textContent = members.length;
+      for (const uid of members) {
+        const userDoc = await db.collection('users').doc(uid).get();
+        const name = userDoc.exists ? (userDoc.data().displayName || userDoc.data().email) : uid;
+        const li = document.createElement('li'); li.textContent = name; list.appendChild(li);
       }
-      catch(err) {
-        console.error(err);
-        showError(err.message);
+      if (members.length === 0) list.innerHTML = '<li style="text-align:center;color:#777;">No members yet</li>';
+    }
+    // Wishlists
+    async function renderWishlists() {
+      const list = document.getElementById('wishlistsList');
+      list.innerHTML = '';
+      const snap = await db.collection('wishlists').where('linkedGroups', 'array-contains', group.id).get();
+      if (snap.empty) {
+        list.innerHTML = '<li style="text-align:center;color:#777;">No wishlists yet</li>';
+        return;
+      }
+      snap.forEach(doc => {
+        const data = doc.data(); const li = document.createElement('li');
+        li.innerHTML = `<a href="view-wishlist.html?id=${doc.id}">${data.title || 'Untitled'}</a>`;
+        list.appendChild(li);
+      });
+    }
+
+    // Sidebar
+    document.getElementById('logoutBtn').onclick = () => auth.signOut().then(()=>window.location.href='index.html');
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        document.getElementById('profileUsername').textContent = user.displayName || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        if (user.photoURL) document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
       }
     });
 
-    function renderHeader() {
-      groupName.textContent        = currentGroup.name;
-      groupDescription.textContent = currentGroup.description || 'No description.';
-      groupType.textContent        = groupTypeKey==='friend'?'Friend Group':'Family Group';
-      memberCount.textContent      = currentGroup.members.length;
-      groupPrivacy.textContent     = currentGroup.isPrivate?'Private':'Open';
-      const dt = (currentGroup.createdAt?.toDate()||new Date())
-        .toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
-      groupCreatedDate.textContent = dt;
-      db.collection('users').doc(currentGroup.createdBy).get()
-        .then(u => groupCreator.textContent = u.exists ? (u.data().displayName||u.data().email) : 'Unknown');
-    }
-
-    function setupActionButtons() {
-      groupActions.innerHTML = '';
-      if (isHost) {
-        groupActions.innerHTML = `
-          <button class="btn btn-primary mono" id="editGroupBtn"><i class="fas fa-edit"></i> Edit</button>
-          <button class="btn btn-primary mono" id="inviteMembersBtn"><i class="fas fa-user-plus"></i> Invite</button>
-          <button class="btn btn-secondary mono" id="deleteGroupBtn"><i class="fas fa-trash"></i> Delete</button>
-        `;
-        document.getElementById('editGroupBtn').onclick   = ()=>alert('Edit modal…');
-        document.getElementById('inviteMembersBtn').onclick = ()=>alert('Invite modal…');
-        document.getElementById('deleteGroupBtn').onclick = ()=>confirmDelete();
-        gridRefs.pendingInvitesSection.style.display = 'block';
-      } else {
-        groupActions.innerHTML = `
-          <button class="btn btn-secondary mono" id="leaveGroupBtn"><i class="fas fa-sign-out-alt"></i> Leave Group</button>
-        `;
-        document.getElementById('leaveGroupBtn').onclick = ()=>confirmLeave();
-      }
-      gridRefs.createGroupWishlist.onclick = ()=>{
-        location.href = `create-wishlist.html?groupId=${groupId}&type=${groupTypeKey}`;
-      };
-    }
-
-    async function loadWishlists(isGroup) {
-      const container = isGroup ? gridRefs.groupWishlists : gridRefs.memberWishlists;
-      if (isGroup) {
-        [...container.children].filter(el=>el.id!=='createGroupWishlist').forEach(el=>el.remove());
-      } else {
-        container.innerHTML = '';
-      }
-      let q = db.collection('wishlists')
-                .where(isGroup?'isGroupWishlist':'sharedWith','==', isGroup? true : groupId);
-      if (!isGroup) q = q.where('isGroupWishlist','==',false);
-      const snap = await q.get();
-      if (snap.empty) {
-        const empty = document.createElement('div');
-        empty.className = 'empty-state';
-        empty.innerHTML = isGroup
-          ? `<div class="empty-icon"><i class="fas fa-list"></i></div><h2 class="empty-title">No Group Wishlists</h2><p class="empty-description">Create one to start!</p>`
-          : `<div class="empty-icon"><i class="fas fa-user-friends"></i></div><h2 class="empty-title">No Member Wishlists Shared</h2>`;
-        container.append(isGroup? container.querySelector('#createGroupWishlist'): empty);
-        return;
-      }
-      snap.forEach(doc=>{
-        const w = doc.data();
-        const card = createWishlistCard(doc.id,w);
-        container.insertBefore(card, isGroup? container.querySelector('#createGroupWishlist'): null);
-      });
-    }
-
-    function createWishlistCard(id,w) {
-      const card = document.createElement('div');
-      card.className = 'wishlist-card';
-      const created = (w.createdAt?.toDate()||new Date())
-        .toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'});
-      const itemsPreview = (w.items||[]).slice(0,3).map(it=>
-        `<div class="wishlist-item">
-            <div class="wishlist-item-name">${it.name}</div>
-            <div class="wishlist-item-status ${
-              it.status==='reserved'?'status-reserved':
-              it.status==='purchased'?'status-purchased':'status-available'
-            }">${it.status||'available'}</div>
-         </div>`
-      ).join('');
-      card.innerHTML = `
-        <div class="wishlist-header">
-          <h3 class="wishlist-title">${w.name}</h3>
-          <div class="wishlist-owner"><i class="fas fa-user"></i><span id="owner-${id}">Loading…</span></div>
-        </div>
-        <div class="wishlist-meta">
-          <div>Items: ${w.items?.length||0}</div>
-          <div>Created: ${created}</div>
-        </div>
-        <div class="wishlist-body">
-          <p class="wishlist-description">${w.description||'No description.'}</p>
-          ${itemsPreview ? `<div class="wishlist-items">${itemsPreview}</div>` : ''}
-        </div>
-        <div class="wishlist-footer">
-          <a href="view-wishlist.html?id=${id}" class="btn btn-primary mono">View Details</a>
-        </div>`;
-      db.collection('users').doc(w.createdBy).get()
-        .then(u=> {
-          const el = card.querySelector(`#owner-${id}`);
-          if(u.exists) el.textContent = u.data().displayName||u.data().email;
-        });
-      return card;
-    }
-
-    async function loadMembers() {
-      gridRefs.members.innerHTML = '';
-      const snaps = await Promise.all(
-        currentGroup.members.map(uid => db.collection('users').doc(uid).get())
-      );
-      snaps.forEach(doc=>{
-        if(!doc.exists) return;
-        const m = { id: doc.id, ...doc.data() };
-        const card = document.createElement('div');
-        card.className = 'member-card';
-        const initial = (m.displayName||m.email||'U').charAt(0).toUpperCase();
-        const avatar = m.photoURL
-          ? `<img src="${m.photoURL}" style="width:100%;height:100%;border-radius:50%">`
-          : initial;
-        const role = m.id===currentGroup.createdBy
-          ? '<div class="member-role role-host">Host</div>'
-          : '<div class="member-role">Member</div>';
-        card.innerHTML = `
-          <div class="member-avatar">${avatar}</div>
-          <h3 class="member-name">${m.displayName||'User'}</h3>
-          <div class="member-email">${m.email}</div>
-          ${role}`;
-        gridRefs.members.append(card);
-      });
-    }
-
-    async function loadPendingInvites() {
-      gridRefs.pendingInvitesList.innerHTML = '';
-      const col = groupTypeKey==='friend'?'friendInvites':'familyInvites';
-      const snap = await db.collection(col)
-        .where('groupId','==',groupId)
-        .where('status','==','pending').get();
-      if (snap.empty) {
-        gridRefs.pendingInvitesList.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-icon"><i class="fas fa-envelope-open"></i></div>
-            <h2 class="empty-title">No Pending Invites</h2>
-            <p class="empty-description">All invites handled.</p>
-          </div>`;
-        return;
-      }
-      snap.forEach(doc=>{
-        const inv = doc.data();
-        const c = document.createElement('div');
-        c.className = 'invite-card';
-        c.innerHTML = `<div class="invite-email">${inv.email}</div><div class="invite-status">Pending</div>`;
-        gridRefs.pendingInvitesList.append(c);
-      });
-    }
-
-    function confirmLeave() {
-      if (confirm(`Leave "${currentGroup.name}"?`)) alert('Leave group…');
-    }
-    function confirmDelete() {
-      if (confirm(`Delete "${currentGroup.name}"?`)) alert('Delete group…');
-    }
-
-    document.getElementById('logoutBtn').onclick = () =>
-      auth.signOut().then(()=> location.href='login.html')
-        .catch(e=> showError('Sign-out failed.'));
+    // Init
+    loadGroup();
   </script>
 </body>
 </html>
