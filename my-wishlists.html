@@ -203,124 +203,102 @@
   </main>
 
  <script>
-    // Firebase config & initialization
-    const firebaseConfig = {
-      apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
-      authDomain: "optanav1.firebaseapp.com",
-      projectId: "optanav1",
-      storageBucket: "optanav1.appspot.com",
-      messagingSenderId: "16298669202",
-      appId: "1:16298669202:web:ac2a1cd399993b1883624b",
-      measurementId: "G-RR7D4MB5FY"
-    };
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    // Optana Wishlist Loader - JavaScript
 
-    // Sidebar logout
-    document.getElementById('logoutBtn').onclick = function() {
-      auth.signOut().then(() => window.location.href = 'index.html');
-    };
+// Firebase config & initialization
+const firebaseConfig = {
+  apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+  authDomain: "optanav1.firebaseapp.com",
+  projectId: "optanav1",
+  storageBucket: "optanav1.appspot.com",
+  messagingSenderId: "16298669202",
+  appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+  measurementId: "G-RR7D4MB5FY"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-    // Show user info in sidebar
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('profileUsername').textContent = user.displayName || 'User';
-        document.getElementById('profileEmail').textContent = user.email || '';
-        if (user.photoURL) {
-          document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
-        }
-      }
-    });
-
-    // Alerts
-    function showSuccess(msg) {
-      const el = document.getElementById('successAlert');
-      el.textContent = msg;
-      el.style.display = '';
-      document.getElementById('errorAlert').style.display = 'none';
-      setTimeout(() => { el.style.display = 'none'; }, 2500);
+// Show user info in sidebar
+auth.onAuthStateChanged(user => {
+  if (user) {
+    document.getElementById('profileUsername').textContent = user.displayName || 'User';
+    document.getElementById('profileEmail').textContent = user.email || '';
+    if (user.photoURL) {
+      document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
     }
-    function showError(msg) {
-      const el = document.getElementById('errorAlert');
-      el.textContent = msg;
-      el.style.display = '';
-      document.getElementById('successAlert').style.display = 'none';
-      setTimeout(() => { el.style.display = 'none'; }, 3500);
-    }
+  }
+});
 
-    // Fetch and render wishlists
-    function renderWishlists(wishlists, groupMap) {
-      const tbody = document.getElementById('wishlistTableBody');
-      tbody.innerHTML = '';
-      if (wishlists.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777;">No wishlists yet. <a href="create-wishlist.html">Create one!</a></td></tr>`;
-        return;
-      }
-      wishlists.forEach(wl => {
-        let privacyBadge = '';
-        if (wl.privacy === 'public') privacyBadge = '<span class="badge badge-public">Public</span>';
-        else if (wl.privacy === 'friends') privacyBadge = '<span class="badge badge-friends">Groups Only</span>';
-        else privacyBadge = '<span class="badge badge-private">Private</span>';
+// Show error messages
+function showError(message) {
+  console.error(message);
+  const errorEl = document.getElementById('errorAlert');
+  errorEl.textContent = message;
+  errorEl.style.display = 'block';
+  setTimeout(() => { errorEl.style.display = 'none'; }, 3000);
+}
 
-        let groupsHtml = '';
-        if (Array.isArray(wl.linkedGroups) && wl.linkedGroups.length > 0) {
-          groupsHtml = wl.linkedGroups.map(gid => {
-            const g = groupMap[gid];
-            return g ? `<span class="badge badge-group">${g}</span>` : '';
-          }).join('');
-        }
+// Fetch group names
+async function fetchGroupNames(groupIds) {
+  const groupMap = {};
+  const promises = groupIds.map(gid => db.collection('friendGroups').doc(gid).get());
+  const docs = await Promise.all(promises);
+  docs.forEach(doc => {
+    if (doc.exists) groupMap[doc.id] = doc.data().name;
+  });
+  return groupMap;
+}
 
-        const actions = `
-          <div class="wishlist-actions">
-            <a href="view-wishlist.html?id=${wl.id}" class="btn btn-secondary mono" title="View"><i class="fas fa-eye"></i></a>
-            <a href="edit-wishlist.html?id=${wl.id}" class="btn btn-primary mono" title="Edit"><i class="fas fa-edit"></i></a>
-          </div>
-        `;
+// Render wishlists
+function renderWishlists(wishlists, groupMap) {
+  const tbody = document.getElementById('wishlistTableBody');
+  tbody.innerHTML = '';
+  if (wishlists.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5">No wishlists found.</td></tr>`;
+    return;
+  }
 
-        tbody.innerHTML += `
-          <tr>
-            <td>${wl.title || ''}</td>
-            <td>${wl.occasion ? wl.occasion.charAt(0).toUpperCase() + wl.occasion.slice(1) : ''}</td>
-            <td>${privacyBadge}</td>
-            <td>${groupsHtml}</td>
-            <td>${actions}</td>
-          </tr>
-        `;
-      });
-    }
+  wishlists.forEach(wl => {
+    let privacyLabel = wl.privacy.charAt(0).toUpperCase() + wl.privacy.slice(1);
+    let groups = (wl.linkedGroups || []).map(gid => groupMap[gid] || 'Unknown Group').join(', ');
 
-    // Fetch group names for mapping
-    async function fetchGroupNames(groupIds) {
-      const groupMap = {};
-      const docs = await Promise.all(groupIds.map(gid => db.collection('friendGroups').doc(gid).get()));
-      docs.forEach(doc => {
-        if (doc.exists) groupMap[doc.id] = doc.data().name;
-      });
-      return groupMap;
-    }
+    tbody.innerHTML += `
+      <tr>
+        <td>${wl.title}</td>
+        <td>${wl.occasion || ''}</td>
+        <td>${privacyLabel}</td>
+        <td>${groups}</td>
+        <td>
+          <a href="view-wishlist.html?id=${wl.id}" class="btn btn-secondary">View</a>
+        </td>
+      </tr>
+    `;
+  });
+}
 
-    // Load wishlists on auth
-    auth.onAuthStateChanged(async user => {
-      if (!user) {
-        document.getElementById('wishlistTableBody').innerHTML = `<tr><td colspan="5" style="text-align:center;color:#777;">You must be signed in.</td></tr>`;
-        return;
-      }
-      db.collection('wishlists').where('owner', '==', user.uid).orderBy('createdAt', 'desc').onSnapshot(async snap => {
-        const wishlists = [];
-        let allGroupIds = new Set();
-        snap.forEach(doc => {
-          const wl = doc.data();
-          wl.id = doc.id;
-          if (Array.isArray(wl.linkedGroups)) {
-            wl.linkedGroups.forEach(gid => allGroupIds.add(gid));
-          }
-          wishlists.push(wl);
-        });
-        const groupMap = await fetchGroupNames(Array.from(allGroupIds));
-        renderWishlists(wishlists, groupMap);
-      });
-    });
+// Load wishlists
+async function loadWishlists(userId) {
+  try {
+    const snapshot = await db.collection('wishlists').where('owner', '==', userId).get();
+    const wishlists = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const groupIds = wishlists.flatMap(wl => wl.linkedGroups || []);
+    const groupMap = await fetchGroupNames([...new Set(groupIds)]);
+
+    renderWishlists(wishlists, groupMap);
+  } catch (error) {
+    showError('Error loading wishlists: ' + error.message);
+  }
+}
+
+// On auth state change
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loadWishlists(user.uid);
+  }
+});
+
   </script>
 </body>
 </html>
