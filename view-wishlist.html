@@ -85,6 +85,10 @@
     .btn-primary:hover { background: var(--accent-light); }
     .btn-secondary { background: var(--gray); color: var(--dark); }
     .btn-secondary:hover { background: #d0d0d0; }
+    .btn-share { background: #e3f2fd; color: #0d47a1; margin-left: 0.5rem; }
+    .btn-share:hover { background: #bbdefb; }
+    .btn-edit { background: #d1e7dd; color: #0f5132; margin-left: 0.5rem; }
+    .btn-edit:hover { background: #bcd0c7; }
     .main-content { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
     .frame {
       background: var(--light);
@@ -99,6 +103,8 @@
       margin-bottom: 1.5rem;
       border-bottom: 1px solid var(--gray);
       padding-bottom: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
     }
     .page-title { font-size: 2rem; }
     .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-family: 'Roboto Mono', monospace; font-size: 0.75rem; }
@@ -132,6 +138,16 @@
     .item-row:last-child { border-bottom: none; }
     .item-title { font-weight: bold; }
     .item-link { color: var(--primary-color); text-decoration: underline; }
+    .total-row {
+      padding: 1rem;
+      font-weight: bold;
+      background: var(--gray-light);
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      border-top: 2px solid var(--primary-color);
+      font-size: 1.1rem;
+    }
     .alert { border-radius:8px; padding:1rem; margin-bottom:1rem; }
     .alert-success { background:#d4edda; color:#155724; border:1px solid #c3e6cb; }
     .alert-danger { background:#f8d7da; color:#721c24; border:1px solid #f5c6cb; }
@@ -142,6 +158,7 @@
       .sidebar { width: 100vw; position: static; height: auto; }
       .main-content { margin-left: 0; padding: 1rem; }
       .frame { padding: 1rem; }
+      .page-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
     }
   </style>
 </head>
@@ -161,7 +178,7 @@
     <nav class="nav-menu" aria-label="Main Navigation">
       <ul>
         <li class="nav-item"><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
-        <li class="nav-item"><a href="my-wishlists.html" class="nav-link"><i class="fas fa-gift"></i><span>My Wishlists</span></a></li>
+        <li class="nav-item"><a href="my-wishlists.html" class="nav-link active"><i class="fas fa-gift"></i><span>My Wishlists</span></a></li>
         <li class="nav-item"><a href="friend-groups.html" class="nav-link"><i class="fas fa-users"></i><span>Friend Groups</span></a></li>
         <li class="nav-item"><a href="family-groups.html" class="nav-link"><i class="fas fa-house-user"></i><span>Family Groups</span></a></li>
         <li class="nav-item"><a href="browse.html" class="nav-link"><i class="fas fa-search"></i><span>Browse</span></a></li>
@@ -178,9 +195,13 @@
   <!-- Main Content -->
   <main class="main-content">
     <div class="frame">
-      <header class="page-header">
+      <header class="page-header" id="headerActionsContainer">
         <h1 class="page-title" id="wishlistTitle">Wishlist</h1>
-        <a href="browse.html" class="btn btn-secondary mono"><i class="fas fa-arrow-left"></i> Back to Browse</a>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a href="my-wishlists.html" class="btn btn-secondary mono" id="backBtn"><i class="fas fa-arrow-left"></i> Back to Wishlists</a>
+          <button class="btn btn-share mono" id="shareBtn" title="Share"><i class="fas fa-share-alt"></i> Share</button>
+          <a href="#" class="btn btn-edit mono" id="editBtn" style="display:none;"><i class="fas fa-edit"></i> Edit</a>
+        </div>
       </header>
       <div id="alertContainer"></div>
       <div id="wishlistContent" style="display:none;">
@@ -197,6 +218,9 @@
           <div class="item-header"><div>Item</div><div>Price</div><div>Type</div></div>
           <div id="itemsList">
             <div class="item-row" style="text-align:center;color:#777;">No items added yet</div>
+          </div>
+          <div class="total-row" id="totalRow" style="display:none;">
+            Total: <span id="totalPrice" style="margin-left:0.5em;">$0.00</span>
           </div>
         </div>
       </div>
@@ -232,6 +256,21 @@
     // Sidebar logout
     document.getElementById('logoutBtn').onclick = function() {
       auth.signOut().then(() => window.location.href = 'index.html');
+    };
+
+    // Share button
+    document.getElementById('shareBtn').onclick = function() {
+      const url = window.location.href;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+          showAlert('success', 'Link copied to clipboard!');
+        }, () => {
+          showAlert('danger', 'Could not copy link.');
+        });
+      } else {
+        // fallback
+        prompt('Copy this link:', url);
+      }
     };
 
     // Load wishlist
@@ -272,23 +311,40 @@
       // Items
       const itemsList = document.getElementById('itemsList');
       itemsList.innerHTML = '';
+      let total = 0;
       if (wishlist.items && wishlist.items.length > 0) {
         wishlist.items.forEach(item => {
           const row = document.createElement('div');
           row.className = 'item-row';
+          let priceStr = '';
+          if (item.price !== undefined && item.price !== null && item.price !== '') {
+            const price = Number(item.price);
+            if (!isNaN(price)) {
+              priceStr = '$' + price.toFixed(2);
+              total += price;
+            }
+          }
           row.innerHTML = `
             <div>
               <span class="item-title">${item.title || ''}</span>
               ${item.url ? `<a href="${item.url}" target="_blank" class="item-link"><i class="fas fa-link"></i></a>` : ''}
               <div style="font-size:0.9em;color:#666;">${item.description || ''}</div>
             </div>
-            <div>${item.price ? '$' + Number(item.price).toFixed(2) : ''}</div>
+            <div>${priceStr}</div>
             <div><span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type === 'need' ? 'Need' : 'Want'}</span></div>
           `;
           itemsList.appendChild(row);
         });
       } else {
         itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
+      }
+      // Show total price if there are items with prices
+      const totalRow = document.getElementById('totalRow');
+      if (total > 0) {
+        totalRow.style.display = '';
+        document.getElementById('totalPrice').textContent = '$' + total.toFixed(2);
+      } else {
+        totalRow.style.display = 'none';
       }
       document.getElementById('wishlistContent').style.display = '';
     }
@@ -360,6 +416,7 @@
       // Check access
       if (wishlist.privacy === 'public') {
         renderWishlist();
+        showEditIfOwner();
       } else {
         auth.onAuthStateChanged(async user => {
           currentUser = user;
@@ -369,11 +426,24 @@
           const allowed = await checkAccess(wishlist, user);
           if (allowed) {
             renderWishlist();
+            showEditIfOwner();
           } else {
             showAlert('danger', 'You do not have permission to view this wishlist.');
           }
         });
       }
+    }
+
+    function showEditIfOwner() {
+      // Show edit button if current user is the owner
+      auth.onAuthStateChanged(user => {
+        if (user && wishlist && user.uid === wishlist.owner) {
+          document.getElementById('editBtn').style.display = '';
+          document.getElementById('editBtn').href = 'edit-wishlist.html?id=' + wishlist.id;
+        } else {
+          document.getElementById('editBtn').style.display = 'none';
+        }
+      });
     }
 
     // Show user info in sidebar
