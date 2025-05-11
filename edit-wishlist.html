@@ -186,11 +186,11 @@
     @media (max-width: 992px) {
       .main-content { margin-left: 80px; }
     }
-    .col-full { grid-column: 1 / -1; }
-    .item-form { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .item-form-left, .item-form-right { display: flex; flex-direction: column; gap: 1.5rem; }
-    .item-buttons { display: flex; gap: 1rem; }
-    .form-text { color: #888; font-size: 0.95rem; }
+    @media (max-width: 600px) {
+      .sidebar { width: 100vw; position: static; height: auto; }
+      .main-content { margin-left: 0; padding: 1rem; }
+      .frame { padding: 1rem; }
+    }
   </style>
 </head>
 <body>
@@ -228,7 +228,7 @@
     <div class="frame">
       <header class="page-header">
         <h1 class="page-title">Edit Wishlist</h1>
-        <a href="dashboard.html" class="btn btn-secondary mono"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+        <a href="my-wishlists.html" class="btn btn-secondary mono"><i class="fas fa-arrow-left"></i> Back to My Wishlists</a>
       </header>
       <div class="alert alert-success" id="successAlert" style="display:none; border-radius:8px; padding:1rem; margin-bottom:1rem; background:#d4edda; color:#155724; border:1px solid #c3e6cb;">
         Wishlist updated successfully!
@@ -236,6 +236,7 @@
       <div class="alert alert-danger" id="errorAlert" style="display:none; border-radius:8px; padding:1rem; margin-bottom:1rem; background:#f8d7da; color:#721c24; border:1px solid #f5c6cb;">
         There was an error updating your wishlist. Please try again.
       </div>
+
       <div class="form-card">
         <form id="wishlistForm">
           <!-- Wishlist Details Section -->
@@ -275,11 +276,12 @@
               <div id="groupCheckboxes"><div class="form-text">Loading your groups...</div></div>
             </div>
           </div>
+
           <!-- Items Section -->
           <div class="form-section">
             <h2 class="form-section-title">Edit Items</h2>
-            <div class="item-form">
-              <div class="item-form-left">
+            <div class="item-form" style="display:flex; flex-wrap:wrap; gap:1rem;">
+              <div class="item-form-left" style="flex:1;">
                 <div class="form-group">
                   <label for="itemTitle" class="form-label">Item Title*</label>
                   <input type="text" id="itemTitle" class="form-control" placeholder="e.g., Wireless Headphones">
@@ -289,7 +291,7 @@
                   <input type="url" id="itemUrl" class="form-control" placeholder="https://...">
                 </div>
               </div>
-              <div class="item-form-right">
+              <div class="item-form-right" style="flex:1;">
                 <div class="form-group">
                   <label for="itemPrice" class="form-label">Price (Optional)</label>
                   <input type="number" id="itemPrice" class="form-control" placeholder="0.00" min="0" step="0.01">
@@ -303,11 +305,11 @@
                   <div class="toggle-labels"><span>Want</span><span>Need</span></div>
                 </div>
               </div>
-              <div class="form-group col-full">
+              <div class="form-group col-full" style="flex-basis:100%;">
                 <label for="itemDescription" class="form-label">Item Description</label>
                 <textarea id="itemDescription" class="form-control" placeholder="Add details about this item..."></textarea>
               </div>
-              <div class="item-buttons col-full">
+              <div class="item-buttons col-full" style="flex-basis:100%; display:flex; gap:1rem;">
                 <button type="button" id="clearItemBtn" class="btn btn-secondary">Clear</button>
                 <button type="button" id="addItemBtn" class="btn btn-primary">Add Item</button>
               </div>
@@ -319,9 +321,10 @@
               </div>
             </div>
           </div>
+
           <!-- Form Actions -->
           <div class="form-actions">
-            <a href="dashboard.html" class="btn btn-secondary mono">Cancel</a>
+            <a href="my-wishlists.html" class="btn btn-secondary mono">Cancel</a>
             <button type="submit" class="btn btn-primary mono">Save Changes</button>
           </div>
         </form>
@@ -331,261 +334,269 @@
 
   <!-- Firebase & Page Scripts -->
   <script>
-  // Firebase config & initialization
-  const firebaseConfig = {
-    apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
-    authDomain: "optanav1.firebaseapp.com",
-    projectId: "optanav1",
-    storageBucket: "optanav1.firebasestorage.app",
-    messagingSenderId: "16298669202",
-    appId: "1:16298669202:web:ac2a1cd399993b1883624b",
-    measurementId: "G-RR7D4MB5FY"
-  };
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+    // Firebase config & initialization
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+      authDomain: "optanav1.firebaseapp.com",
+      projectId: "optanav1",
+      storageBucket: "optanav1.appspot.com",
+      messagingSenderId: "16298669202",
+      appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+      measurementId: "G-RR7D4MB5FY"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-  // DOM references
-  const logoutBtn       = document.getElementById('logoutBtn');
-  const profileUsername = document.getElementById('profileUsername');
-  const profileEmail    = document.getElementById('profileEmail');
-  const userAvatar      = document.getElementById('userAvatar');
-  const groupCheckboxes = document.getElementById('groupCheckboxes');
-  const successAlert    = document.getElementById('successAlert');
-  const errorAlert      = document.getElementById('errorAlert');
-  const wishlistForm    = document.getElementById('wishlistForm');
-  const wishlistTitle   = document.getElementById('wishlistTitle');
-  const wishlistDescription = document.getElementById('wishlistDescription');
-  const occasion        = document.getElementById('occasion');
-  const privacy         = document.getElementById('privacy');
-  const itemTitle       = document.getElementById('itemTitle');
-  const itemUrl         = document.getElementById('itemUrl');
-  const itemPrice       = document.getElementById('itemPrice');
-  const itemDescription = document.getElementById('itemDescription');
-  const itemTypeToggle  = document.getElementById('itemTypeToggle');
-  const addItemBtn      = document.getElementById('addItemBtn');
-  const clearItemBtn    = document.getElementById('clearItemBtn');
-  const itemsList       = document.getElementById('itemsList');
+    // DOM references
+    const logoutBtn       = document.getElementById('logoutBtn');
+    const profileUsername = document.getElementById('profileUsername');
+    const profileEmail    = document.getElementById('profileEmail');
+    const userAvatar      = document.getElementById('userAvatar');
+    const groupCheckboxes = document.getElementById('groupCheckboxes');
+    const successAlert    = document.getElementById('successAlert');
+    const errorAlert      = document.getElementById('errorAlert');
 
-  let items = [];
-  let editingItemIndex = null;
-  let userGroups = [];
-  let linkedGroups = [];
-
-  // Get wishlist ID from URL
-  function getWishlistId() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('id');
-  }
-
-  // Load user profile info
-  function loadUserProfile(user) {
-    profileUsername.textContent = user.displayName || user.email.split('@')[0];
-    profileEmail.textContent = user.email;
-    if (user.photoURL) {
-      userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;">`;
-    } else {
-      userAvatar.innerHTML = `<i class="fas fa-user"></i>`;
+    // Get wishlist ID from URL
+    function getParam(name) {
+      const url = new URL(window.location.href);
+      return url.searchParams.get(name);
     }
-  }
-
-  // Load user's groups for checkboxes
-  async function loadUserGroups(user) {
-    // Fetch both friend and family groups where user is a member
-    const friendGroupsSnap = await db.collection('friendGroups').where('members', 'array-contains', user.uid).get();
-    const familyGroupsSnap = await db.collection('familyGroups').where('members', 'array-contains', user.uid).get();
-    userGroups = [];
-    friendGroupsSnap.forEach(doc => userGroups.push({ id: doc.id, ...doc.data(), type: 'friend' }));
-    familyGroupsSnap.forEach(doc => userGroups.push({ id: doc.id, ...doc.data(), type: 'family' }));
-
-    if (userGroups.length === 0) {
-      groupCheckboxes.innerHTML = `<div class="form-text">You have no groups yet.</div>`;
-      return;
-    }
-
-    // Render checkboxes
-    groupCheckboxes.innerHTML = '';
-    userGroups.forEach(group => {
-      const checkbox = document.createElement('label');
-      checkbox.style.display = 'block';
-      checkbox.style.marginBottom = '0.5rem';
-      checkbox.innerHTML = `
-        <input type="checkbox" class="group-checkbox" value="${group.id}">
-        ${group.name} <span class="badge" style="background:#eee;color:#555;">${group.type === 'friend' ? 'Friend' : 'Family'}</span>
-      `;
-      groupCheckboxes.appendChild(checkbox);
-    });
-  }
-
-  // Set checked state for linked groups
-  function setLinkedGroupsCheckboxes(linkedGroupsArr) {
-    document.querySelectorAll('.group-checkbox').forEach(cb => {
-      cb.checked = linkedGroupsArr && linkedGroupsArr.includes(cb.value);
-    });
-  }
-
-  // Collect checked group IDs
-  function getCheckedGroups() {
-    return Array.from(document.querySelectorAll('.group-checkbox'))
-      .filter(cb => cb.checked)
-      .map(cb => cb.value);
-  }
-
-  // Load existing wishlist data
-  async function loadWishlist(user) {
-    const wishlistId = getWishlistId();
+    const wishlistId = getParam('id');
     if (!wishlistId) {
-      errorAlert.textContent = 'No wishlist ID provided.';
-      errorAlert.style.display = 'block';
-      return;
+      alert('No wishlist ID provided.');
+      window.location.href = "my-wishlists.html";
     }
-    try {
-      const doc = await db.collection('wishlists').doc(wishlistId).get();
-      if (!doc.exists) throw new Error('Wishlist not found');
-      const data = doc.data();
 
-      // Only allow editing if owner
-      if (data.owner !== user.uid) {
-        errorAlert.textContent = 'You do not have permission to edit this wishlist.';
+    // User info and logout
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        profileUsername.textContent = user.displayName || "User";
+        profileEmail.textContent = user.email;
+        if (user.photoURL) {
+          userAvatar.innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
+        }
+        loadGroups(user.uid);
+        loadWishlist(user.uid);
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut().then(() => window.location.href = "login.html");
+    });
+
+    // Load user's groups (friend and family)
+    async function loadGroups(uid) {
+      try {
+        const friendGroupsSnap = await db.collection('friendGroups').where('members', 'array-contains', uid).get();
+        const familyGroupsSnap = await db.collection('familyGroups').where('members', 'array-contains', uid).get();
+        let html = "";
+        if (friendGroupsSnap.empty && familyGroupsSnap.empty) {
+          html = `<div class="form-text" style="color:#888;">No groups found.</div>`;
+        } else {
+          friendGroupsSnap.forEach(doc => {
+            html += `<label style="display:block;margin-bottom:0.5em;"><input type="checkbox" value="${doc.id}"> <span class="badge badge-want">Friend</span> ${doc.data().name}</label>`;
+          });
+          familyGroupsSnap.forEach(doc => {
+            html += `<label style="display:block;margin-bottom:0.5em;"><input type="checkbox" value="${doc.id}"> <span class="badge badge-need">Family</span> ${doc.data().name}</label>`;
+          });
+        }
+        groupCheckboxes.innerHTML = html;
+      } catch (e) {
+        groupCheckboxes.innerHTML = `<div class="form-text" style="color:#c00;">Error loading groups.</div>`;
+      }
+    }
+
+    // --- ITEMS LOGIC ---
+    let items = [];
+    let editingItemIndex = null;
+    function updateItemsListUI() {
+      const itemsListDiv = document.getElementById('itemsList');
+      if (items.length === 0) {
+        itemsListDiv.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
+        return;
+      }
+      itemsListDiv.innerHTML = '';
+      items.forEach((item, idx) => {
+        itemsListDiv.innerHTML += `
+          <div class="item-row" data-index="${idx}">
+            <div>${item.title}${item.url ? `<br><a href="${item.url}" target="_blank" style="font-size:0.85em;color:#0077cc;">Link</a>` : ''}</div>
+            <div>${item.price ? `$${parseFloat(item.price).toFixed(2)}` : ''}</div>
+            <div><span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type.charAt(0).toUpperCase() + item.type.slice(1)}</span></div>
+            <div class="item-actions">
+              <button class="btn-icon" type="button" onclick="editItem(${idx})"><i class="fas fa-edit"></i></button>
+              <button class="btn-icon delete" type="button" onclick="removeItem(${idx})"><i class="fas fa-trash"></i></button>
+            </div>
+          </div>
+        `;
+      });
+    }
+    window.removeItem = function(idx) {
+      items.splice(idx, 1);
+      updateItemsListUI();
+    }
+    window.editItem = function(idx) {
+      const item = items[idx];
+      editingItemIndex = idx;
+      document.getElementById('itemTitle').value = item.title;
+      document.getElementById('itemUrl').value = item.url;
+      document.getElementById('itemPrice').value = item.price;
+      document.getElementById('itemTypeToggle').checked = item.type === 'need';
+      document.getElementById('itemDescription').value = item.description;
+      document.getElementById('addItemBtn').textContent = "Update Item";
+    }
+    document.getElementById('addItemBtn').addEventListener('click', function() {
+      const title = document.getElementById('itemTitle').value.trim();
+      if (!title) return alert('Item title is required!');
+      const url = document.getElementById('itemUrl').value.trim();
+      const price = document.getElementById('itemPrice').value.trim();
+      const type = document.getElementById('itemTypeToggle').checked ? 'need' : 'want';
+      const description = document.getElementById('itemDescription').value.trim();
+      const newItem = { title, url, price, type, description };
+      if (editingItemIndex !== null) {
+        items[editingItemIndex] = newItem;
+        editingItemIndex = null;
+        document.getElementById('addItemBtn').textContent = "Add Item";
+      } else {
+        items.push(newItem);
+      }
+      updateItemsListUI();
+      // Clear fields
+      document.getElementById('itemTitle').value = '';
+      document.getElementById('itemUrl').value = '';
+      document.getElementById('itemPrice').value = '';
+      document.getElementById('itemTypeToggle').checked = false;
+      document.getElementById('itemDescription').value = '';
+    });
+    document.getElementById('clearItemBtn').addEventListener('click', function() {
+      document.getElementById('itemTitle').value = '';
+      document.getElementById('itemUrl').value = '';
+      document.getElementById('itemPrice').value = '';
+      document.getElementById('itemTypeToggle').checked = false;
+      document.getElementById('itemDescription').value = '';
+      editingItemIndex = null;
+      document.getElementById('addItemBtn').textContent = "Add Item";
+    });
+
+    // --- LOAD EXISTING WISHLIST ---
+    async function loadWishlist(uid) {
+      try {
+        // Load wishlist doc
+        const docRef = db.collection('wishlists').doc(wishlistId);
+        const doc = await docRef.get();
+        if (!doc.exists) throw new Error("Wishlist not found");
+        const wl = doc.data();
+        if (wl.ownerId !== uid) throw new Error("Not authorized");
+        document.getElementById('wishlistTitle').value = wl.title || '';
+        document.getElementById('wishlistDescription').value = wl.description || '';
+        document.getElementById('occasion').value = wl.occasion || '';
+        document.getElementById('privacy').value = wl.privacy || '';
+        // Set group checkboxes
+        if (wl.groupIds && Array.isArray(wl.groupIds)) {
+          setTimeout(() => { // Wait for groupCheckboxes to load
+            wl.groupIds.forEach(id => {
+              const cb = groupCheckboxes.querySelector(`input[type="checkbox"][value="${id}"]`);
+              if (cb) cb.checked = true;
+            });
+          }, 500);
+        }
+        // Load items
+        const itemsSnap = await docRef.collection('items').orderBy('createdAt').get();
+        items = [];
+        itemsSnap.forEach(itemDoc => {
+          const item = itemDoc.data();
+          items.push({
+            title: item.title || '',
+            url: item.url || '',
+            price: item.price || '',
+            type: item.type || 'want',
+            description: item.description || ''
+          });
+        });
+        updateItemsListUI();
+      } catch (err) {
+        errorAlert.textContent = err.message || "Could not load wishlist.";
         errorAlert.style.display = 'block';
-        wishlistForm.style.display = 'none';
+      }
+    }
+
+    // --- SUBMIT HANDLER ---
+    document.getElementById('wishlistForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+
+      // Get wishlist data
+      const title = document.getElementById('wishlistTitle').value.trim();
+      const description = document.getElementById('wishlistDescription').value.trim();
+      const occasion = document.getElementById('occasion').value;
+      const privacy = document.getElementById('privacy').value;
+      let groupIds = [];
+      document.querySelectorAll('#groupCheckboxes input[type="checkbox"]:checked').forEach(cb => groupIds.push(cb.value));
+
+      // Get current user
+      const user = auth.currentUser;
+      if (!user) {
+        errorAlert.innerText = "You must be logged in to edit a wishlist.";
+        errorAlert.style.display = 'block';
+        return;
+      }
+      if (!title) {
+        errorAlert.innerText = "Wishlist title is required.";
+        errorAlert.style.display = 'block';
+        return;
+      }
+      if (items.length === 0) {
+        errorAlert.innerText = "Please add at least one item to your wishlist.";
+        errorAlert.style.display = 'block';
         return;
       }
 
-      // Fill form fields
-      wishlistTitle.value = data.title || '';
-      wishlistDescription.value = data.description || '';
-      occasion.value = data.occasion || '';
-      privacy.value = data.privacy || 'public';
-      linkedGroups = Array.isArray(data.linkedGroups) ? data.linkedGroups : [];
+      try {
+        // 1. Update the wishlist document
+        const wishlistDocRef = db.collection('wishlists').doc(wishlistId);
+        await wishlistDocRef.update({
+          title,
+          description,
+          occasion,
+          privacy,
+          groupIds,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-      // Wait for groups to load, then check the right ones
-      setTimeout(() => setLinkedGroupsCheckboxes(linkedGroups), 500);
+        // 2. Replace items: delete all, then add new
+        const itemsColRef = wishlistDocRef.collection('items');
+        // Delete all existing items (batch)
+        const oldItemsSnap = await itemsColRef.get();
+        const batch = db.batch();
+        oldItemsSnap.forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
 
-      // Load items
-      items = Array.isArray(data.items) ? data.items : [];
-      renderItemsList();
-    } catch (e) {
-      errorAlert.textContent = 'Error loading wishlist: ' + e.message;
-      errorAlert.style.display = 'block';
-    }
-  }
+        // Add new items (batch)
+        const batch2 = db.batch();
+        items.forEach(item => {
+          const itemRef = itemsColRef.doc();
+          batch2.set(itemRef, {
+            title: item.title,
+            url: item.url,
+            price: item.price ? parseFloat(item.price) : null,
+            type: item.type,
+            description: item.description,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        });
+        await batch2.commit();
 
-  // Render items list
-  function renderItemsList() {
-    itemsList.innerHTML = '';
-    if (items.length === 0) {
-      itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
-      return;
-    }
-    items.forEach((item, idx) => {
-      const row = document.createElement('div');
-      row.className = 'item-row';
-      row.innerHTML = `
-        <div>${item.title ? `<a href="${item.url||'#'}" target="_blank" style="color:inherit;text-decoration:${item.url?'underline':'none'};">${item.title}</a>` : ''}</div>
-        <div>${item.price ? '$' + Number(item.price).toFixed(2) : '-'}</div>
-        <div><span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type === 'need' ? 'Need' : 'Want'}</span></div>
-        <div class="item-actions">
-          <button type="button" class="btn-icon" title="Edit" onclick="editItem(${idx})"><i class="fas fa-edit"></i></button>
-          <button type="button" class="btn-icon delete" title="Delete" onclick="deleteItem(${idx})"><i class="fas fa-trash"></i></button>
-        </div>
-      `;
-      itemsList.appendChild(row);
+        // Success UI
+        successAlert.style.display = 'block';
+        setTimeout(() => window.location.href = 'my-wishlists.html', 1200);
+      } catch (err) {
+        errorAlert.innerText = "There was an error updating your wishlist. Please try again.";
+        errorAlert.style.display = 'block';
+        console.error(err);
+      }
     });
-  }
-
-  // Add/edit/delete item logic
-  window.editItem = function(idx) {
-    const item = items[idx];
-    itemTitle.value = item.title || '';
-    itemUrl.value = item.url || '';
-    itemPrice.value = item.price || '';
-    itemDescription.value = item.description || '';
-    itemTypeToggle.checked = item.type === 'need';
-    editingItemIndex = idx;
-    addItemBtn.textContent = 'Update Item';
-  };
-
-  window.deleteItem = function(idx) {
-    items.splice(idx, 1);
-    renderItemsList();
-    if (editingItemIndex === idx) {
-      clearItemForm();
-    }
-  };
-
-  function clearItemForm() {
-    itemTitle.value = '';
-    itemUrl.value = '';
-    itemPrice.value = '';
-    itemDescription.value = '';
-    itemTypeToggle.checked = false;
-    editingItemIndex = null;
-    addItemBtn.textContent = 'Add Item';
-  }
-  clearItemBtn.onclick = clearItemForm;
-
-  addItemBtn.onclick = function() {
-    const title = itemTitle.value.trim();
-    if (!title) return;
-    const item = {
-      title,
-      url: itemUrl.value.trim(),
-      price: itemPrice.value.trim(),
-      description: itemDescription.value.trim(),
-      type: itemTypeToggle.checked ? 'need' : 'want'
-    };
-    if (editingItemIndex !== null) {
-      items[editingItemIndex] = item;
-    } else {
-      items.push(item);
-    }
-    renderItemsList();
-    clearItemForm();
-  };
-
-  // Form submission: update wishlist in Firestore
-  wishlistForm.onsubmit = async function(e) {
-    e.preventDefault();
-    const wishlistId = getWishlistId();
-    if (!wishlistId) return;
-    // Gather form data
-    const title = wishlistTitle.value.trim();
-    const description = wishlistDescription.value.trim();
-    const occ = occasion.value;
-    const priv = privacy.value;
-    const linkedGroupsArr = getCheckedGroups();
-
-    // Validate
-    if (!title) {
-      errorAlert.textContent = 'Title is required.';
-      errorAlert.style.display = 'block';
-      return;
-    }
-    try {
-      await db.collection('wishlists').doc(wishlistId).update({
-        title, description, occasion: occ, privacy: priv, linkedGroups: linkedGroupsArr, items
-      });
-      successAlert.style.display = 'block';
-      errorAlert.style.display = 'none';
-      setTimeout(()=>{successAlert.style.display='none'}, 2000);
-    } catch (e) {
-      errorAlert.textContent = 'Error updating wishlist: ' + e.message;
-      errorAlert.style.display = 'block';
-    }
-  };
-
-  // Auth and page load
-  auth.onAuthStateChanged(async user => {
-    if (!user) { window.location.href = 'index.html'; return; }
-    loadUserProfile(user);
-    await loadUserGroups(user);
-    await loadWishlist(user);
-  });
-
-  // Logout
-  logoutBtn.onclick = () => auth.signOut();
-
   </script>
 </body>
 </html>
