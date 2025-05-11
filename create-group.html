@@ -594,11 +594,8 @@
           groupData.pendingInvites = members;
         }
         
-        // Determine collection based on group type
-        const collectionName = selectedGroupType === 'friend' ? 'friendGroups' : 'familyGroups';
-        
-        // Save to Firestore
-        await db.collection(collectionName).add(groupData);
+        // Save to unified groups collection
+        await db.collection('groups').add(groupData);
         
         // Show success message
         successAlert.textContent = `${selectedGroupType === 'friend' ? 'Friend' : 'Family'} group created successfully!`;
@@ -606,7 +603,7 @@
         
         // Redirect after delay
         setTimeout(() => {
-          window.location.href = selectedGroupType === 'friend' ? 'friend-groups.html' : 'family-groups.html';
+          window.location.href = "groups.html?success=true&message=Group created successfully!";
         }, 2000);
         
       } catch (error) {
