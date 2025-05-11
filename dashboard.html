@@ -125,47 +125,51 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
     
-    // Function to fetch user data
+    // Fetch counts from Firestore
     async function fetchUserData(userId) {
       try {
-        // Fetch wishlist count
-        const wishlistsRef = await db.collection('wishlists').where('userId', '==', userId).get();
-        const wishlistCount = wishlistsRef.size;
+        // Count wishlists owned by this user
+        const wishlistSnap = await db.collection('wishlists')
+          .where('owner', '==', userId).get();
+        const wishlistCount = wishlistSnap.size;
         
-        // Fetch groups count
-        const userGroupsRef = await db.collection('groupMembers').where('userId', '==', userId).get();
-        const groupCount = userGroupsRef.size;
+        // Count groups (friend + family) where user is a member
+        const friendSnap = await db.collection('friendGroups')
+          .where('members', 'array-contains', userId).get();
+        const familySnap = await db.collection('familyGroups')
+          .where('members', 'array-contains', userId).get();
+        const groupCount = friendSnap.size + familySnap.size;
         
-        // Update UI with counts
+        // Update UI
         document.getElementById('wishlistCount').textContent = wishlistCount;
         document.getElementById('groupCount').textContent = groupCount;
         document.getElementById('dashboardWishlistCount').textContent = wishlistCount;
         document.getElementById('dashboardGroupCount').textContent = groupCount;
       } catch (error) {
-        console.error("Error fetching user data:", error);
+        console.error("Error fetching dashboard data:", error);
       }
     }
     
-    // Auth state listener
+    // Auth listener
     auth.onAuthStateChanged(user => {
-      if (user) {
-        document.getElementById('profileUsername').textContent = user.displayName || 'User';
-        document.getElementById('profileEmail').textContent = user.email || '';
-        if (user.photoURL) {
-          document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
-        }
-        
-        // Fetch and display user data
-        fetchUserData(user.uid);
-      } else {
-        // Redirect to login if not authenticated
+      if (!user) {
         window.location.href = 'index.html';
+        return;
       }
+      // Populate sidebar profile
+      document.getElementById('profileUsername').textContent = user.displayName || 'User';
+      document.getElementById('profileEmail').textContent = user.email || '';
+      if (user.photoURL) {
+        document.getElementById('userAvatar').innerHTML =
+          `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
+      }
+      // Fetch and display counts
+      fetchUserData(user.uid);
     });
     
-    document.getElementById('logoutBtn').onclick = function() {
+    // Logout
+    document.getElementById('logoutBtn').onclick = () =>
       auth.signOut().then(() => window.location.href = 'index.html');
-    };
   </script>
 </body>
 </html>
