@@ -784,196 +784,91 @@
     </main>
 
     <!-- Scripts -->
-    <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "your-app.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-app.appspot.com",
-            messagingSenderId: "your-messaging-sender-id",
-            appId: "your-app-id"
-        };
-        
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-        
-        // DOM Elements
-        const welcomeText = document.getElementById('welcomeText');
-        const profileUsername = document.getElementById('profileUsername');
-        const profileEmail = document.getElementById('profileEmail');
-        const logoutBtn = document.getElementById('logoutBtn');
-        
-        // Check Authentication State
-        // Replace the current auth.onAuthStateChanged code with this:
-auth.onAuthStateChanged(user => {
-    // Add a small delay to ensure Firebase is fully initialized
-    setTimeout(() => {
-        if (user) {
-            // User is signed in
-            console.log("User is authenticated:", user.email);
-            profileEmail.textContent = user.email;
-            
-            // Get user data from Firestore
-            db.collection('users').doc(user.uid).get()
-                .then(doc => {
-                    if (doc.exists && doc.data().displayName) {
-                        const userName = doc.data().displayName;
-                        profileUsername.textContent = userName;
-                        welcomeText.textContent = `Welcome back, ${userName}!`;
-                        
-                        // Set first initial in user avatar
-                        const userAvatar = document.getElementById('userAvatar');
-                        if (userName && userName.length > 0) {
-                            userAvatar.innerHTML = userName[0].toUpperCase();
+<script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "your-app.firebaseapp.com",
+        projectId: "your-project-id",
+        storageBucket: "your-app.appspot.com",
+        messagingSenderId: "your-messaging-sender-id",
+        appId: "your-app-id",
+        measurementId: "G-MEASUREMENT_ID"
+    };
+    
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+    const analytics = firebase.analytics();
+    const performance = firebase.performance();
+    
+    // DOM Elements
+    const welcomeText = document.getElementById('welcomeText');
+    const profileUsername = document.getElementById('profileUsername');
+    const profileEmail = document.getElementById('profileEmail');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
+    // Check Authentication State
+    auth.onAuthStateChanged(user => {
+        setTimeout(() => {
+            if (user) {
+                console.log("User is authenticated:", user.email);
+                profileEmail.textContent = user.email;
+
+                db.collection('users').doc(user.uid).get()
+                    .then(doc => {
+                        if (doc.exists && doc.data().displayName) {
+                            const userName = doc.data().displayName;
+                            profileUsername.textContent = userName;
+                            welcomeText.textContent = `Welcome back, ${userName}!`;
+
+                            const userAvatar = document.getElementById('userAvatar');
+                            if (userName && userName.length > 0) {
+                                userAvatar.innerHTML = userName[0].toUpperCase();
+                            }
                         }
-                    }
-                })
-                .catch(error => {
-                    console.error("Error getting user data:", error);
-                });
-        } else {
-            // User is not signed in
-            console.log("User is not authenticated, redirecting to login");
-            
-            // Check if we're in a redirect loop by using sessionStorage
-            const redirectCount = sessionStorage.getItem('redirectCount') || 0;
-            if (parseInt(redirectCount) > 2) {
-                // Break the redirect loop
-                console.error("Redirect loop detected! Please check authentication setup.");
-                sessionStorage.removeItem('redirectCount');
-                alert("Authentication error. Please clear your browser cookies and try again.");
+                    })
+                    .catch(error => {
+                        console.error("Error getting user data:", error);
+                    });
             } else {
-                // Increment redirect count and redirect
-                sessionStorage.setItem('redirectCount', parseInt(redirectCount) + 1);
-                window.location.href = "login.html";
-            }
-        }
-    }, 500); // Half-second delay to ensure Firebase is initialized
-});
-        
-        // Logout Function
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut()
-                .then(() => {
-                    // Sign-out successful, redirect to login
+                console.log("User is not authenticated, redirecting to login");
+                const redirectCount = sessionStorage.getItem('redirectCount') || 0;
+                if (parseInt(redirectCount) > 2) {
+                    console.error("Redirect loop detected!");
+                    sessionStorage.removeItem('redirectCount');
+                    alert("Authentication error. Please clear your browser cookies and try again.");
+                } else {
+                    sessionStorage.setItem('redirectCount', parseInt(redirectCount) + 1);
                     window.location.href = "login.html";
-                })
-                .catch(error => {
-                    console.error("Error signing out:", error);
-                });
-        });
-        
-        // Sample functions for dashboard interactions
-        
-        // Function to handle wishlist actions
-        document.querySelectorAll('.wishlist-actions .btn-icon').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                const action = button.getAttribute('aria-label');
-                const wishlistItem = button.closest('.wishlist-item');
-                const wishlistTitle = wishlistItem.querySelector('.wishlist-title').textContent;
-                
-                if (action.includes('Edit')) {
-                    // Redirect to edit page or show modal
-                    console.log(`Edit ${wishlistTitle}`);
-                    // window.location.href = `edit-wishlist.html?title=${encodeURIComponent(wishlistTitle)}`;
-                } else if (action.includes('Share')) {
-                    // Show sharing options
-                    console.log(`Share ${wishlistTitle}`);
-                    // Implement sharing functionality
-                    shareWishlist(wishlistTitle);
-                } else if (action.includes('View')) {
-                    // View wishlist or group details
-                    console.log(`View ${wishlistTitle}`);
-                    // window.location.href = `view-details.html?title=${encodeURIComponent(wishlistTitle)}`;
                 }
-            });
-        });
-        
-        // Function to share wishlist
-        function shareWishlist(wishlistTitle) {
-            // Placeholder for sharing functionality
-            // In a real app, this would open a modal or create a shareable link
-            alert(`Share link for "${wishlistTitle}" copied to clipboard!`);
-        }
-        
-        // Update timestamps for demo purposes
-        document.addEventListener('DOMContentLoaded', () => {
-            // Get current date and format it
-            const now = new Date();
-            const formatter = new Intl.DateTimeFormat('en-US', { 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-            });
-            
-            // Update recent activity timestamps for demo
-            const activityItems = document.querySelectorAll('.content-card-title:contains("Recent Activity") + div + div .wishlist-meta span');
-            if (activityItems.length > 0) {
-                // These would normally come from the database
-                const timeDeltas = ['2 hours ago', 'Yesterday', '3 days ago'];
-                activityItems.forEach((item, index) => {
-                    if (index < timeDeltas.length) {
-                        item.innerHTML = `<i class="fas fa-clock"></i> ${timeDeltas[index]}`;
-                    }
-                });
             }
-            
-            // Update upcoming events for demo
-            const upcomingEvents = document.querySelectorAll('.content-card-title:contains("Upcoming Events") + div + div .wishlist-meta span:first-child');
-            if (upcomingEvents.length > 0) {
-                // Calculate future dates for demo purposes
-                const dates = [15, 22, 30].map(day => {
-                    const eventDate = new Date(now);
-                    eventDate.setDate(now.getDate() + day);
-                    return formatter.format(eventDate);
-                });
-                
-                upcomingEvents.forEach((item, index) => {
-                    if (index < dates.length) {
-                        item.innerHTML = `<i class="fas fa-calendar"></i> ${dates[index]}`;
-                    }
-                });
-            }
-        });
-        
-        // Add a global query selector helper for contains text (used above)
-        jQuery.expr[':'].contains = function(a, i, m) {
-            return jQuery(a).text().toUpperCase()
-                .indexOf(m[3].toUpperCase()) >= 0;
-        };
-        
-        // Function to initialize any charts or visualizations
-        function initDashboardVisualizations() {
-            // This would normally contain chart initialization code
-            // For example, using Chart.js or D3.js to render wishlist completion stats
-            console.log('Dashboard visualizations initialized');
-        }
-        
-        // Initialize dashboard
-        function initDashboard() {
-            console.log('Dashboard initialized');
-            // Add any additional initialization code here
-            
-            // Fetch and update stats from the database
-            fetchUserStats();
-            
-            // Initialize visualizations
-            initDashboardVisualizations();
-        }
-        
-        // Fetch user statistics from the database
-        function fetchUserStats() {
-            // In a real app, this would fetch actual stats from Firebase
-            // For demo purposes, we're using hardcoded values in the HTML
-            console.log('User statistics fetched');
-        }
-        
-        // Initialize the dashboard when the page loads
-        window.addEventListener('load', initDashboard);
-    </script>
+        }, 500);
+    });
+
+    // Logout Function
+    logoutBtn.addEventListener('click', () => {
+        auth.signOut()
+            .then(() => {
+                window.location.href = "login.html";
+            })
+            .catch(error => {
+                console.error("Error signing out:", error);
+            });
+    });
+
+    // Initialize dashboard
+    window.addEventListener('load', () => {
+        console.log('Dashboard initialized');
+        initDashboardVisualizations();
+    });
+
+    // Function to initialize any charts or visualizations
+    function initDashboardVisualizations() {
+        console.log('Dashboard visualizations initialized');
+    }
+
+</script>
 </body>
 </html>
