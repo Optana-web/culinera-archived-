@@ -807,34 +807,52 @@
         const logoutBtn = document.getElementById('logoutBtn');
         
         // Check Authentication State
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                // User is signed in
-                profileEmail.textContent = user.email;
-                
-                // Get user data from Firestore
-                db.collection('users').doc(user.uid).get()
-                    .then(doc => {
-                        if (doc.exists && doc.data().displayName) {
-                            const userName = doc.data().displayName;
-                            profileUsername.textContent = userName;
-                            welcomeText.textContent = `Welcome back, ${userName}!`;
-                            
-                            // Set first initial in user avatar
-                            const userAvatar = document.getElementById('userAvatar');
-                            if (userName && userName.length > 0) {
-                                userAvatar.innerHTML = userName[0].toUpperCase();
-                            }
+        // Replace the current auth.onAuthStateChanged code with this:
+auth.onAuthStateChanged(user => {
+    // Add a small delay to ensure Firebase is fully initialized
+    setTimeout(() => {
+        if (user) {
+            // User is signed in
+            console.log("User is authenticated:", user.email);
+            profileEmail.textContent = user.email;
+            
+            // Get user data from Firestore
+            db.collection('users').doc(user.uid).get()
+                .then(doc => {
+                    if (doc.exists && doc.data().displayName) {
+                        const userName = doc.data().displayName;
+                        profileUsername.textContent = userName;
+                        welcomeText.textContent = `Welcome back, ${userName}!`;
+                        
+                        // Set first initial in user avatar
+                        const userAvatar = document.getElementById('userAvatar');
+                        if (userName && userName.length > 0) {
+                            userAvatar.innerHTML = userName[0].toUpperCase();
                         }
-                    })
-                    .catch(error => {
-                        console.error("Error getting user data:", error);
-                    });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error getting user data:", error);
+                });
+        } else {
+            // User is not signed in
+            console.log("User is not authenticated, redirecting to login");
+            
+            // Check if we're in a redirect loop by using sessionStorage
+            const redirectCount = sessionStorage.getItem('redirectCount') || 0;
+            if (parseInt(redirectCount) > 2) {
+                // Break the redirect loop
+                console.error("Redirect loop detected! Please check authentication setup.");
+                sessionStorage.removeItem('redirectCount');
+                alert("Authentication error. Please clear your browser cookies and try again.");
             } else {
-                // User is not signed in, redirect to login page
+                // Increment redirect count and redirect
+                sessionStorage.setItem('redirectCount', parseInt(redirectCount) + 1);
                 window.location.href = "login.html";
             }
-        });
+        }
+    }, 500); // Half-second delay to ensure Firebase is initialized
+});
         
         // Logout Function
         logoutBtn.addEventListener('click', () => {
