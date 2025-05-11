@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Optana – View Group</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="View group details and wishlists">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    :root {
+      --primary: #FF8C42; --dark: #333; --light: #fff; --gray-light: #F5F5F5; --sidebar-w: 260px;
+    }
+    * { box-sizing: border-box; margin:0; padding:0; }
+    body { font-family:'Playfair Display', serif; display:flex; background:var(--gray-light); color:var(--dark); min-height:100vh; }
+    .mono{font-family:'Roboto Mono',monospace;}
+    .sidebar {
+      width:var(--sidebar-w); background:var(--dark); color:var(--light);
+      position:fixed; top:0; left:0; height:100vh; display:flex; flex-direction:column;
+    }
+    .sidebar-header, .user-profile, .sidebar-footer { padding:1.5rem; border-bottom:1px solid rgba(255,255,255,0.1);}
+    .sidebar-footer{margin-top:auto;border-top:none;}
+    .logo a{font-size:1.8rem;font-weight:700;color:var(--light);text-decoration:none;text-align:center;display:block;}
+    .logo span{color:var(--primary);}
+    .user-avatar{width:80px;height:80px;background:var(--primary);border-radius:50%;margin:0 auto .5rem;display:flex;align-items:center;justify-content:center;font-size:2rem;}
+    .user-info h3{font-size:1.1rem;margin-bottom:.25rem;}
+    .user-email{font-size:.8rem;color:rgba(255,255,255,.7);}
+    .nav-menu{flex:1;overflow-y:auto;}
+    .nav-menu ul{list-style:none;}
+    .nav-link{display:flex;align-items:center;padding:.75rem 1.5rem;color:var(--light);text-decoration:none;font-size:.95rem;transition:background .3s;}
+    .nav-link.active, .nav-link:hover{background:rgba(255,255,255,0.1);}
+    .nav-link i{width:20px;margin-right:1rem;text-align:center;}
+    .main { flex:1;margin-left:var(--sidebar-w);padding:2rem; }
+    .top-bar{background:var(--light);padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px rgba(0,0,0,0.1);position:sticky;top:0;z-index:10;}
+    .page-title{font-size:1.8rem;font-weight:700;}
+    .frame{background:var(--light);border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);padding:2rem;max-width:800px;margin:1.5rem auto;}
+    .badge{display:inline-block;padding:.25rem .5rem;font-family:'Roboto Mono';font-size:.75rem;border-radius:4px;color:#fff;}
+    .badge-type{background:var(--primary);}
+    .badge-host{background:#6c757d;margin-right:.5rem;}
+    .section{margin-top:2rem;}
+    .members-list, .wishlists-list{display:grid;gap:1rem;}
+    .members-list { grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); }
+    .member-card, .wishlist-card {
+      background:var(--gray-light);padding:1rem;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.05);
+    }
+    .member-name, .wishlist-title{font-size:1rem;font-weight:500;margin-top:.5rem;text-align:center;}
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header"><div class="logo"><a href="index.html">Opt<span>ana</span></a></div></div>
+    <div class="user-profile">
+      <div class="user-avatar" id="userAvatar"><i class="fas fa-user"></i></div>
+      <div class="user-info">
+        <h3 id="profileUsername">User</h3>
+        <div class="user-email" id="profileEmail">user@example.com</div>
+      </div>
+    </div>
+    <nav class="nav-menu">
+      <ul>
+        <li><a href="dashboard.html" class="nav-link"><i class="fas fa-home"></i>Dashboard</a></li>
+        <li><a href="my-wishlists.html" class="nav-link"><i class="fas fa-gift"></i>My Wishlists</a></li>
+        <li><a href="groups.html" class="nav-link active"><i class="fas fa-users"></i>My Groups</a></li>
+      </ul>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logoutBtn" class="btn btn-primary mono"><i class="fas fa-sign-out-alt"></i>Log Out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="top-bar">
+      <div class="page-title" id="groupTitle">Loading...</div>
+    </div>
+    <div class="frame">
+      <div id="groupBadges">
+        <!-- badges inserted here -->
+      </div>
+      <p id="groupDescription" style="margin-top:1rem;color:#555;">—</p>
+
+      <div class="section">
+        <h2 class="mono">Members</h2>
+        <div class="members-list" id="membersList">
+          <!-- member cards -->
+        </div>
+      </div>
+
+      <div class="section">
+        <h2 class="mono">Wishlists</h2>
+        <div class="wishlists-list" id="wishlistsList">
+          <!-- wishlist cards -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+      authDomain: "optanav1.firebaseapp.com",
+      projectId: "optanav1",
+      storageBucket: "optanav1.appspot.com",
+      messagingSenderId: "16298669202",
+      appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+      measurementId: "G-RR7D4MB5FY"
+    };
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    function escapeHtml(t){return t?.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')||'';}
+
+    async function renderGroup(id, type){
+      const col = type==='family'?'familyGroups':'friendGroups';
+      const doc = await db.collection(col).doc(id).get();
+      if (!doc.exists) return;
+      const grp = doc.data();
+      const isHost = grp.createdBy===auth.currentUser.uid;
+
+      document.getElementById('groupTitle').textContent = grp.name;
+      document.getElementById('groupDescription').textContent = grp.description||'No description';
+      const badges = [];
+      badges.push(`<span class="badge badge-type mono">${type==='friend'?'Friend':'Family'} Group</span>`);
+      if (isHost) badges.push(`<span class="badge badge-host mono">Host</span>`);
+      document.getElementById('groupBadges').innerHTML = badges.join(' ');
+
+      // members
+      const memList = document.getElementById('membersList');
+      memList.innerHTML = '';
+      for (let uid of grp.members||[]){
+        const userDoc = await db.collection('users').doc(uid).get();
+        const name = userDoc.exists?userDoc.data().displayName:'User';
+        const card = document.createElement('div');
+        card.className='member-card';
+        card.innerHTML = `<i class="fas fa-user mono" style="font-size:2rem;"></i><div class="member-name mono">${escapeHtml(name)}</div>`;
+        memList.appendChild(card);
+      }
+
+      // wishlists
+      const listElm = document.getElementById('wishlistsList');
+      listElm.innerHTML = '';
+      const snap = await db.collection('wishlists')
+        .where('linkedGroups','array-contains', id)
+        .orderBy('createdAt','desc')
+        .get();
+      snap.forEach(doc => {
+        const wl = doc.data();
+        const card = document.createElement('div');
+        card.className='wishlist-card mono';
+        card.innerHTML = `<div class="wishlist-title">${escapeHtml(wl.title)}</div>`;
+        listElm.appendChild(card);
+      });
+    }
+
+    auth.onAuthStateChanged(user=>{
+      if(!user) return window.location.href='index.html';
+      document.getElementById('profileUsername').textContent = user.displayName||'User';
+      document.getElementById('profileEmail').textContent = user.email||'';
+      if(user.photoURL){
+        document.getElementById('userAvatar').innerHTML =
+          `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
+      }
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id'), type = params.get('type')||'friend';
+      renderGroup(id, type);
+    });
+
+    document.getElementById('logoutBtn').onclick = ()=> auth.signOut().then(()=>location.href='index.html');
+  </script>
+</body>
+</html>
