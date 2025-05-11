@@ -2,266 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Optana – Dashboard</title>
-  <meta name="description" content="Manage your wishlists and groups">
-  
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Your Optana dashboard">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
-
   <style>
-    :root {
-      --primary-color: #FF8C42;
-      --accent-light: #FFBC80;
-      --dark: #333333;
-      --light: #FFFFFF;
-      --gray-light: #F5F5F5;
-      --gray: #E0E0E0;
-      --sidebar-width: 260px;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Playfair Display', serif;
-      color: var(--dark);
-      background: var(--gray-light);
-      line-height: 1.6;
-      min-height: 100vh;
-      display: flex;
-    }
+    :root { --primary-color: #FF8C42; --accent-light: #FFBC80; --dark: #333; --light: #fff; --gray-light: #F5F5F5; --gray: #E0E0E0; --sidebar-width: 260px; }
+    body { font-family: 'Playfair Display', serif; color: var(--dark); background: var(--gray-light); min-height: 100vh; display: flex; }
     .mono { font-family: 'Roboto Mono', monospace; }
-
-    /* Sidebar Styles */
-    .sidebar {
-      width: var(--sidebar-width);
-      background: var(--dark);
-      color: var(--light);
-      height: 100vh;
-      position: fixed;
-      left: 0; top: 0;
-      display: flex; flex-direction: column;
-      overflow-y: auto;
-      transition: all 0.3s ease;
-      z-index: 100;
-    }
+    .sidebar { width: var(--sidebar-width); background: var(--dark); color: var(--light); height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; }
     .sidebar-header { padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .logo { font-size: 1.8rem; font-weight: 700; text-align: center; }
     .logo span { color: var(--primary-color); }
     .logo a { text-decoration: none; color: var(--light); }
-
-    .user-profile {
-      padding: 1.5rem; text-align: center;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-    }
-    .user-avatar {
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      background: var(--primary-color);
-      margin: 0 auto 1rem;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; color: var(--light);
-    }
+    .user-profile { padding: 1.5rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .user-avatar { width: 80px; height: 80px; border-radius: 50%; background: var(--primary-color); margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--light); }
     .user-info h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
-    .user-email {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.7);
-    }
-
+    .user-email { font-family: 'Roboto Mono', monospace; font-size: 0.8rem; color: rgba(255,255,255,0.7); }
     .nav-menu { padding: 1.5rem 0; flex-grow: 1; }
     .nav-item { list-style: none; }
-    .nav-link {
-      display: flex; align-items: center;
-      padding: 0.8rem 1.5rem;
-      color: var(--gray);
-      text-decoration: none;
-      transition: all 0.3s;
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.95rem;
-    }
+    .nav-link { display: flex; align-items: center; padding: 0.8rem 1.5rem; color: var(--gray); text-decoration: none; transition: all 0.3s; font-family: 'Roboto Mono', monospace; font-size: 0.95rem; }
     .nav-link:hover { background: rgba(255,255,255,0.1); color: var(--light); }
     .nav-link.active { background: var(--primary-color); color: var(--light); }
-    .nav-link i {
-      margin-right: 1.5rem; /* increased spacing */
-      width: 20px; text-align: center;
-    }
-
-    .sidebar-footer {
-      padding: 1rem 1.5rem;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-    .btn {
-      font-family: 'Roboto Mono', monospace;
-      padding: 0.5rem 1.5rem;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      text-decoration: none;
-      display: inline-block;
-      transition: all 0.3s;
-      text-align: center;
-      border: none; outline: none;
-      width: 100%;
-    }
-    .btn-primary {
-      background: var(--primary-color); color: var(--light);
-    }
-    .btn-primary:hover {
-      background: var(--accent-light);
-    }
-
-    /* Main Content */
-    .main-content {
-      flex: 1; margin-left: var(--sidebar-width);
-      transition: all 0.3s ease;
-    }
-    .content-wrapper {
-      padding: 2rem; max-width: 1200px; margin: 0 auto;
-    }
-    .page-header {
-      display: flex; justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--gray);
-    }
-    .page-title { font-size: 2rem; font-weight: 700; }
-    .page-actions { display: flex; gap: 1rem; }
-
-    .welcome-banner {
-      background: var(--light);
-      border-radius: 12px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    .welcome-title { font-size: 1.8rem; margin-bottom: 1rem; }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .stat-card {
-      background: var(--light);
-      border-radius: 12px;
-      padding: 1.5rem;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-      transition: transform 0.3s ease;
-    }
-    .stat-card:hover { transform: translateY(-5px); }
-    .stat-title {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.9rem; color: var(--dark);
-      margin-bottom: 0.5rem;
-    }
-    .stat-value {
-      font-size: 2rem; font-weight: 700;
-      color: var(--primary-color);
-    }
-    .stat-desc {
-      font-size: 0.9rem; color: #777;
-      margin-top: 0.5rem;
-    }
-
-    .content-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
-      gap: 1.5rem;
-    }
-    .content-card {
-      background: var(--light);
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-    }
-    .content-card-header {
-      background: var(--gray-light);
-      padding: 1rem 1.5rem;
-      border-bottom: 1px solid var(--gray);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .content-card-title { font-size: 1.2rem; font-weight: 700; }
-    .content-card-body { padding: 1.5rem; }
-
-    .wishlist-item {
-      display: flex; align-items: center;
-      padding: 0.8rem 0;
-      border-bottom: 1px solid var(--gray-light);
-    }
-    .wishlist-item:last-child { border-bottom: none; }
-    .wishlist-thumb {
-      width: 60px; height: 60px;
-      border-radius: 8px;
-      background: var(--gray-light);
-      margin-right: 1rem;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--primary-color);
-    }
-    .wishlist-info { flex: 1; }
-    .wishlist-title { font-size: 1.1rem; margin-bottom: 0.3rem; }
-    .wishlist-meta {
-      font-family: 'Roboto Mono', monospace;
-      font-size: 0.8rem; color: #777;
-      display: flex; gap: 1rem;
-    }
-    .wishlist-meta span { display: flex; align-items: center; }
-    .wishlist-meta i { margin-right: 0.3rem; }
-    .wishlist-actions { display: flex; gap: 0.5rem; }
-    .btn-icon {
-      width: 36px; height: 36px;
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 8px;
-      background: var(--gray-light);
-      color: var(--dark);
-      border: none; cursor: pointer;
-      transition: all 0.3s;
-    }
-    .btn-icon:hover {
-      background: var(--primary-color);
-      color: var(--light);
-    }
-
-    .progress-bar-container {
-      width: 100%; height: 8px;
-      background: var(--gray-light);
-      border-radius: 4px;
-      margin-top: 0.5rem;
-      overflow: hidden;
-    }
-    .progress-bar {
-      height: 100%; background: var(--primary-color);
-      border-radius: 4px;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-      .sidebar { width: 80px; overflow: visible; }
-      .logo span, .user-info, .nav-link span, .sidebar-footer { display: none; }
-      .logo { font-size: 1.4rem; }
-      .user-avatar { width:50px; height:50px; font-size:1.4rem; }
-      .nav-link { justify-content: center; padding:1rem; }
-      .nav-link i { margin-right: 0; }
-      .main-content { margin-left: 80px; }
-    }
-    @media (max-width: 768px) {
-      .stats-grid, .content-grid {
-        grid-template-columns: 1fr;
-      }
-      .page-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-      }
-    }
+    .nav-link i { margin-right: 1.5rem; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .btn { font-family: 'Roboto Mono', monospace; padding: 0.5rem 1.5rem; border-radius: 12px; cursor: pointer; font-size: 0.9rem; text-decoration: none; display: inline-block; transition: all 0.3s; border: none; }
+    .btn-primary { background: var(--primary-color); color: var(--light); }
+    .btn-primary:hover { background: var(--accent-light); }
+    .main-content { flex: 1; margin-left: var(--sidebar-width); padding: 2rem; }
+    .frame { background: var(--light); border-radius: 16px; padding: 2rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); margin: 0 auto; max-width: 1000px; }
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--gray); padding-bottom: 1rem; }
+    .page-title { font-size: 2rem; }
+    @media (max-width: 992px) { .main-content { margin-left: 80px; } }
+    @media (max-width: 600px) { .sidebar { width: 100vw; position: static; height: auto; } .main-content { margin-left: 0; padding: 1rem; } .frame { padding: 1rem; } }
   </style>
 </head>
 <body>
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="sidebar-header">
       <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
@@ -286,253 +67,42 @@
       </ul>
     </nav>
     <div class="sidebar-footer">
-      <button id="logoutBtn" type="button" class="btn btn-primary">
-        <i class="fas fa-sign-out-alt"></i> Log Out
-      </button>
+      <button id="logoutBtn" class="btn btn-primary"><i class="fas fa-sign-out-alt"></i> Log Out</button>
     </div>
   </aside>
-
-  <!-- Main Content -->
   <main class="main-content">
-    <div class="content-wrapper">
+    <div class="frame">
       <header class="page-header">
-        <h1 class="page-title">Dashboard</h1>
-        <div class="page-actions">
-          <a href="create-wishlist.html" class="btn btn-primary"><i class="fas fa-plus"></i> Create Wishlist</a>
-        </div>
+        <h1 class="page-title">Welcome to Optana!</h1>
       </header>
-
-      <section class="welcome-banner">
-        <h2 class="welcome-title" id="welcomeText">Welcome back!</h2>
-        <p>Here's an overview of your wishlists and groups.</p>
-      </section>
-
-      <section class="stats-grid">
-        <div class="stat-card">
-          <h3 class="stat-title">TOTAL WISHLISTS</h3>
-          <div class="stat-value mono" id="statTotalWishlists">0</div>
-          <p class="stat-desc">Wishlists across all your groups</p>
-        </div>
-        <div class="stat-card">
-          <h3 class="stat-title">FULFILLED ITEMS</h3>
-          <div class="stat-value mono" id="statFulfilledItems">0</div>
-          <p class="stat-desc">Items marked fulfilled</p>
-        </div>
-        <div class="stat-card">
-          <h3 class="stat-title">ACTIVE GROUPS</h3>
-          <div class="stat-value mono" id="statActiveGroups">0</div>
-          <p class="stat-desc">Friend & family groups</p>
-        </div>
-      </section>
-
-      <div class="content-grid">
-        <div class="content-card">
-          <div class="content-card-header">
-            <h3 class="content-card-title">Recent Wishlists</h3>
-            <a href="my-wishlists.html" class="mono">View All</a>
-          </div>
-          <div class="content-card-body" id="recentWishlists">
-            <!-- dynamic content -->
-          </div>
-        </div>
-
-        <div class="content-card">
-          <div class="content-card-header">
-            <h3 class="content-card-title">My Groups</h3>
-            <a href="friend-groups.html" class="mono">View All</a>
-          </div>
-          <div class="content-card-body" id="myGroups">
-            <!-- dynamic content -->
-          </div>
-        </div>
-      </div>
-
-      <div class="content-grid" style="margin-top:1.5rem;">
-        <div class="content-card">
-          <div class="content-card-header">
-            <h3 class="content-card-title">Upcoming Events</h3>
-            <a href="calendar.html" class="mono">View Calendar</a>
-          </div>
-          <div class="content-card-body" id="upcomingEvents">
-            <!-- dynamic content -->
-          </div>
-        </div>
-        <div class="content-card">
-          <div class="content-card-header">
-            <h3 class="content-card-title">Recent Activity</h3>
-            <a href="activity.html" class="mono">View All</a>
-          </div>
-          <div class="content-card-body" id="recentActivity">
-            <!-- dynamic content -->
-          </div>
-        </div>
-      </div>
+      <p>This is your dashboard. Use the sidebar to navigate your wishlists, groups, and more.</p>
     </div>
   </main>
-
   <script>
-    // Firebase config & initialization
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
       authDomain: "optanav1.firebaseapp.com",
       projectId: "optanav1",
-      storageBucket: "optanav1.firebasestorage.app",
+      storageBucket: "optanav1.appspot.com",
       messagingSenderId: "16298669202",
       appId: "1:16298669202:web:ac2a1cd399993b1883624b",
       measurementId: "G-RR7D4MB5FY"
     };
     if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    const logoutBtn = document.getElementById('logoutBtn');
-    const welcomeText = document.getElementById('welcomeText');
-    const profileUsername = document.getElementById('profileUsername');
-    const profileEmail = document.getElementById('profileEmail');
-    const userAvatar = document.getElementById('userAvatar');
-
-    auth.onAuthStateChanged(async user => {
+    auth.onAuthStateChanged(user => {
       if (user) {
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        const data = userDoc.exists ? userDoc.data() : {};
-        const username = data.username || user.displayName || user.email.split('@')[0];
-        welcomeText.textContent = `Welcome back, ${username}!`;
-        profileUsername.textContent = username;
-        profileEmail.textContent = user.email;
-        if (!user.photoURL) {
-          userAvatar.innerHTML = `<span>${username.charAt(0).toUpperCase()}</span>`;
-        } else {
-          userAvatar.innerHTML = `
-            <img src="${user.photoURL}" alt="Avatar"
-                 style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        document.getElementById('profileUsername').textContent = user.displayName || 'User';
+        document.getElementById('profileEmail').textContent = user.email || '';
+        if (user.photoURL) {
+          document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
         }
-        loadDashboardData(user.uid);
-      } else {
-        location.href = 'index.html';
       }
     });
-
-    logoutBtn.addEventListener('click', async () => {
-      await auth.signOut();
-      location.href = 'index.html';
-    });
-
-    async function loadDashboardData(uid) {
-      // Stats
-      const wlSnap = await db.collection('wishlists').where('owner','==',uid).get();
-      const fulfilledSnap = await db.collection('wishlists')
-        .where('owner','==',uid).where('fulfilled','==',true).get();
-      const grpSnap = await db.collection('groups')
-        .where('members','array-contains',uid).get();
-      document.getElementById('statTotalWishlists').textContent = wlSnap.size;
-      document.getElementById('statFulfilledItems').textContent = fulfilledSnap.size;
-      document.getElementById('statActiveGroups').textContent = grpSnap.size;
-
-      // Recent Wishlists
-      const recent = await db.collection('wishlists')
-        .where('owner','==',uid).orderBy('createdAt','desc').limit(3).get();
-      const recentEl = document.getElementById('recentWishlists');
-      recentEl.innerHTML = '';
-      recent.forEach(doc => {
-        const wl = doc.data();
-        const date = wl.createdAt.toDate().toLocaleDateString();
-        recentEl.innerHTML += `
-          <div class="wishlist-item">
-            <div class="wishlist-thumb"><i class="fas fa-gift"></i></div>
-            <div class="wishlist-info">
-              <h4 class="wishlist-title">${wl.title}</h4>
-              <div class="wishlist-meta">
-                <span><i class="fas fa-calendar"></i> ${date}</span>
-                <span><i class="fas fa-list"></i> ${wl.items.length} items</span>
-              </div>
-              <div class="progress-bar-container">
-                <div class="progress-bar" style="width:${wl.progress}%"></div>
-              </div>
-            </div>
-            <div class="wishlist-actions">
-              <button class="btn-icon" aria-label="Edit"><i class="fas fa-edit"></i></button>
-              <button class="btn-icon" aria-label="Share"><i class="fas fa-share-alt"></i></button>
-            </div>
-          </div>`;
-      });
-
-      // My Groups
-      const groupsEl = document.getElementById('myGroups');
-      groupsEl.innerHTML = '';
-      grpSnap.forEach(doc => {
-        const g = doc.data();
-        groupsEl.innerHTML += `
-          <div class="wishlist-item">
-            <div class="wishlist-thumb"><i class="fas fa-users"></i></div>
-            <div class="wishlist-info">
-              <h4 class="wishlist-title">${g.name}</h4>
-              <div class="wishlist-meta">
-                <span><i class="fas fa-user"></i> ${g.members.length} members</span>
-                <span><i class="fas fa-gift"></i> ${g.wishlists.length} wishlists</span>
-              </div>
-            </div>
-            <div class="wishlist-actions">
-              <button class="btn-icon" aria-label="View group"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>`;
-      });
-
-      // Upcoming Events
-      const now = firebase.firestore.Timestamp.now();
-      const evSnap = await db.collection('events')
-        .where('owner','==',uid).where('date','>=',now)
-        .orderBy('date','asc').limit(3).get();
-      const evEl = document.getElementById('upcomingEvents');
-      evEl.innerHTML = '';
-      evSnap.forEach(doc => {
-        const e = doc.data();
-        const date = e.date.toDate().toLocaleDateString();
-        evEl.innerHTML += `
-          <div class="wishlist-item">
-            <div class="wishlist-thumb"><i class="fas fa-calendar-day"></i></div>
-            <div class="wishlist-info">
-              <h4 class="wishlist-title">${e.title}</h4>
-              <div class="wishlist-meta">
-                <span><i class="fas fa-calendar"></i> ${date}</span>
-                <span><i class="fas fa-gift"></i> ${e.wishlistCount} wishlists</span>
-              </div>
-            </div>
-            <div class="wishlist-actions">
-              <button class="btn-icon" aria-label="View event"><i class="fas fa-eye"></i></button>
-            </div>
-          </div>`;
-      });
-
-      // Recent Activity
-      const actSnap = await db.collection('activity')
-        .where('user','==',uid).orderBy('timestamp','desc').limit(3).get();
-      const actEl = document.getElementById('recentActivity');
-      actEl.innerHTML = '';
-      actSnap.forEach(doc => {
-        const a = doc.data();
-        const ago = timeSince(a.timestamp.toDate());
-        actEl.innerHTML += `
-          <div class="wishlist-item">
-            <div class="wishlist-thumb"><i class="fas fa-bell"></i></div>
-            <div class="wishlist-info">
-              <h4 class="wishlist-title">${a.message}</h4>
-              <div class="wishlist-meta">
-                <span><i class="fas fa-clock"></i> ${ago}</span>
-              </div>
-            </div>
-          </div>`;
-      });
-    }
-
-    function timeSince(date) {
-      const seconds = Math.floor((new Date() - date) / 1000);
-      const intervals = { year:31536000, month:2592000, day:86400, hour:3600, minute:60 };
-      for (let i in intervals) {
-        const value = Math.floor(seconds/intervals[i]);
-        if (value >= 1) return `${value} ${i}${value>1?'s':''} ago`;
-      }
-      return 'Just now';
-    }
+    document.getElementById('logoutBtn').onclick = function() {
+      auth.signOut().then(() => window.location.href = 'index.html');
+    };
   </script>
 </body>
 </html>
