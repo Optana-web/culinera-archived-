@@ -135,8 +135,73 @@
     .badge-private { background-color: #f8d7da; color: #721c24; }
     .badge-group { background-color: #d1e7dd; color: #0f5132; margin-right: 0.25em; }
     .wishlist-actions { display: flex; gap: 0.5rem; }
+    .loading-spinner {
+      display: inline-block;
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(0,0,0,0.1);
+      border-radius: 50%;
+      border-top-color: var(--primary-color);
+      animation: spin 1s ease-in-out infinite;
+      margin: 0 auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #777;
+    }
+    .loading-text {
+      margin-top: 1rem;
+      font-family: 'Roboto Mono', monospace;
+    }
+    .wishlist-count {
+      background: var(--accent-light);
+      color: var(--dark);
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+      font-size: 0.8rem;
+      margin-left: 0.5rem;
+      font-family: 'Roboto Mono', monospace;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: #777;
+    }
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: var(--gray);
+    }
+    .empty-state h3 {
+      margin-bottom: 1rem;
+    }
+    .empty-state p {
+      margin-bottom: 1.5rem;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
     @media (max-width: 992px) {
       .main-content { margin-left: 80px; }
+    }
+    @media (max-width: 768px) {
+      .action-buttons {
+        flex-direction: column;
+      }
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
     }
     @media (max-width: 600px) {
       .sidebar { width: 100vw; position: static; height: auto; }
@@ -179,26 +244,40 @@
   <main class="main-content">
     <div class="frame">
       <header class="page-header">
-        <h1 class="page-title">My Wishlists</h1>
+        <div>
+          <h1 class="page-title">My Wishlists <span class="wishlist-count" id="wishlistCount">0</span></h1>
+        </div>
         <a href="create-wishlist.html" class="btn btn-primary mono"><i class="fas fa-plus"></i> Create Wishlist</a>
       </header>
       <div class="alert alert-success" id="successAlert" style="display:none;"></div>
       <div class="alert alert-danger" id="errorAlert" style="display:none;"></div>
 
-      <table class="wishlist-table" id="wishlistTable">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Occasion</th>
-            <th>Privacy</th>
-            <th>Groups</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="wishlistTableBody">
-          <tr><td colspan="5" style="text-align:center;color:#777;">Loading...</td></tr>
-        </tbody>
-      </table>
+      <div id="wishlistContent">
+        <div class="loading-container" id="loadingContainer">
+          <div class="loading-spinner"></div>
+          <div class="loading-text">Loading your wishlists...</div>
+        </div>
+        
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <i class="fas fa-gift"></i>
+          <h3>No Wishlists Yet</h3>
+          <p>You haven't created any wishlists yet. Create your first wishlist to start tracking items you want or need.</p>
+          <a href="create-wishlist.html" class="btn btn-primary mono"><i class="fas fa-plus"></i> Create Your First Wishlist</a>
+        </div>
+        
+        <table class="wishlist-table" id="wishlistTable" style="display:none;">
+          <thead>
+            <tr>
+              <th width="30%">Title</th>
+              <th width="15%">Occasion</th>
+              <th width="15%">Privacy</th>
+              <th width="25%">Groups</th>
+              <th width="15%">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="wishlistTableBody"></tbody>
+        </table>
+      </div>
     </div>
   </main>
 
@@ -217,6 +296,19 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // Elements
+    const loadingContainer = document.getElementById('loadingContainer');
+    const emptyState = document.getElementById('emptyState');
+    const wishlistTable = document.getElementById('wishlistTable');
+    const wishlistTableBody = document.getElementById('wishlistTableBody');
+    const wishlistCount = document.getElementById('wishlistCount');
+
+    // Check for URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('success')) {
+      showSuccess(urlParams.get('message') || 'Operation completed successfully!');
+    }
+
     // Show user info in sidebar
     auth.onAuthStateChanged(user => {
       if (user) {
@@ -227,75 +319,267 @@
         }
         loadWishlists(user.uid);
       } else {
-        // Optionally redirect to login
-        document.getElementById('wishlistTableBody').innerHTML = `<tr><td colspan="5">Please log in to view your wishlists.</td></tr>`;
+        // Redirect to login
+        window.location.href = 'index.html?redirect=my-wishlists.html';
       }
     });
 
-    // Show error messages
+    // Show error/success messages
     function showError(message) {
-      console.error(message);
       const errorEl = document.getElementById('errorAlert');
       errorEl.textContent = message;
       errorEl.style.display = 'block';
-      setTimeout(() => { errorEl.style.display = 'none'; }, 3000);
+      document.getElementById('successAlert').style.display = 'none';
+      setTimeout(() => { errorEl.style.display = 'none'; }, 5000);
+    }
+
+    function showSuccess(message) {
+      const successEl = document.getElementById('successAlert');
+      successEl.textContent = message;
+      successEl.style.display = 'block';
+      document.getElementById('errorAlert').style.display = 'none';
+      setTimeout(() => { successEl.style.display = 'none'; }, 5000);
+    }
+
+    // Format privacy badge
+    function getPrivacyBadge(privacy) {
+      if (!privacy) return '';
+      switch(privacy.toLowerCase()) {
+        case 'public':
+          return '<span class="badge badge-public">Public</span>';
+        case 'friends':
+          return '<span class="badge badge-friends">Friends Only</span>';
+        case 'private':
+          return '<span class="badge badge-private">Private</span>';
+        default:
+          return `<span class="badge">${privacy}</span>`;
+      }
+    }
+
+    // Format occasion with icon
+    function formatOccasion(occasion) {
+      if (!occasion) return '';
+      let icon = '';
+      switch(occasion.toLowerCase()) {
+        case 'birthday':
+          icon = '<i class="fas fa-birthday-cake" title="Birthday"></i> ';
+          break;
+        case 'christmas':
+          icon = '<i class="fas fa-tree" title="Christmas"></i> ';
+          break;
+        case 'wedding':
+          icon = '<i class="fas fa-rings-wedding" title="Wedding"></i> ';
+          break;
+        case 'baby':
+          icon = '<i class="fas fa-baby" title="Baby Shower"></i> ';
+          break;
+        case 'graduation':
+          icon = '<i class="fas fa-graduation-cap" title="Graduation"></i> ';
+          break;
+        case 'housewarming':
+          icon = '<i class="fas fa-home" title="Housewarming"></i> ';
+          break;
+      }
+      // Capitalize first letter
+      return icon + occasion.charAt(0).toUpperCase() + occasion.slice(1);
+    }
+
+    // Group badge formatter
+    function formatGroupBadges(groupNames) {
+      if (!groupNames || !groupNames.length) return 'None';
+      return groupNames.map(name => 
+        `<span class="badge badge-group">${name}</span>`
+      ).join(' ');
     }
 
     // Fetch group names by IDs
     async function fetchGroupNames(groupIds) {
+      if (!groupIds || !groupIds.length) return {};
       const groupMap = {};
-      if (!groupIds.length) return groupMap;
-      const promises = groupIds.map(gid => db.collection('friendGroups').doc(gid).get());
-      const docs = await Promise.all(promises);
-      docs.forEach(doc => {
-        if (doc.exists) groupMap[doc.id] = doc.data().name;
-      });
-      return groupMap;
+      
+      try {
+        // Try friend groups
+        const friendGroups = await db.collection('friendGroups')
+          .where(firebase.firestore.FieldPath.documentId(), 'in', groupIds)
+          .get();
+          
+        friendGroups.forEach(doc => {
+          if (doc.exists) groupMap[doc.id] = doc.data().name;
+        });
+        
+        // Try family groups 
+        // Need to filter out already found IDs to avoid duplicate queries
+        const remainingIds = groupIds.filter(id => !groupMap[id]);
+        
+        if (remainingIds.length > 0) {
+          const familyGroups = await db.collection('familyGroups')
+            .where(firebase.firestore.FieldPath.documentId(), 'in', remainingIds)
+            .get();
+            
+          familyGroups.forEach(doc => {
+            if (doc.exists) groupMap[doc.id] = doc.data().name;
+          });
+        }
+        
+        return groupMap;
+      } catch (error) {
+        console.error("Error fetching group names:", error);
+        return groupMap;
+      }
     }
 
     // Render wishlists in the table
     function renderWishlists(wishlists, groupMap) {
-      const tbody = document.getElementById('wishlistTableBody');
-      tbody.innerHTML = '';
-      if (!wishlists.length) {
-        tbody.innerHTML = `<tr><td colspan="5">No wishlists found.</td></tr>`;
+      loadingContainer.style.display = 'none';
+      
+      if (!wishlists || wishlists.length === 0) {
+        emptyState.style.display = 'block';
+        wishlistTable.style.display = 'none';
+        wishlistCount.textContent = '0';
         return;
       }
+      
+      wishlistCount.textContent = wishlists.length;
+      wishlistTable.style.display = 'table';
+      emptyState.style.display = 'none';
+      wishlistTableBody.innerHTML = '';
+      
       wishlists.forEach(wl => {
-        let privacyLabel = wl.privacy ? wl.privacy.charAt(0).toUpperCase() + wl.privacy.slice(1) : 'Unknown';
-        let groups = (wl.linkedGroups || []).map(gid => groupMap[gid] || 'Unknown Group').join(', ');
-        tbody.innerHTML += `
-          <tr>
-            <td>${wl.title || ''}</td>
-            <td>${wl.occasion || ''}</td>
-            <td>${privacyLabel}</td>
-            <td>${groups}</td>
-            <td>
-              <a href="view-wishlist.html?id=${wl.id}" class="btn btn-secondary">View</a>
-            </td>
-          </tr>
+        // Format privacy badge
+        const privacyBadge = getPrivacyBadge(wl.privacy);
+        
+        // Format linked groups
+        const linkedGroupNames = (wl.linkedGroups || [])
+          .map(gid => groupMap[gid] || 'Unknown Group');
+        const groupsDisplay = formatGroupBadges(linkedGroupNames);
+        
+        // Format occasion
+        const occasionDisplay = formatOccasion(wl.occasion);
+        
+        // Create table row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>
+            <strong>${wl.title || 'Untitled Wishlist'}</strong>
+            ${wl.description ? `<div style="font-size:0.85em;color:#666;margin-top:0.3rem;">${wl.description.substring(0, 50)}${wl.description.length > 50 ? '...' : ''}</div>` : ''}
+          </td>
+          <td>${occasionDisplay}</td>
+          <td>${privacyBadge}</td>
+          <td>${groupsDisplay}</td>
+          <td>
+            <div class="action-buttons">
+              <a href="view-wishlist.html?id=${wl.id}" class="btn btn-secondary btn-sm">
+                <i class="fas fa-eye"></i> View
+              </a>
+              <button class="btn btn-danger btn-sm delete-wishlist" data-id="${wl.id}" title="Delete Wishlist">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </td>
         `;
+        wishlistTableBody.appendChild(row);
       });
+      
+      // Add event listeners for delete buttons
+      document.querySelectorAll('.delete-wishlist').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const wishlistId = this.getAttribute('data-id');
+          deleteWishlist(wishlistId);
+        });
+      });
+    }
+
+    // Delete wishlist
+    async function deleteWishlist(wishlistId) {
+      if (!confirm('Are you sure you want to delete this wishlist? This action cannot be undone.')) {
+        return;
+      }
+      
+      try {
+        // First check if this user owns the wishlist
+        const wishlistDoc = await db.collection('wishlists').doc(wishlistId).get();
+        
+        if (!wishlistDoc.exists) {
+          showError('Wishlist not found.');
+          return;
+        }
+        
+        const wishlistData = wishlistDoc.data();
+        if (wishlistData.owner !== auth.currentUser.uid) {
+          showError('You do not have permission to delete this wishlist.');
+          return;
+        }
+        
+        // Delete the wishlist
+        await db.collection('wishlists').doc(wishlistId).delete();
+        
+        // Refresh the list
+        showSuccess('Wishlist deleted successfully.');
+        loadWishlists(auth.currentUser.uid);
+        
+      } catch (error) {
+        console.error('Error deleting wishlist:', error);
+        showError('Error deleting wishlist: ' + error.message);
+      }
     }
 
     // Load wishlists for the current user
     async function loadWishlists(userId) {
       try {
-        const snapshot = await db.collection('wishlists').where('owner', '==', userId).get();
-        const wishlists = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        const groupIds = wishlists.flatMap(wl => wl.linkedGroups || []);
-        const groupMap = await fetchGroupNames([...new Set(groupIds)]);
+        // Show loading state
+        loadingContainer.style.display = 'flex';
+        wishlistTable.style.display = 'none';
+        emptyState.style.display = 'none';
+        
+        // Query wishlists
+        const snapshot = await db.collection('wishlists')
+          .where('owner', '==', userId)
+          .orderBy('createdAt', 'desc')
+          .get();
+          
+        if (snapshot.empty) {
+          renderWishlists([], {});
+          return;
+        }
+        
+        // Process wishlists
+        const wishlists = snapshot.docs.map(doc => ({ 
+          id: doc.id, 
+          ...doc.data(),
+          createdAt: doc.data().createdAt?.toDate() || new Date()
+        }));
+        
+        // Get unique group IDs from all wishlists
+        const allGroupIds = wishlists.reduce((acc, wl) => {
+          if (wl.linkedGroups && Array.isArray(wl.linkedGroups)) {
+            wl.linkedGroups.forEach(gid => acc.add(gid));
+          }
+          return acc;
+        }, new Set());
+        
+        // Fetch group names if we have any groups
+        const groupIds = [...allGroupIds];
+        const groupMap = groupIds.length > 0 ? await fetchGroupNames(groupIds) : {};
+        
+        // Render wishlists
         renderWishlists(wishlists, groupMap);
+        
       } catch (error) {
+        console.error('Error loading wishlists:', error);
+        loadingContainer.style.display = 'none';
         showError('Error loading wishlists: ' + error.message);
       }
     }
 
     // Logout button
     document.getElementById('logoutBtn').addEventListener('click', () => {
-      auth.signOut();
+      auth.signOut().then(() => {
+        window.location.href = 'index.html';
+      }).catch(error => {
+        console.error('Error signing out:', error);
+        showError('Error signing out: ' + error.message);
+      });
     });
-
   </script>
 </body>
 </html>
