@@ -346,199 +346,230 @@
 
   <!-- Firebase & Page Scripts -->
   <script>
-    // Firebase config & initialization
-    const firebaseConfig = {
-  apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
-  authDomain: "optanav1.firebaseapp.com",
-  projectId: "optanav1",
-  storageBucket: "optanav1.firebasestorage.app",
-  messagingSenderId: "16298669202",
-  appId: "1:16298669202:web:ac2a1cd399993b1883624b",
-  measurementId: "G-RR7D4MB5FY"
-};
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  // Firebase config & initialization
+  const firebaseConfig = {
+    apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+    authDomain: "optanav1.firebaseapp.com",
+    projectId: "optanav1",
+    storageBucket: "optanav1.firebasestorage.app",
+    messagingSenderId: "16298669202",
+    appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+    measurementId: "G-RR7D4MB5FY"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    // DOM elements
-    const logoutBtn = document.getElementById('logoutBtn');
-    const profileUsername = document.getElementById('profileUsername');
-    const profileEmail = document.getElementById('profileEmail');
-    const userAvatar = document.getElementById('userAvatar');
-    const wishlistForm = document.getElementById('wishlistForm');
-    const addItemBtn = document.getElementById('addItemBtn');
-    const clearItemBtn = document.getElementById('clearItemBtn');
-    const itemsList = document.getElementById('itemsList');
-    const successAlert = document.getElementById('successAlert');
-    const errorAlert = document.getElementById('errorAlert');
+  // DOM references
+  const logoutBtn       = document.getElementById('logoutBtn');
+  const profileUsername = document.getElementById('profileUsername');
+  const profileEmail    = document.getElementById('profileEmail');
+  const userAvatar      = document.getElementById('userAvatar');
+  const wishlistForm    = document.getElementById('wishlistForm');
+  const addItemBtn      = document.getElementById('addItemBtn');
+  const clearItemBtn    = document.getElementById('clearItemBtn');
+  const itemsList       = document.getElementById('itemsList');
+  const successAlert    = document.getElementById('successAlert');
+  const errorAlert      = document.getElementById('errorAlert');
 
-    let wishlistItems = [];
+  let wishlistItems = [];
 
-    // Auth state and profile loading
-    auth.onAuthStateChanged(async user => {
-      if (!user) return location.href = 'index.html';
-      const userDoc = await db.collection('users').doc(user.uid).get();
-      const data = userDoc.exists ? userDoc.data() : {};
-      const username = data.username || user.displayName || user.email.split('@')[0];
-      profileUsername.textContent = username;
-      profileEmail.textContent = user.email;
-      if (!user.photoURL) {
-        userAvatar.innerHTML = `<span>${username.charAt(0).toUpperCase()}</span>`;
-      } else {
-        userAvatar.innerHTML = `<img src="${user.photoURL}" alt="Avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
-      }
-      loadUserGroups(user.uid);
-    });
+  // Auth state & profile load
+  auth.onAuthStateChanged(async user => {
+    if (!user) return location.href = 'index.html';
 
-    // Load groups into checkboxes
-    async function loadUserGroups(uid) {
-      const groupsEl = document.getElementById('groupCheckboxes');
-      groupsEl.innerHTML = '';
-      try {
-        const [friendGroups, familyGroups] = await Promise.all([
-          db.collection('groups').where('type','==','friend').where('members','array-contains',uid).get(),
-          db.collection('groups').where('type','==','family').where('members','array-contains',uid).get()
-        ]);
-        if (friendGroups.empty && familyGroups.empty) {
-          groupsEl.innerHTML = '<div class="form-text">No groups found.</div>';
-          return;
-        }
-        if (!friendGroups.empty) {
-          groupsEl.innerHTML += '<div style="font-weight:bold;margin-bottom:0.5rem;">Friend Groups:</div>';
-          friendGroups.forEach(doc => {
-            groupsEl.innerHTML += `
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="group-${doc.id}" value="${doc.id}">
-                <label class="form-check-label" for="group-${doc.id}">${doc.data().name}</label>
-              </div>`;
-          });
-        }
-        if (!familyGroups.empty) {
-          groupsEl.innerHTML += '<div style="font-weight:bold;margin-top:1rem;margin-bottom:0.5rem;">Family Groups:</div>';
-          familyGroups.forEach(doc => {
-            groupsEl.innerHTML += `
-              <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="group-${doc.id}" value="${doc.id}">
-                <label class="form-check-label" for="group-${doc.id}">${doc.data().name}</label>
-              </div>`;
-          });
-        }
-      } catch (err) {
-        console.error(err);
-        groupsEl.innerHTML = '<div class="form-text text-danger">Error loading groups.</div>';
-      }
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    const data    = userDoc.exists ? userDoc.data() : {};
+    const username = data.username || user.displayName || user.email.split('@')[0];
+
+    profileUsername.textContent = username;
+    profileEmail.textContent    = user.email;
+    if (!user.photoURL) {
+      userAvatar.innerHTML = `<span>${username.charAt(0).toUpperCase()}</span>`;
+    } else {
+      userAvatar.innerHTML = `
+        <img src="${user.photoURL}" alt="Avatar"
+             style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
     }
 
-    // Logout
-    logoutBtn.addEventListener('click', async () => {
-      await auth.signOut();
-      location.href = 'index.html';
-    });
+    loadUserGroups(user.uid);
+  });
 
-    // Clear item inputs
-    function clearItemForm() {
-      ['itemTitle','itemUrl','itemPrice','itemDescription'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('itemTypeToggle').checked = false;
-    }
-    clearItemBtn.addEventListener('click', clearItemForm);
+  // Load groups into checkboxes
+  async function loadUserGroups(uid) {
+    const groupsEl = document.getElementById('groupCheckboxes');
+    groupsEl.innerHTML = '';
+    try {
+      const [friendsSnap, familySnap] = await Promise.all([
+        db.collection('groups').where('type','==','friend').where('members','array-contains',uid).get(),
+        db.collection('groups').where('type','==','family').where('members','array-contains',uid).get()
+      ]);
 
-    // Add item
-    addItemBtn.addEventListener('click', () => {
-      const title = document.getElementById('itemTitle').value.trim();
-      if (!title) return alert('Item title is required!');
-      const url = document.getElementById('itemUrl').value.trim();
-      const price = parseFloat(document.getElementById('itemPrice').value) || null;
-      const desc = document.getElementById('itemDescription').value.trim();
-      const type = document.getElementById('itemTypeToggle').checked ? 'need' : 'want';
-      const item = { id: Date.now().toString(), title, url, price, description: desc, type };
-      wishlistItems.push(item);
-      renderItemsList();
-      clearItemForm();
-    });
-
-    // Render items
-    function renderItemsList() {
-      if (!wishlistItems.length) {
-        itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
+      if (friendsSnap.empty && familySnap.empty) {
+        groupsEl.innerHTML = '<div class="form-text">No groups found.</div>';
         return;
       }
-      itemsList.innerHTML = '';
-      wishlistItems.forEach(item => {
-        itemsList.innerHTML += `
-          <div class="item-row" id="item-${item.id}">
-            <div>
-              ${item.url ? `<a href="${item.url}" target="_blank">${item.title}</a>` : `<strong>${item.title}</strong>`}
-              ${item.description ? `<div style="font-size:0.85rem;color:#777;">${item.description}</div>` : ''}
-            </div>
-            <div>${item.price!=null?`$${item.price.toFixed(2)}`:'-'}</div>
-            <div><span class="badge badge-${item.type}">${item.type.toUpperCase()}</span></div>
-            <div class="item-actions">
-              <button class="btn-icon edit" onclick="editItem('${item.id}')"><i class="fas fa-edit"></i></button>
-              <button class="btn-icon delete" onclick="deleteItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
-            </div>
-          </div>`;
-      });
-    }
 
-    // Edit & Delete
-    function editItem(id) {
-      const idx = wishlistItems.findIndex(i=>i.id===id);
-      if (idx<0) return;
-      const item = wishlistItems.splice(idx,1)[0];
-      document.getElementById('itemTitle').value = item.title;
-      document.getElementById('itemUrl').value = item.url;
-      document.getElementById('itemPrice').value = item.price || '';
-      document.getElementById('itemDescription').value = item.description;
-      document.getElementById('itemTypeToggle').checked = item.type==='need';
-      renderItemsList();
-    }
-    function deleteItem(id) {
-      wishlistItems = wishlistItems.filter(i=>i.id!==id);
-      renderItemsList();
-    }
-
-    // Submit wishlist
-    wishlistForm.addEventListener('submit', async e => {
-      e.preventDefault();
-      successAlert.style.display = 'none';
-      errorAlert.style.display = 'none';
-      const title = document.getElementById('wishlistTitle').value.trim();
-      if (!title) {
-        errorAlert.textContent = 'Wishlist title is required.';
-        errorAlert.style.display = 'block';
-        return;
-      }
-      const description = document.getElementById('wishlistDescription').value.trim();
-      const occasion = document.getElementById('occasion').value;
-      const privacy = document.getElementById('privacy').value;
-      const linkedGroups = Array.from(document.querySelectorAll('#groupCheckboxes input:checked')).map(cb=>cb.value);
-
-      try {
-        const user = auth.currentUser;
-        const ref = await db.collection('wishlists').add({
-          userId: user.uid, title, description, occasion,
-          privacy, groups: linkedGroups,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      if (!friendsSnap.empty) {
+        groupsEl.innerHTML += '<div class="form-text" style="font-weight:bold;">Friend Groups:</div>';
+        friendsSnap.forEach(doc => {
+          const g = doc.data();
+          groupsEl.innerHTML += `
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="group-${doc.id}" value="${doc.id}">
+              <label class="form-check-label" for="group-${doc.id}">${g.name}</label>
+            </div>`;
         });
-        const batch = db.batch();
-        wishlistItems.forEach(item => {
-          const itemRef = ref.collection('items').doc(item.id);
-          batch.set(itemRef, item);
-        });
-        await batch.commit();
-        successAlert.style.display = 'block';
-        wishlistForm.reset();
-        wishlistItems = [];
-        renderItemsList();
-      } catch (err) {
-        console.error(err);
-        errorAlert.textContent = 'There was an error creating your wishlist. Please try again.';
-        errorAlert.style.display = 'block';
       }
+
+      if (!familySnap.empty) {
+        groupsEl.innerHTML += '<div class="form-text" style="font-weight:bold;margin-top:1rem;">Family Groups:</div>';
+        familySnap.forEach(doc => {
+          const g = doc.data();
+          groupsEl.innerHTML += `
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="group-${doc.id}" value="${doc.id}">
+              <label class="form-check-label" for="group-${doc.id}">${g.name}</label>
+            </div>`;
+        });
+      }
+
+    } catch (err) {
+      console.error(err);
+      groupsEl.innerHTML = '<div class="form-text text-danger">Error loading groups.</div>';
+    }
+  }
+
+  // Logout
+  logoutBtn.addEventListener('click', async () => {
+    await auth.signOut();
+    location.href = 'index.html';
+  });
+
+  // Clear item form
+  function clearItemForm() {
+    ['itemTitle','itemUrl','itemPrice','itemDescription'].forEach(id => {
+      document.getElementById(id).value = '';
     });
+    document.getElementById('itemTypeToggle').checked = false;
+  }
+  clearItemBtn.addEventListener('click', clearItemForm);
 
-    // Initial render
+  // Add item
+  addItemBtn.addEventListener('click', () => {
+    const title = document.getElementById('itemTitle').value.trim();
+    if (!title) return alert('Item title is required!');
+
+    const url         = document.getElementById('itemUrl').value.trim();
+    const priceInput  = document.getElementById('itemPrice').value;
+    const price       = priceInput ? parseFloat(priceInput) : null;
+    const description = document.getElementById('itemDescription').value.trim();
+    const type        = document.getElementById('itemTypeToggle').checked ? 'need' : 'want';
+
+    const item = {
+      id: Date.now().toString(),
+      title, url, price, description, type
+    };
+    wishlistItems.push(item);
     renderItemsList();
-  </script>
+    clearItemForm();
+  });
+
+  // Render items
+  function renderItemsList() {
+    if (!wishlistItems.length) {
+      itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
+      return;
+    }
+    itemsList.innerHTML = '';
+    wishlistItems.forEach(item => {
+      itemsList.innerHTML += `
+        <div class="item-row" id="item-${item.id}">
+          <div>
+            ${item.url 
+              ? `<a href="${item.url}" target="_blank">${item.title}</a>` 
+              : `<strong>${item.title}</strong>`}
+            ${item.description 
+              ? `<div style="font-size:0.85rem;color:#777;">${item.description}</div>` 
+              : ''}
+          </div>
+          <div>${item.price!=null ? '$'+item.price.toFixed(2) : '-'}</div>
+          <div><span class="badge badge-${item.type}">${item.type.toUpperCase()}</span></div>
+          <div class="item-actions">
+            <button class="btn-icon edit" onclick="editItem('${item.id}')"><i class="fas fa-edit"></i></button>
+            <button class="btn-icon delete" onclick="deleteItem('${item.id}')"><i class="fas fa-trash-alt"></i></button>
+          </div>
+        </div>`;
+    });
+  }
+
+  // Edit / Delete
+  function editItem(id) {
+    const idx = wishlistItems.findIndex(i => i.id === id);
+    if (idx < 0) return;
+    const [item] = wishlistItems.splice(idx, 1);
+    document.getElementById('itemTitle').value       = item.title;
+    document.getElementById('itemUrl').value         = item.url;
+    document.getElementById('itemPrice').value       = item.price || '';
+    document.getElementById('itemDescription').value = item.description;
+    document.getElementById('itemTypeToggle').checked= item.type === 'need';
+    renderItemsList();
+  }
+  function deleteItem(id) {
+    wishlistItems = wishlistItems.filter(i => i.id !== id);
+    renderItemsList();
+  }
+
+  // Submit wishlist
+  wishlistForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    successAlert.style.display = 'none';
+    errorAlert.style.display   = 'none';
+
+    const title = document.getElementById('wishlistTitle').value.trim();
+    if (!title) {
+      errorAlert.textContent = 'Wishlist title is required.';
+      errorAlert.style.display = 'block';
+      return;
+    }
+
+    const description = document.getElementById('wishlistDescription').value.trim();
+    const occasion    = document.getElementById('occasion').value;
+    const privacy     = document.getElementById('privacy').value;
+    const linkedGroups = Array.from(
+      document.querySelectorAll('#groupCheckboxes input:checked')
+    ).map(cb => cb.value);
+
+    try {
+      const user = auth.currentUser;
+      const wlRef = await db.collection('wishlists').add({
+        userId: user.uid,
+        title, description, occasion, privacy,
+        groups: linkedGroups,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      const batch = db.batch();
+      wishlistItems.forEach(item => {
+        const itemRef = wlRef.collection('items').doc(item.id);
+        batch.set(itemRef, item);
+      });
+      await batch.commit();
+
+      successAlert.style.display = 'block';
+      wishlistForm.reset();
+      wishlistItems = [];
+      renderItemsList();
+    } catch (err) {
+      console.error(err);
+      errorAlert.textContent = 'Error creating wishlist. Please try again.';
+      errorAlert.style.display = 'block';
+    }
+  });
+
+  // Initial render
+  renderItemsList();
+</script>
+
 </body>
 </html>
