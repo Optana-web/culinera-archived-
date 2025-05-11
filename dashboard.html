@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Culinera – Dashboard</title>
-    <meta name="description" content="Manage your culinary experiences and recipes">
+    <title>Optana – Dashboard</title>
+    <meta name="description" content="Manage your wishlists and groups">
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -288,18 +288,18 @@
             padding: 1.5rem;
         }
         
-        .recipe-item {
+        .wishlist-item {
             display: flex;
             align-items: center;
             padding: 0.8rem 0;
             border-bottom: 1px solid var(--gray-light);
         }
         
-        .recipe-item:last-child {
+        .wishlist-item:last-child {
             border-bottom: none;
         }
         
-        .recipe-thumb {
+        .wishlist-thumb {
             width: 60px;
             height: 60px;
             border-radius: 8px;
@@ -311,16 +311,16 @@
             color: var(--primary-color);
         }
         
-        .recipe-info {
+        .wishlist-info {
             flex: 1;
         }
         
-        .recipe-title {
+        .wishlist-title {
             font-size: 1.1rem;
             margin-bottom: 0.3rem;
         }
         
-        .recipe-meta {
+        .wishlist-meta {
             font-family: 'Roboto Mono', monospace;
             font-size: 0.8rem;
             color: #777;
@@ -328,16 +328,16 @@
             gap: 1rem;
         }
         
-        .recipe-meta span {
+        .wishlist-meta span {
             display: flex;
             align-items: center;
         }
         
-        .recipe-meta i {
+        .wishlist-meta i {
             margin-right: 0.3rem;
         }
         
-        .recipe-actions {
+        .wishlist-actions {
             display: flex;
             gap: 0.5rem;
         }
@@ -359,6 +359,22 @@
         .btn-icon:hover {
             background: var(--primary-color);
             color: var(--light);
+        }
+        
+        /* Progress bar styles */
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background: var(--gray-light);
+            border-radius: 4px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 4px;
         }
         
         /* Responsive */
@@ -413,7 +429,7 @@
     <!-- Sidebar Navigation -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <div class="logo"><a href="index.html">Culin<span>era</span></a></div>
+            <div class="logo"><a href="index.html">Opt<span>ana</span></a></div>
         </div>
         
         <div class="user-profile">
@@ -435,27 +451,27 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="yourrecipes.html" class="nav-link">
-                        <i class="fas fa-utensils"></i>
-                        <span>Your Recipes</span>
+                    <a href="my-wishlists.html" class="nav-link">
+                        <i class="fas fa-gift"></i>
+                        <span>My Wishlists</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="friend-groups.html" class="nav-link">
+                        <i class="fas fa-users"></i>
+                        <span>Friend Groups</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="family-groups.html" class="nav-link">
+                        <i class="fas fa-house-user"></i>
+                        <span>Family Groups</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="browse.html" class="nav-link">
                         <i class="fas fa-search"></i>
-                        <span>Browse Recipes</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="popular.html" class="nav-link">
-                        <i class="fas fa-fire"></i>
-                        <span>Popular</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="categories.html" class="nav-link">
-                        <i class="fas fa-tags"></i>
-                        <span>Categories</span>
+                        <span>Browse</span>
                     </a>
                 </li>
                 <li class="nav-item">
@@ -492,98 +508,107 @@
             <header class="page-header">
                 <h1 class="page-title">Dashboard</h1>
                 <div class="page-actions">
-                    <a href="create-recipe.html" class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Create Recipe
+                    <a href="create-wishlist.html" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Wishlist
                     </a>
                 </div>
             </header>
             
             <section class="welcome-banner">
                 <h2 class="welcome-title" id="welcomeText">Welcome back!</h2>
-                <p>Here's an overview of your culinary activities and recipes.</p>
+                <p>Here's an overview of your wishlists and groups.</p>
             </section>
             
             <section class="stats-grid">
                 <div class="stat-card">
-                    <h3 class="stat-title">TOTAL RECIPES</h3>
-                    <div class="stat-value">12</div>
-                    <p class="stat-desc">You've created 12 delicious recipes so far</p>
+                    <h3 class="stat-title">TOTAL WISHLISTS</h3>
+                    <div class="stat-value">8</div>
+                    <p class="stat-desc">You've created 8 wishlists across all your groups</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="stat-title">FAVORITE COUNT</h3>
-                    <div class="stat-value">48</div>
-                    <p class="stat-desc">Your recipes have been favorited 48 times</p>
+                    <h3 class="stat-title">FULFILLED ITEMS</h3>
+                    <div class="stat-value">23</div>
+                    <p class="stat-desc">23 items have been fulfilled from your wishlists</p>
                 </div>
                 <div class="stat-card">
-                    <h3 class="stat-title">AVERAGE RATING</h3>
-                    <div class="stat-value">4.7</div>
-                    <p class="stat-desc">Your recipes have an average rating of 4.7 stars</p>
+                    <h3 class="stat-title">ACTIVE GROUPS</h3>
+                    <div class="stat-value">5</div>
+                    <p class="stat-desc">You're part of 3 friend groups and 2 family groups</p>
                 </div>
             </section>
             
             <div class="content-grid">
                 <div class="content-card">
                     <div class="content-card-header">
-                        <h3 class="content-card-title">Recent Recipes</h3>
-                        <a href="yourrecipes.html" class="mono">View All</a>
+                        <h3 class="content-card-title">Recent Wishlists</h3>
+                        <a href="my-wishlists.html" class="mono">View All</a>
                     </div>
                     <div class="content-card-body">
-                        <div class="recipe-item">
-                            <div class="recipe-thumb">
-                                <i class="fas fa-utensils"></i>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-gift"></i>
                             </div>
-                            <div class="recipe-info">
-                                <h4 class="recipe-title">Spicy Thai Basil Chicken</h4>
-                                <div class="recipe-meta">
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Birthday Wishlist</h4>
+                                <div class="wishlist-meta">
                                     <span><i class="fas fa-calendar"></i> May 5, 2025</span>
-                                    <span><i class="fas fa-heart"></i> 12</span>
+                                    <span><i class="fas fa-list"></i> 8 items</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: 25%"></div>
                                 </div>
                             </div>
-                            <div class="recipe-actions">
-                                <button type="button" class="btn-icon" aria-label="Edit recipe">
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="Edit wishlist">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn-icon" aria-label="Share recipe">
+                                <button type="button" class="btn-icon" aria-label="Share wishlist">
                                     <i class="fas fa-share-alt"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="recipe-item">
-                            <div class="recipe-thumb">
-                                <i class="fas fa-utensils"></i>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-gift"></i>
                             </div>
-                            <div class="recipe-info">
-                                <h4 class="recipe-title">Mushroom Risotto</h4>
-                                <div class="recipe-meta">
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Home Decor</h4>
+                                <div class="wishlist-meta">
                                     <span><i class="fas fa-calendar"></i> May 2, 2025</span>
-                                    <span><i class="fas fa-heart"></i> 8</span>
+                                    <span><i class="fas fa-list"></i> 12 items</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: 50%"></div>
                                 </div>
                             </div>
-                            <div class="recipe-actions">
-                                <button type="button" class="btn-icon" aria-label="Edit recipe">
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="Edit wishlist">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn-icon" aria-label="Share recipe">
+                                <button type="button" class="btn-icon" aria-label="Share wishlist">
                                     <i class="fas fa-share-alt"></i>
                                 </button>
                             </div>
                         </div>
-                        <div class="recipe-item">
-                            <div class="recipe-thumb">
-                                <i class="fas fa-utensils"></i>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-gift"></i>
                             </div>
-                            <div class="recipe-info">
-                                <h4 class="recipe-title">Classic Apple Pie</h4>
-                                <div class="recipe-meta">
-                                    <span><i class="fas fa-calendar"></i> Apr 28, 2025</span>
-                                    <span><i class="fas fa-heart"></i> 15</span>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Tech Gadgets</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-calendar"></i> Apr 18, 2025</span>
+                                    <span><i class="fas fa-list"></i> 5 items</span>
+                                </div>
+                                <div class="progress-bar-container">
+                                    <div class="progress-bar" style="width: 80%"></div>
                                 </div>
                             </div>
-                            <div class="recipe-actions">
-                                <button type="button" class="btn-icon" aria-label="Edit recipe">
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="Edit wishlist">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn-icon" aria-label="Share recipe">
+                                <button type="button" class="btn-icon" aria-label="Share wishlist">
                                     <i class="fas fa-share-alt"></i>
                                 </button>
                             </div>
@@ -593,41 +618,162 @@
                 
                 <div class="content-card">
                     <div class="content-card-header">
-                        <h3 class="content-card-title">Recent Activity</h3>
+                        <h3 class="content-card-title">My Groups</h3>
+                        <a href="friend-groups.html" class="mono">View All</a>
                     </div>
                     <div class="content-card-body">
-                        <div class="recipe-item">
-                            <div class="recipe-thumb">
-                                <i class="fas fa-comment"></i>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-users"></i>
                             </div>
-                            <div class="recipe-info">
-                                <h4 class="recipe-title">New comment on Mushroom Risotto</h4>
-                                <div class="recipe-meta">
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">College Friends</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-user"></i> 5 members</span>
+                                    <span><i class="fas fa-gift"></i> 3 wishlists</span>
+                                </div>
+                            </div>
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="View group">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-house-user"></i>
+                            </div>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Immediate Family</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-user"></i> 4 members</span>
+                                    <span><i class="fas fa-gift"></i> 8 wishlists</span>
+                                </div>
+                            </div>
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="View group">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Hiking Club</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-user"></i> 8 members</span>
+                                    <span><i class="fas fa-gift"></i> 2 wishlists</span>
+                                </div>
+                            </div>
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="View group">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="content-grid" style="margin-top: 1.5rem;">
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">Upcoming Events</h3>
+                        <a href="calendar.html" class="mono">View Calendar</a>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Mom's Birthday</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-calendar"></i> May 15, 2025</span>
+                                    <span><i class="fas fa-gift"></i> 1 wishlist</span>
+                                </div>
+                            </div>
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="View event">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Sam's Graduation</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-calendar"></i> Jun 2, 2025</span>
+                                    <span><i class="fas fa-gift"></i> 1 wishlist</span>
+                                </div>
+                            </div>
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="View event">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-calendar-day"></i>
+                            </div>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Summer BBQ</h4>
+                                <div class="wishlist-meta">
+                                    <span><i class="fas fa-calendar"></i> Jul 4, 2025</span>
+                                    <span><i class="fas fa-gift"></i> 0 wishlists</span>
+                                </div>
+                            </div>
+                            <div class="wishlist-actions">
+                                <button type="button" class="btn-icon" aria-label="View event">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="content-card">
+                    <div class="content-card-header">
+                        <h3 class="content-card-title">Recent Activity</h3>
+                        <a href="activity.html" class="mono">View All</a>
+                    </div>
+                    <div class="content-card-body">
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Alex added a new item to "Birthday Wishlist"</h4>
+                                <div class="wishlist-meta">
                                     <span><i class="fas fa-clock"></i> 2 hours ago</span>
-                                    <span><i class="fas fa-user"></i> JaneDoe</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="recipe-item">
-                            <div class="recipe-thumb">
-                                <i class="fas fa-heart"></i>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-bell"></i>
                             </div>
-                            <div class="recipe-info">
-                                <h4 class="recipe-title">3 new favorites on your recipes</h4>
-                                <div class="recipe-meta">
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Jamie joined "College Friends" group</h4>
+                                <div class="wishlist-meta">
                                     <span><i class="fas fa-clock"></i> Yesterday</span>
                                 </div>
                             </div>
                         </div>
-                        <div class="recipe-item">
-                            <div class="recipe-thumb">
-                                <i class="fas fa-star"></i>
+                        <div class="wishlist-item">
+                            <div class="wishlist-thumb">
+                                <i class="fas fa-bell"></i>
                             </div>
-                            <div class="recipe-info">
-                                <h4 class="recipe-title">New 5-star rating on Classic Apple Pie</h4>
-                                <div class="recipe-meta">
+                            <div class="wishlist-info">
+                                <h4 class="wishlist-title">Item "Wireless Headphones" was fulfilled</h4>
+                                <div class="wishlist-meta">
                                     <span><i class="fas fa-clock"></i> 3 days ago</span>
-                                    <span><i class="fas fa-user"></i> ChefMike</span>
                                 </div>
                             </div>
                         </div>
@@ -637,74 +783,179 @@
         </div>
     </main>
 
+    <!-- Scripts -->
     <script>
-        // --- FIREBASE CONFIG ---
+        // Firebase Configuration
         const firebaseConfig = {
-  apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
-  authDomain: "optanav1.firebaseapp.com",
-  projectId: "optanav1",
-  storageBucket: "optanav1.firebasestorage.app",
-  messagingSenderId: "16298669202",
-  appId: "1:16298669202:web:ac2a1cd399993b1883624b",
-  measurementId: "G-RR7D4MB5FY"
-};
-
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+            apiKey: "YOUR_API_KEY",
+            authDomain: "your-app.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-app.appspot.com",
+            messagingSenderId: "your-messaging-sender-id",
+            appId: "your-app-id"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-
-        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // DOM Elements
         const welcomeText = document.getElementById('welcomeText');
         const profileUsername = document.getElementById('profileUsername');
         const profileEmail = document.getElementById('profileEmail');
-        const userAvatar = document.getElementById('userAvatar');
-
-        // Listen for auth state and fetch Firestore profile
-        auth.onAuthStateChanged(async user => {
+        const logoutBtn = document.getElementById('logoutBtn');
+        
+        // Check Authentication State
+        auth.onAuthStateChanged(user => {
             if (user) {
-                // User is logged in
-                try {
-                    // Try to get username and provider from Firestore
-                    const userDoc = await db.collection('users').doc(user.uid).get();
-                    let username = "";
-                    
-                    if (userDoc.exists) {
-                        const data = userDoc.data();
-                        username = data.username || (user.displayName || user.email.split('@')[0]);
-                    } else {
-                        username = user.displayName || user.email.split('@')[0];
-                    }
-                    
-                    welcomeText.textContent = `Welcome back, ${username}!`;
-                    profileUsername.textContent = username;
-                    profileEmail.textContent = user.email;
-                    
-                    // Set first letter of username as avatar text if no avatar image
-                    if (!user.photoURL) {
-                        userAvatar.innerHTML = `<span>${username.charAt(0).toUpperCase()}</span>`;
-                    } else {
-                        userAvatar.innerHTML = `<img src="${user.photoURL}" alt="User avatar" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">`;
-                    }
-                } catch (err) {
-                    console.error('Error fetching user data:', err);
-                    welcomeText.textContent = "Welcome back!";
-                }
+                // User is signed in
+                profileEmail.textContent = user.email;
+                
+                // Get user data from Firestore
+                db.collection('users').doc(user.uid).get()
+                    .then(doc => {
+                        if (doc.exists && doc.data().displayName) {
+                            const userName = doc.data().displayName;
+                            profileUsername.textContent = userName;
+                            welcomeText.textContent = `Welcome back, ${userName}!`;
+                            
+                            // Set first initial in user avatar
+                            const userAvatar = document.getElementById('userAvatar');
+                            if (userName && userName.length > 0) {
+                                userAvatar.innerHTML = userName[0].toUpperCase();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error("Error getting user data:", error);
+                    });
             } else {
-                // No user is signed in, redirect to index
-                location.href = 'index.html';
+                // User is not signed in, redirect to login page
+                window.location.href = "login.html";
             }
         });
-
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await auth.signOut();
-                location.href = 'index.html';
-            } catch (error) {
-                console.error('Error signing out:', error);
+        
+        // Logout Function
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut()
+                .then(() => {
+                    // Sign-out successful, redirect to login
+                    window.location.href = "login.html";
+                })
+                .catch(error => {
+                    console.error("Error signing out:", error);
+                });
+        });
+        
+        // Sample functions for dashboard interactions
+        
+        // Function to handle wishlist actions
+        document.querySelectorAll('.wishlist-actions .btn-icon').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const action = button.getAttribute('aria-label');
+                const wishlistItem = button.closest('.wishlist-item');
+                const wishlistTitle = wishlistItem.querySelector('.wishlist-title').textContent;
+                
+                if (action.includes('Edit')) {
+                    // Redirect to edit page or show modal
+                    console.log(`Edit ${wishlistTitle}`);
+                    // window.location.href = `edit-wishlist.html?title=${encodeURIComponent(wishlistTitle)}`;
+                } else if (action.includes('Share')) {
+                    // Show sharing options
+                    console.log(`Share ${wishlistTitle}`);
+                    // Implement sharing functionality
+                    shareWishlist(wishlistTitle);
+                } else if (action.includes('View')) {
+                    // View wishlist or group details
+                    console.log(`View ${wishlistTitle}`);
+                    // window.location.href = `view-details.html?title=${encodeURIComponent(wishlistTitle)}`;
+                }
+            });
+        });
+        
+        // Function to share wishlist
+        function shareWishlist(wishlistTitle) {
+            // Placeholder for sharing functionality
+            // In a real app, this would open a modal or create a shareable link
+            alert(`Share link for "${wishlistTitle}" copied to clipboard!`);
+        }
+        
+        // Update timestamps for demo purposes
+        document.addEventListener('DOMContentLoaded', () => {
+            // Get current date and format it
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            // Update recent activity timestamps for demo
+            const activityItems = document.querySelectorAll('.content-card-title:contains("Recent Activity") + div + div .wishlist-meta span');
+            if (activityItems.length > 0) {
+                // These would normally come from the database
+                const timeDeltas = ['2 hours ago', 'Yesterday', '3 days ago'];
+                activityItems.forEach((item, index) => {
+                    if (index < timeDeltas.length) {
+                        item.innerHTML = `<i class="fas fa-clock"></i> ${timeDeltas[index]}`;
+                    }
+                });
+            }
+            
+            // Update upcoming events for demo
+            const upcomingEvents = document.querySelectorAll('.content-card-title:contains("Upcoming Events") + div + div .wishlist-meta span:first-child');
+            if (upcomingEvents.length > 0) {
+                // Calculate future dates for demo purposes
+                const dates = [15, 22, 30].map(day => {
+                    const eventDate = new Date(now);
+                    eventDate.setDate(now.getDate() + day);
+                    return formatter.format(eventDate);
+                });
+                
+                upcomingEvents.forEach((item, index) => {
+                    if (index < dates.length) {
+                        item.innerHTML = `<i class="fas fa-calendar"></i> ${dates[index]}`;
+                    }
+                });
             }
         });
+        
+        // Add a global query selector helper for contains text (used above)
+        jQuery.expr[':'].contains = function(a, i, m) {
+            return jQuery(a).text().toUpperCase()
+                .indexOf(m[3].toUpperCase()) >= 0;
+        };
+        
+        // Function to initialize any charts or visualizations
+        function initDashboardVisualizations() {
+            // This would normally contain chart initialization code
+            // For example, using Chart.js or D3.js to render wishlist completion stats
+            console.log('Dashboard visualizations initialized');
+        }
+        
+        // Initialize dashboard
+        function initDashboard() {
+            console.log('Dashboard initialized');
+            // Add any additional initialization code here
+            
+            // Fetch and update stats from the database
+            fetchUserStats();
+            
+            // Initialize visualizations
+            initDashboardVisualizations();
+        }
+        
+        // Fetch user statistics from the database
+        function fetchUserStats() {
+            // In a real app, this would fetch actual stats from Firebase
+            // For demo purposes, we're using hardcoded values in the HTML
+            console.log('User statistics fetched');
+        }
+        
+        // Initialize the dashboard when the page loads
+        window.addEventListener('load', initDashboard);
     </script>
 </body>
 </html>
