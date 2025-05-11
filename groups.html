@@ -200,7 +200,7 @@ body {
 
 .top-bar {
   background: var(--light);
-  padding: 1rem 2rem;
+  padding: 0;              /* removed padding for fluid layout */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -500,7 +500,6 @@ body {
 }
 
 @media (max-width: 768px) {
-  .top-bar { padding: 1rem; }
   .top-bar-actions { flex-wrap: wrap; gap: 0.5rem; }
 }
 
