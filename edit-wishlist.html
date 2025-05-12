@@ -189,6 +189,16 @@
       .main-content { margin-left: 0; padding: 1rem; }
       .frame { padding: 1rem; }
     }
+    .alert {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+      font-family: 'Roboto Mono', monospace;
+      display: block;
+    }
+    .alert-success { background: #e6f9ef; color: var(--success); border: 1px solid #bff0d2; }
+    .alert-danger { background: #fdeaea; color: var(--danger); border: 1px solid #f5c6cb; }
   </style>
 </head>
 <body>
@@ -343,7 +353,7 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Helper
+    // Helper: get query param
     function getQueryParam(param) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(param);
@@ -360,226 +370,216 @@
         document.getElementById('profileUsername').textContent = user.displayName || 'User';
         document.getElementById('profileEmail').textContent = user.email || '';
         if (user.photoURL) {
-          document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:100%;height:100%;border-radius:50%;">`;
+          document.getElementById('userAvatar').innerHTML = `<img src="${user.photoURL}" style="width:80px;height:80px;border-radius:50%;">`;
         }
       }
     });
 
-    // Group loading
-    let allGroups = [];
-    let currentWishlist = null;
-    let currentUser = null;
+    // --- Wishlist Editing Logic ---
     let items = [];
-    let editingIndex = null;
+    let editingIndex = -1;
+    let userId = null;
+    let wishlistId = getQueryParam('id');
+    let groupsList = [];
 
     // DOM refs
-    const groupCheckboxes = document.getElementById('groupCheckboxes');
-    const itemsList = document.getElementById('itemsList');
+    const wishlistForm = document.getElementById('wishlistForm');
+    const itemsListDiv = document.getElementById('itemsList');
     const addItemBtn = document.getElementById('addItemBtn');
     const clearItemBtn = document.getElementById('clearItemBtn');
-    const wishlistForm = document.getElementById('wishlistForm');
+    const groupCheckboxesDiv = document.getElementById('groupCheckboxes');
     const successAlert = document.getElementById('successAlert');
     const errorAlert = document.getElementById('errorAlert');
 
-    function showSuccess(msg) {
-      successAlert.textContent = msg;
-      successAlert.style.display = '';
-      errorAlert.style.display = 'none';
-      setTimeout(() => { successAlert.style.display = 'none'; }, 2500);
-    }
-    function showError(msg) {
-      errorAlert.textContent = msg;
-      errorAlert.style.display = '';
-      successAlert.style.display = 'none';
-      setTimeout(() => { errorAlert.style.display = 'none'; }, 3500);
-    }
+    // Item field refs
+    const itemTitle = document.getElementById('itemTitle');
+    const itemUrl = document.getElementById('itemUrl');
+    const itemPrice = document.getElementById('itemPrice');
+    const itemTypeToggle = document.getElementById('itemTypeToggle');
+    const itemDescription = document.getElementById('itemDescription');
 
-    // Load groups for this user
-    async function loadGroups(uid) {
-      const friendGroups = await db.collection('friendGroups').where('members', 'array-contains', uid).get();
-      const familyGroups = await db.collection('familyGroups').where('members', 'array-contains', uid).get();
-      allGroups = [];
-      friendGroups.forEach(doc => allGroups.push({id: doc.id, name: doc.data().name, type: 'friend'}));
-      familyGroups.forEach(doc => allGroups.push({id: doc.id, name: doc.data().name, type: 'family'}));
-      renderGroupCheckboxes();
-    }
-
-    function renderGroupCheckboxes() {
-      if (allGroups.length === 0) {
-        groupCheckboxes.innerHTML = '<div class="form-text">No groups to link.</div>';
+    // Load user & data
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = 'index.html';
         return;
       }
-      groupCheckboxes.innerHTML = allGroups.map(g =>
-        `<label style="display:inline-block;margin-right:1.5em;margin-bottom:0.5em;">
-          <input type="checkbox" value="${g.id}" data-type="${g.type}"> ${g.name}
-        </label>`
-      ).join('');
-      // Pre-check linked groups
-      if (currentWishlist && currentWishlist.linkedGroups) {
-        currentWishlist.linkedGroups.forEach(gid => {
-          const checkbox = groupCheckboxes.querySelector(`input[value="${gid}"]`);
-          if (checkbox) checkbox.checked = true;
-        });
+      userId = user.uid;
+      await loadGroups();
+      if (wishlistId) {
+        await loadWishlist();
+      } else {
+        errorAlert.style.display = '';
+        errorAlert.textContent = 'No wishlist ID provided.';
       }
+    });
+
+    // Load groups for checkbox list
+    async function loadGroups() {
+      groupCheckboxesDiv.innerHTML = '<div class="form-text">Loading your groups...</div>';
+      const snap = await db.collection('groups').where('members', 'array-contains', userId).get();
+      groupsList = [];
+      if (snap.empty) {
+        groupCheckboxesDiv.innerHTML = '<div class="form-text">You are not in any groups.</div>';
+        return;
+      }
+      let html = '';
+      snap.forEach(doc => {
+        const g = doc.data();
+        groupsList.push({ id: doc.id, name: g.name });
+        html += `<label style="display:block;"><input type="checkbox" value="${doc.id}" class="group-checkbox"> ${g.name}</label>`;
+      });
+      groupCheckboxesDiv.innerHTML = html;
     }
 
     // Load wishlist data
     async function loadWishlist() {
-      const wishlistId = getQueryParam('id');
-      if (!wishlistId) {
-        showError('No wishlist ID specified.');
-        return;
-      }
-      auth.onAuthStateChanged(async user => {
-        if (!user) {
-          showError('You must be signed in.');
-          setTimeout(() => window.location.href = 'index.html', 1500);
-          return;
-        }
-        currentUser = user;
-        await loadGroups(user.uid);
-
-        // Get wishlist doc
+      try {
         const doc = await db.collection('wishlists').doc(wishlistId).get();
         if (!doc.exists) {
-          showError('Wishlist not found.');
-          setTimeout(() => window.location.href = 'my-wishlists.html', 1500);
+          errorAlert.style.display = '';
+          errorAlert.textContent = 'Wishlist not found.';
           return;
         }
-        currentWishlist = doc.data();
-        currentWishlist.id = doc.id;
-        if (currentWishlist.owner !== user.uid) {
-          showError('You do not have permission to edit this wishlist.');
-          setTimeout(() => window.location.href = 'my-wishlists.html', 1500);
-          return;
-        }
-        // Fill form fields
-        document.getElementById('wishlistTitle').value = currentWishlist.title || '';
-        document.getElementById('wishlistDescription').value = currentWishlist.description || '';
-        document.getElementById('occasion').value = currentWishlist.occasion || '';
-        document.getElementById('privacy').value = currentWishlist.privacy || 'public';
-
+        const w = doc.data();
+        // Fill fields
+        document.getElementById('wishlistTitle').value = w.title || '';
+        document.getElementById('wishlistDescription').value = w.description || '';
+        document.getElementById('occasion').value = w.occasion || '';
+        document.getElementById('privacy').value = w.privacy || 'public';
         // Linked groups
-        setTimeout(renderGroupCheckboxes, 300); // ensure checkboxes are loaded
-
+        setTimeout(() => { // Wait for groups to load
+          if (w.groups && Array.isArray(w.groups)) {
+            document.querySelectorAll('.group-checkbox').forEach(cb => {
+              if (w.groups.includes(cb.value)) cb.checked = true;
+            });
+          }
+        }, 400);
         // Items
-        items = Array.isArray(currentWishlist.items) ? JSON.parse(JSON.stringify(currentWishlist.items)) : [];
+        items = Array.isArray(w.items) ? w.items : [];
         renderItems();
-      });
+      } catch (e) {
+        errorAlert.style.display = '';
+        errorAlert.textContent = 'Error loading wishlist.';
+      }
     }
 
-    // Items logic
-    function clearItemForm() {
-      document.getElementById('itemTitle').value = '';
-      document.getElementById('itemUrl').value = '';
-      document.getElementById('itemPrice').value = '';
-      document.getElementById('itemDescription').value = '';
-      document.getElementById('itemTypeToggle').checked = false;
-      editingIndex = null;
-      addItemBtn.textContent = 'Add Item';
-    }
-
+    // Render items list
     function renderItems() {
-      itemsList.innerHTML = '';
-      if (items.length === 0) {
-        itemsList.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
+      if (!items || items.length === 0) {
+        itemsListDiv.innerHTML = '<div class="item-row" style="text-align:center;color:#777;">No items added yet</div>';
         return;
       }
+      itemsListDiv.innerHTML = '';
       items.forEach((item, idx) => {
-        const row = document.createElement('div');
-        row.className = 'item-row';
-        let priceStr = '';
-        if (item.price !== undefined && item.price !== null && item.price !== '') {
-          const price = Number(item.price);
-          if (!isNaN(price)) priceStr = '$' + price.toFixed(2);
-        }
-        row.innerHTML = `
-          <div>
-            <span class="item-title">${item.title || ''}</span>
-            ${item.url ? `<a href="${item.url}" target="_blank" class="item-link"><i class="fas fa-link"></i></a>` : ''}
-            <div style="font-size:0.9em;color:#666;">${item.description || ''}</div>
-          </div>
-          <div>${priceStr}</div>
-          <div><span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type === 'need' ? 'Need' : 'Want'}</span></div>
-          <div class="item-actions">
-            <button type="button" class="btn-icon" title="Edit" onclick="editItem(${idx})"><i class="fas fa-edit"></i></button>
-            <button type="button" class="btn-icon delete" title="Delete" onclick="deleteItem(${idx})"><i class="fas fa-trash"></i></button>
+        itemsListDiv.innerHTML += `
+          <div class="item-row">
+            <div>
+              <strong>${item.title || ''}</strong>
+              ${item.url ? `<br><a href="${item.url}" target="_blank" style="font-size:0.9em;">Link</a>` : ''}
+              ${item.description ? `<div style="font-size:0.9em;color:#666;">${item.description}</div>` : ''}
+            </div>
+            <div>${item.price ? '$'+parseFloat(item.price).toFixed(2) : '-'}</div>
+            <div>
+              <span class="badge ${item.type === 'need' ? 'badge-need' : 'badge-want'}">${item.type === 'need' ? 'Need' : 'Want'}</span>
+            </div>
+            <div class="item-actions">
+              <button type="button" class="btn-icon" title="Edit" onclick="editItem(${idx})"><i class="fas fa-edit"></i></button>
+              <button type="button" class="btn-icon delete" title="Delete" onclick="deleteItem(${idx})"><i class="fas fa-trash"></i></button>
+            </div>
           </div>
         `;
-        itemsList.appendChild(row);
       });
     }
 
     // Add or update item
     addItemBtn.onclick = function() {
-      const title = document.getElementById('itemTitle').value.trim();
-      if (!title) return showError('Item title is required.');
-      const url = document.getElementById('itemUrl').value.trim();
-      const price = document.getElementById('itemPrice').value.trim();
-      const description = document.getElementById('itemDescription').value.trim();
-      const type = document.getElementById('itemTypeToggle').checked ? 'need' : 'want';
-      const item = { title, url, price: price ? Number(price) : '', description, type };
-      if (editingIndex !== null) {
+      const title = itemTitle.value.trim();
+      if (!title) {
+        alert('Item title is required.');
+        return;
+      }
+      const item = {
+        title,
+        url: itemUrl.value.trim(),
+        price: itemPrice.value ? parseFloat(itemPrice.value) : '',
+        type: itemTypeToggle.checked ? 'need' : 'want',
+        description: itemDescription.value.trim()
+      };
+      if (editingIndex >= 0) {
         items[editingIndex] = item;
+        editingIndex = -1;
+        addItemBtn.textContent = 'Add Item';
       } else {
         items.push(item);
       }
+      clearItemFields();
       renderItems();
-      clearItemForm();
     };
 
-    clearItemBtn.onclick = clearItemForm;
+    // Clear item fields
+    clearItemBtn.onclick = clearItemFields;
+    function clearItemFields() {
+      itemTitle.value = '';
+      itemUrl.value = '';
+      itemPrice.value = '';
+      itemTypeToggle.checked = false;
+      itemDescription.value = '';
+      editingIndex = -1;
+      addItemBtn.textContent = 'Add Item';
+    }
 
+    // Edit item (global for inline onclick)
     window.editItem = function(idx) {
       const item = items[idx];
-      document.getElementById('itemTitle').value = item.title || '';
-      document.getElementById('itemUrl').value = item.url || '';
-      document.getElementById('itemPrice').value = item.price || '';
-      document.getElementById('itemDescription').value = item.description || '';
-      document.getElementById('itemTypeToggle').checked = (item.type === 'need');
+      itemTitle.value = item.title || '';
+      itemUrl.value = item.url || '';
+      itemPrice.value = item.price || '';
+      itemTypeToggle.checked = (item.type === 'need');
+      itemDescription.value = item.description || '';
       editingIndex = idx;
       addItemBtn.textContent = 'Update Item';
     };
 
+    // Delete item (global for inline onclick)
     window.deleteItem = function(idx) {
       if (confirm('Delete this item?')) {
         items.splice(idx, 1);
         renderItems();
-        clearItemForm();
+        clearItemFields();
       }
     };
 
     // Handle form submit
     wishlistForm.onsubmit = async function(e) {
       e.preventDefault();
+      successAlert.style.display = 'none';
+      errorAlert.style.display = 'none';
+
+      // Gather fields
       const title = document.getElementById('wishlistTitle').value.trim();
-      if (!title) return showError('Wishlist title is required.');
+      if (!title) {
+        errorAlert.style.display = '';
+        errorAlert.textContent = 'Wishlist title is required.';
+        return;
+      }
       const description = document.getElementById('wishlistDescription').value.trim();
       const occasion = document.getElementById('occasion').value;
       const privacy = document.getElementById('privacy').value;
-      // Linked groups
-      const linkedGroups = [];
-      groupCheckboxes.querySelectorAll('input[type=checkbox]:checked').forEach(cb => {
-        linkedGroups.push(cb.value);
-      });
+      const groupIds = Array.from(document.querySelectorAll('.group-checkbox:checked')).map(cb => cb.value);
 
-      // Prepare data
-      const updateData = {
-        title, description, occasion, privacy,
-        linkedGroups,
-        items
-      };
+      // Save to Firestore
       try {
-        await db.collection('wishlists').doc(currentWishlist.id).update(updateData);
-        showSuccess('Wishlist updated successfully!');
-        setTimeout(() => window.location.href = 'view-wishlist.html?id=' + currentWishlist.id, 1200);
-      } catch (err) {
-        showError('Error updating wishlist.');
+        await db.collection('wishlists').doc(wishlistId).update({
+          title, description, occasion, privacy, groups: groupIds, items
+        });
+        successAlert.style.display = '';
+        setTimeout(() => { window.location.href = 'my-wishlists.html'; }, 1200);
+      } catch (e) {
+        errorAlert.style.display = '';
+        errorAlert.textContent = 'Error saving wishlist: ' + (e.message || e);
       }
     };
-
-    // Initial load
-    loadWishlist();
   </script>
 </body>
 </html>
