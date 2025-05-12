@@ -116,7 +116,15 @@
 
   <script>
     // Firebase init
-    const firebaseConfig = { apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc", authDomain: "optanav1.firebaseapp.com", projectId: "optanav1" };
+const firebaseConfig = {
+  apiKey: "AIzaSyA_CZn_fLuzyBoWCqKxI0SHPalTGBaLIGc",
+  authDomain: "optanav1.firebaseapp.com",
+  projectId: "optanav1",
+  storageBucket: "optanav1.appspot.com",
+  messagingSenderId: "16298669202",
+  appId: "1:16298669202:web:ac2a1cd399993b1883624b",
+  measurementId: "G-RR7D4MB5FY"
+};
     if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth(), db = firebase.firestore();
 
